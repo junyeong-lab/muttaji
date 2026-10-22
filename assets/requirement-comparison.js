@@ -51,6 +51,7 @@
       return node;
     };
     let current=[],sourceText="",sourceProfile="";
+    window.MuttajiComparisonSnapshot=null;
     function snapshot(){
       return profileFields.map(id=>String(document.getElementById(id)?.value||"")).join("\n---\n");
     }
@@ -64,6 +65,9 @@
     function update(){
       const outcomes=collect();
       const total=tally(outcomes);
+      // In-memory snapshot used by the separate roadmap screen. Never uploaded.
+      window.MuttajiComparisonSnapshot={posting:sourceText,profile:sourceProfile,
+        profileCerts:String(document.getElementById("certs")?.value||""),items:outcomes};
       summary.textContent="총 "+outcomes.length+"개 요건 · 충족 "+total["충족"]+" · 부분 충족 "+total["부분 충족"]+
         " · 미충족 "+total["미충족"]+" · 확인 필요 "+total["확인 필요"]+
         ". 사용자 확인·입력 기준이며 자동 검증 또는 합격 가능성 평가가 아닙니다.";
@@ -79,6 +83,7 @@
       if(panel.hidden)return;
       if(job.value!==sourceText||snapshot()!==sourceProfile){
         panel.hidden=true;
+        window.MuttajiComparisonSnapshot=null;
         help.textContent="채용공고 또는 프로필이 변경되었습니다. 아래 '요건 비교하기'를 다시 눌러 최신 내용으로 검토하세요.";
         help.hidden=false;
       }
@@ -86,6 +91,7 @@
     const button=document.getElementById("requirements-run");
     button.addEventListener("click",()=>{
       list.replaceChildren();panel.hidden=true;
+      window.MuttajiComparisonSnapshot=null;
       const parser=window.JobTextAnalyzer;
       if(!parser){help.textContent="공고 분류기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.";help.hidden=false;return;}
       const text=job.value.trim();
