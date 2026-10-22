@@ -47,6 +47,46 @@ function grounded(value,original) {
   }
   return out;
 }
+// Return only allowlisted metadata. Never return provider error messages, which
+// may contain submitted text or account-specific details.
+function gatewayFailure(status, code) {
+  const statuses={
+    400:"AI 요청 형식이 맞지 않습니다.",
+    401:"AI Gateway 키 인증이 거부됐습니다.",
+    402:"AI Gateway 크레딧 또는 예산 한도 문제입니다.",
+    403:"AI Gateway 접근 권한이 거부됐습니다.",
+    404:"모델이나 API 주소를 찾지 못했습니다.",
+    408:"AI Gateway 응답 시간이 초과됐습니다.",
+    422:"모델이 요청된 출력 형식을 지원하지 않을 수 있습니다.",
+    429:"AI Gateway 요청 한도에 도달했습니다."
+  };
+  const sanitized=/^[a-zA-Z0-9_.-]{1,64}$/.test(String(code||""))?code:null;
+  return {error:"UPSTREAM_ERROR",gatewayStatus:status,gatewayCode:sanitized,
+    message:(statuses[status]||"AI Gateway 제공자 오류가 발생했습니다.")+
+      " (Gateway HTTP "+status+(sanitized?", 코드 "+sanitized:"")+")"};
+}
+async function checkGatewayModel() {
+  // Listing models is not a model generation call. The API key never leaves
+  // the server response; return only HTTP status and model availability.
+  try {
+    const response=await fetch("https://ai-gateway.vercel.sh/v1/models",{
+      method:"GET",
+      headers:{"authorization":"Bearer "+process.env.AI_GATEWAY_API_KEY},
+      signal:AbortSignal.timeout(8000)
+    });
+    if(!response.ok)return json({diagnostic:"failed",...gatewayFailure(response.status)},502);
+    const raw=await response.text();
+    if(raw.length>2000000)return json({diagnostic:"error",error:"MODEL_LIST_TOO_LARGE"},502);
+    const payload=JSON.parse(raw);
+    const model=process.env.AI_ANALYSIS_MODEL;
+    const modelIds=Array.isArray(payload.data)?payload.data.map(x=>x&&x.id):[];
+    return json({diagnostic:"ready",credentialAccepted:true,configuredModel:model,
+      modelListed:modelIds.includes(model),note:"AI 텍스트 생성은 실행하지 않았습니다. API 키 인증과 모델 목록만 확인했습니다."});
+  }catch(e){
+    return json({diagnostic:"error",error:e?.name==="TimeoutError"?"DIAGNOSTIC_TIMEOUT":"DIAGNOSTIC_UNAVAILABLE",
+      message:"AI Gateway의 모델 목록 조회에 실패했습니다. AI 생성 요청은 하지 않았습니다."},502);
+  }
+}
 async function handler(request) {
   if(request.method==="GET")return json({enabled:active(),mode:"semantic-ai",consentRequired:true});
   if(request.method!=="POST")return json({error:"METHOD_NOT_ALLOWED"},405);
@@ -70,6 +110,7 @@ async function handler(request) {
     if(raw.length>20000)return json({error:"INPUT_TOO_LARGE"},413);
     body=JSON.parse(raw);
   }catch{return json({error:"INVALID_JSON"},400);}
+  if(body && body.diagnose===true)return checkGatewayModel();
   if(!body || body.consent!==true || typeof body.text!=="string")return json({error:"CONSENT_OR_TEXT_MISSING"},400);
   const userText=body.text.trim();
   if(userText.length<20||userText.length>8000)return json({error:"INVALID_TEXT_LENGTH",message:"AI 분석은 20~8,000자의 텍스트를 지원합니다."},400);
@@ -89,7 +130,18 @@ async function handler(request) {
       }),
       signal:AbortSignal.timeout(24000)
     });
-    if(!response.ok)return json({error:"UPSTREAM_ERROR",message:"AI 제공자가 요청을 처리하지 못했습니다. 관리자에게 설정 확인이 필요합니다."},502);
+    if(!response.ok){
+      // Parse only the structured error code; never echo raw upstream messages.
+      let gatewayCode=null;
+      try{
+        const text=await response.text();
+        if(text.length<6000){
+          const error=JSON.parse(text)?.error;
+          gatewayCode=error?.code||error?.type||null;
+        }
+      }catch{}
+      return json(gatewayFailure(response.status,gatewayCode),502);
+    }
     const raw=await response.text();
     if(raw.length>70000)return json({error:"MODEL_OUTPUT_TOO_LARGE"},502);
     const upstream=JSON.parse(raw);
