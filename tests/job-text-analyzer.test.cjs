@@ -75,7 +75,7 @@ test("실제 EDR/AV 공고 줄바꿈을 하나의 불릿으로 합쳐 2·2·2개
   assert.equal(result.responsibilities[0].text, "엔드포인트 보안솔루션(EDR/AV 등) 구축 및 유지보수");
   assert.equal(result.responsibilities[0].line, 4);
   assert.equal(result.responsibilities[0].endLine, 5);
-  assert.equal(result.responsibilities[1].text, "엔드포인트 보안솔루션(EDR/AV 등) 장애/ 이슈 대응 및 기술지원");
+  assert.equal(result.responsibilities[1].text, "엔드포인트 보안솔루션(EDR/AV 등) 장애/이슈 대응 및 기술지원");
   assert.equal(result.preferred[0].text, "악성코드 분석 및 위협 탐지(Threat Hunting) 관련 보안 지식 보유자 우대");
   assert.equal(result.preferred[0].line, 15);
   assert.equal(result.preferred[0].endLine, 16);
