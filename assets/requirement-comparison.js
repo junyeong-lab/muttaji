@@ -9,9 +9,13 @@
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
   const verdicts=["확인 필요","충족","부분 충족","미충족"];
-  function requirements(posting,parser){
+  function requirements(posting,parser,reviewed){
     if(typeof posting!=="string"||!parser||typeof parser.analyze!=="function")throw new TypeError("공고 분석기를 불러올 수 없습니다.");
-    const result=parser.analyze(posting);
+    // Only trust manually corrected categories for the exact current posting.
+    // Never persist reviews or infer a verified CV from parsed text.
+    const result=reviewed && reviewed.text===posting.trim() &&
+      reviewed.result && Array.isArray(reviewed.result.required) && Array.isArray(reviewed.result.preferred)
+        ? reviewed.result : parser.analyze(posting);
     return ["required","preferred"].flatMap(kind=>result[kind].map((item,index)=>({
       id:kind+"-"+index,kind,text:item.text,source:item.source,
       line:item.line,endLine:item.endLine||item.line
@@ -88,7 +92,7 @@
       if(!text){help.textContent="먼저 '채용공고' 화면에 공고 텍스트를 입력해 주세요.";help.hidden=false;return;}
       const profile=profileFields.map(id=>document.getElementById(id).value.trim());
       if(!profile.some(Boolean)){help.textContent="내 역량 정보를 한 가지 이상 입력해 주세요.";help.hidden=false;return;}
-      try{current=requirements(text,parser);}
+      try{current=requirements(text,parser,window.MuttajiReviewedPosting);}
       catch(error){help.textContent="공고 내용에 문제가 있습니다: "+(error?.message||"분석 실패");help.hidden=false;return;}
       if(!current.length){help.textContent="공고에서 필수·우대 요건이 추출되지 않았습니다. 공고의 필수/우대 제목을 확인하거나 직접 추가해 주세요.";help.hidden=false;return;}
       current.forEach((item,i)=>{
