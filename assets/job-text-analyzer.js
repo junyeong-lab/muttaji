@@ -15,7 +15,7 @@
     { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*방법|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
   ];
   // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
-  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■▶]|(?:\d{1,2}[.)]))\s*/;
+  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■▶]|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
   function withoutBullet(s) {
     return s.replace(BULLET, "").trim();
   }
@@ -29,6 +29,18 @@
   }
   function headingFor(line) {
     var t = withoutBullet(line);
+    var normalized=normalizeHeader(t.replace(/[:：]\s*$/, ""));
+    // Job site compound headings: "[정보보호 컨설턴트] 자격요건".
+    var embedded=normalized.match(/^(?:.{2,45}?[\]】)]?\s+)?(자격\s*요건|지원\s*자격|필수\s*조건|우대\s*사항|우대\s*조건)$/i);
+    if(embedded) {
+      var explicitGroup=groupForLabel(embedded[1]);
+      if(explicitGroup)return {group:explicitGroup,value:"",label:t};
+    }
+    // "정보보호 컨설턴트 주요업무" names both the job and the section.
+    var combined=t.match(/^(.{2,45}?)\s+(주요\s*업무|담당\s*업무|수행\s*업무)\s*[:：]?$/i);
+    if(combined)return {group:"responsibilities",value:"",label:combined[2],roleCandidate:combined[1].trim()};
+    if(/^(?:포지션\s*상세|채용\s*정보|모집\s*공고|공고\s*상세|공고\s*정보)$/i.test(normalized))
+      return {group:"unresolved",value:"",label:"표시용 제목",skip:true};
     var direct = groupForLabel(t.replace(/[:：]\s*$/, ""));
     if (direct) return { group: direct, value: "", label: t.replace(/[:：]\s*$/, "").trim() };
     var m = t.match(/^([^:：]{1,38})\s*[:：]\s*(.*)$/);
@@ -74,8 +86,29 @@
         section=head.group;
         roleHeaderLabel=section==="role"?head.label:null;
         prior=null;
+        if(head.roleCandidate){
+          out.role.push({text:head.roleCandidate,line:ix+1,endLine:ix+1,
+            source:original.trim(),kindHint:"공고 제목에서 추출한 모집 직무 후보 · 확인 필요"});
+          out.totalItems++;
+        }
         if (!head.value) return;
         raw=head.value;
+      }
+      // Some job-board exports include a role prefix before "가. 업무".
+      if(section==="responsibilities"){
+        var mixed=raw.match(/^(.{2,45}?)\s+[가-하][.)]\s+(.+)$/);
+        if(mixed && /(?:컨설턴트|엔지니어|개발자|분석가|담당자|운영자|전문가|관리자|기술자)/.test(mixed[1])){
+          var found=out.role.some(function(item){
+            return item.text===mixed[1]||item.text===mixed[1].replace(/\([^)]*\)/g,"").trim();
+          });
+          if(!found){
+            out.role.push({text:mixed[1],line:ix+1,endLine:ix+1,source:original.trim(),
+              kindHint:"공고의 업무 열에서 추출한 직무 후보 · 확인 필요"});
+            out.totalItems++;
+          }
+          raw=mixed[2];
+          prior=null;
+        }
       }
       var hasBullet=BULLET.test(raw);
       var cleaned=withoutBullet(raw);
@@ -96,7 +129,8 @@
       // OCR often wraps a long bullet over two or more physical lines.
       // Join ONLY immediately adjacent, unbulleted continuation lines of an
       // existing bullet; never join distinct bullets, section headers or blanks.
-      if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind) {
+      if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
+          (cleaned.length<=16 || /(?:및|또는|관련|보안|\u002F|／|[,] )$/.test(prior.item.text))) {
         prior.item.text += /[\/／]$/.test(prior.item.text) ? cleaned : " "+cleaned;
         prior.item.source += "\n"+original.trim();
         prior.item.endLine=ix+1;
