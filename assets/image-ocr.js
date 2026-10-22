@@ -13,8 +13,7 @@
   let libraryPromise = null;
   let workerPromise = null;
   let busy = false;
-  let lastExtraction = "";
-  let lastAppliedText = "";
+  const reviewer = window.MuttajiOcrReview && window.MuttajiOcrReview.createUI();
 
   function library() {
     if (window.Tesseract && typeof window.Tesseract.createWorker === "function") {
@@ -60,6 +59,7 @@
   }
 
   fileInput.addEventListener("change", function () {
+    if (reviewer) reviewer.reset();
     const file = fileInput.files && fileInput.files[0];
     button.disabled = busy || !file ||
       !["image/png", "image/jpeg", "image/webp"].includes(file.type) ||
@@ -94,7 +94,7 @@
           (prepared.columns>1?"번째 표 열":"개 영역");
         const result = await engine.recognize(prepared.regions[idx]);
         const part = String(result && result.data && result.data.text || "").trim();
-        if(part) parts.push(part);
+        parts.push(part);
       }
       if (!fileInput.files || fileInput.files[0] !== image) {
         status.textContent = "선택한 이미지가 바뀌어 이전 글자 추출 결과를 적용하지 않았습니다.";
@@ -105,22 +105,16 @@
         status.textContent = "읽어낸 글자가 없습니다. 원본 이미지를 선명하게 다시 캡처하거나 텍스트를 직접 입력해 주세요.";
         return;
       }
-      // Re-running OCR must not append an identical previous OCR result twice.
-      let previous = textInput.value.trim();
-      if(lastExtraction && previous===lastAppliedText)previous="";
-      const text = previous ? previous+"\n\n"+extracted : extracted;
-      if (text.length > 20000) {
-        status.textContent = "추출 내용이 20,000자 제한을 초과했습니다. 기존 입력은 변경하지 않았습니다.";
+      // Never silently turn column position into a verified job requirement.
+      // The user explicitly edits & confirms each OCR column before classification.
+      if(!reviewer){
+        status.textContent="OCR 검토 화면을 불러오지 못했습니다. 페이지를 새로고침해 주세요.";
         return;
       }
-      textInput.value = text;
-      lastExtraction=extracted;
-      lastAppliedText=text;
-      textInput.dispatchEvent(new Event("input", { bubbles: true }));
-      status.textContent = prepared.columns>1
-        ? "표의 " + prepared.columns + "개 열을 나눠 읽었습니다. " + extracted.length + "자 추출 · EDR/AV·영문·숫자·줄바꿈 오류를 직접 확인해 주세요."
-        : "여백 정리·확대를 적용해 " + extracted.length + "자를 추출했습니다. 한글·영문·숫자 오류를 확인한 뒤 1차 분석을 눌러 주세요.";
-      textInput.focus();
+      reviewer.show(parts);
+      status.textContent = "총 "+parts.filter(Boolean).length+"개 열에서 "+extracted.length+"자를 읽었습니다. 아래에서 잘못된 글자와 담당업무·필수·우대 분류를 수정한 뒤 적용해 주세요.";
+      const panel=document.getElementById("ocr-review");
+      if(panel&&typeof panel.scrollIntoView==="function")panel.scrollIntoView({behavior:"smooth",block:"nearest"});
     } catch (error) {
       status.textContent = "글자 추출 실패: " + (error && error.message ? error.message : "OCR 처리에 실패했습니다.") + " 다시 시도하거나 텍스트를 직접 입력해 주세요.";
     } finally {
