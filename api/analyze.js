@@ -2,6 +2,7 @@
  * No model credentials, access codes, or unconsented job data in the browser bundle.
  * AI_ANALYSIS_ENABLED=true, AI_ANALYSIS_MODEL=verified-provider/model,
  * AI_ANALYSIS_ACCESS_TOKEN=<long random server-only secret> required to enable.
+ * AI_GATEWAY_API_KEY must be a dedicated, budgeted key; OIDC is not a fallback.
  */
 const CATEGORIES = ["company", "department", "role", "responsibilities", "required", "preferred", "unresolved"];
 const json = (body, status=200) => new Response(JSON.stringify(body), {
@@ -9,7 +10,8 @@ const json = (body, status=200) => new Response(JSON.stringify(body), {
 });
 const active = () => process.env.AI_ANALYSIS_ENABLED === "true"
   && !!process.env.AI_ANALYSIS_MODEL
-  && !!process.env.AI_ANALYSIS_ACCESS_TOKEN;
+  && !!process.env.AI_ANALYSIS_ACCESS_TOKEN
+  && !!process.env.AI_GATEWAY_API_KEY;
 function sameSecret(received, expected) {
   if (!received || !expected || received.length !== expected.length) return false;
   let diff=0;
@@ -71,7 +73,9 @@ async function handler(request) {
   if(!body || body.consent!==true || typeof body.text!=="string")return json({error:"CONSENT_OR_TEXT_MISSING"},400);
   const userText=body.text.trim();
   if(userText.length<20||userText.length>8000)return json({error:"INVALID_TEXT_LENGTH",message:"AI 분석은 20~8,000자의 텍스트를 지원합니다."},400);
-  const authorization=process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+  // A project OIDC credential may bypass the dedicated per-key spending budget.
+  // Deliberately require only the budgeted API key configured by the owner.
+  const authorization=process.env.AI_GATEWAY_API_KEY;
   if(!authorization)return json({error:"MODEL_AUTH_UNAVAILABLE",message:"서버의 AI Gateway 인증이 준비되지 않았습니다."},503);
   try{
     const response=await fetch("https://ai-gateway.vercel.sh/v1/chat/completions",{
