@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff7df">
+  <meta name="description" content="뭐따지? AI가 알려주는 나만의 취업 준비 가이드. 채용공고 분석, 역량 비교, 자격증 추천과 취업 준비 로드맵을 준비하고 있습니다.">
+  <title>뭐따지? | AI가 알려주는 취업 준비 가이드</title>
+  <style>
+    :root { --navy:#14213d; --navy2:#233957; --yellow:#ffd94d; --yellow2:#ffcf39; --orange:#ff8c00; --green:#4caf50; --cream:#fff7e5; --paper:#fffefa; --muted:#627084; --line:#ecdfc9; --shadow:0 14px 40px rgba(34,35,49,.075); color:var(--navy); font-family:system-ui,-apple-system,"Noto Sans KR","Apple SD Gothic Neo",sans-serif; }
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(ellipse 65% 40% at 88% 4%,#ffe79f6b,transparent 78%),#fff9ed;min-height:100vh}button,input,textarea,select{font:inherit}
+    button{cursor:pointer}a{color:inherit}.wrap{max-width:1130px;margin:auto;padding:0 22px}.top{height:88px;display:flex;align-items:center;gap:30px;justify-content:space-between}
+    .brand{font-size:1.75rem;letter-spacing:-.1em;font-weight:1000;white-space:nowrap;line-height:1}.brand .warm{color:var(--orange)}
+    .topnav{display:flex;gap:7px;align-items:center}.nav{border:0;background:transparent;border-radius:100px;padding:12px 17px;color:#4b5b73;font-weight:750;white-space:nowrap}.nav:hover,.nav:focus-visible{background:#fff3cf}.nav[aria-current="page"]{background:var(--navy);color:#fff}
+    .status{border:1px solid #f1dba5;background:#fff7da;padding:7px 12px;border-radius:999px;color:#7a601f;font-size:.76rem;font-weight:800;white-space:nowrap}
+    main{min-height:66vh}.panel[hidden]{display:none!important}.hero{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:48px;padding:44px 0 52px}
+    .eyebrow{font-size:.95rem;font-weight:850;color:#bb7100;letter-spacing:-.01em}.hero h1{font-size:clamp(2.65rem,5.1vw,4.9rem);letter-spacing:-.085em;line-height:1.21;margin:22px 0}
+    .hero h1 strong{color:var(--orange)}.hero .desc{font-size:1.09rem;line-height:1.85;color:#53637a;max-width:545px;margin:0 0 30px}
+    .actions{display:flex;gap:11px;flex-wrap:wrap}.primary,.secondary,.outline{display:inline-flex;align-items:center;justify-content:center;border-radius:15px;font-weight:850;padding:15px 23px;border:2px solid transparent;gap:10px;min-height:52px}
+    .primary{background:var(--yellow);color:var(--navy);box-shadow:0 6px 0 #dcae1d}.primary:hover{background:#ffcc2a;transform:translateY(1px);box-shadow:0 5px 0 #dcae1d}.secondary{background:var(--navy);color:white}.secondary:hover{background:#283f61}
+    .outline{border-color:#d8d6cf;background:white;color:var(--navy)}.outline:hover{border-color:var(--orange)}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+    .hero-art{justify-self:center;position:relative;width:min(100%,460px);display:flex;align-items:center;justify-content:center;min-height:470px}
+    .hero-art img{display:block;position:relative;width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 20px 25px rgba(89,66,19,.09));border-radius:0}
+    .chick-fallback{display:none;position:relative;border-radius:36px;background:linear-gradient(160deg,#ffe789,#ffca2c);height:400px;align-items:center;justify-content:center;flex-direction:column;font-size:8rem}.chick-fallback b{font-size:2.4rem}
+    .feature-title{margin:4px 0 20px;font-size:1.6rem;letter-spacing:-.05em}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;margin-bottom:66px}
+    .card{background:var(--paper);border:1px solid #f0e4ce;border-radius:23px;padding:25px 23px;box-shadow:var(--shadow)}
+    .feature-icon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:#fff0bd;font-size:1.7rem;margin-bottom:18px}
+    .card h3{margin:0 0 11px;font-size:1.16rem}.card p{margin:0;color:#647187;line-height:1.7;font-size:.94rem}
+    .cert-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,210px);gap:12px;margin-top:23px}
+    .cert-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:19px 0 0}
+    .cert-card{border:1px solid #eadfcf;border-radius:17px;padding:20px;background:#fffefb;min-width:0}
+    .cert-card h3{font-size:1.03rem;letter-spacing:-.025em;margin:0 0 12px;overflow-wrap:anywhere}
+    .cert-meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+    .cert-meta span{font-size:.73rem;border-radius:99px;padding:5px 9px;background:#fff4d9;color:#715824;font-weight:700}
+    .cert-card p{line-height:1.65;font-size:.87rem;color:#5d6b7d;margin:8px 0}
+    .cert-skills{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+    .cert-skills span{font-size:.73rem;padding:5px 9px;background:#f1f5f9;color:#3e5879;border-radius:8px}
+    .cert-link{display:inline-block;font-size:.83rem;font-weight:750;text-underline-offset:4px;color:#1c5276;margin-top:5px}
+    .cert-count{color:#53637a;margin-top:17px;font-size:.88rem;font-weight:700}
+    .cert-empty{border:1px dashed #d8cba9;border-radius:15px;padding:25px;color:#697381;grid-column:1/-1;line-height:1.7}
+    .step-num{font-size:.72rem;font-weight:850;background:#fff3ce;color:#81651f;border-radius:999px;padding:5px 10px;display:inline-block;margin-top:16px}
+    .section-top{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;margin:36px 0 24px}
+    .heading-kicker{font-weight:900;color:#bb7100;font-size:.8rem;letter-spacing:.03em}.page-title{font-size:clamp(1.8rem,3.4vw,2.65rem);letter-spacing:-.07em;line-height:1.2;margin:8px 0 0}.page-intro{color:var(--muted);line-height:1.8;margin:11px 0 0}
+    .sheet{background:white;border:1px solid #eee2ce;border-radius:24px;padding:30px;box-shadow:var(--shadow);margin-bottom:28px}.sheet + .sheet{margin-top:18px}
+    .pill{display:inline-block;padding:7px 12px;border-radius:20px;background:#fff4d6;color:#956b13;font-size:.78rem;font-weight:800}
+    .group{margin:19px 0}.label{font-weight:850;display:block;margin-bottom:10px;font-size:.93rem}.subtext{display:block;color:var(--muted);font-size:.8rem;margin-top:8px;line-height:1.6}
+    textarea,input[type=text],select{width:100%;border:1px solid #dfe4ea;border-radius:13px;padding:14px 15px;outline:none;background:#fcfdff;color:#14213d}
+    textarea{min-height:170px;line-height:1.7;resize:vertical}.profile-area textarea{min-height:102px}
+    .upload{border:2px dashed #e7d2a3;border-radius:18px;background:#fffaf0;padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .upload input{max-width:100%;font-size:.84rem}.upload-copy{font-size:.88rem;color:#516078;line-height:1.6}
+    .preview{display:none;max-width:min(290px,100%);max-height:250px;object-fit:contain;border-radius:12px;margin-top:12px}
+    .message{display:none;border-radius:13px;background:#eff8f0;color:#246039;border:1px solid #cae7ce;padding:15px 17px;margin-top:20px;font-size:.9rem;line-height:1.6;white-space:pre-wrap}
+    .message.warn{background:#fff7e7;color:#8b5e14;border-color:#f3dea6}.info{background:#fff9e9;border:1px solid #f0ddb4;padding:17px;border-radius:15px;color:#79603b;line-height:1.75;font-size:.89rem}
+    .split{display:grid;grid-template-columns:1.15fr .85fr;gap:23px;align-items:start}.notes{display:grid;gap:14px}
+    .note{background:#f7f9fc;border:1px solid #e9edf4;border-radius:17px;padding:17px}.note b{display:block;margin-bottom:7px}.note span{color:var(--muted);font-size:.86rem;line-height:1.65}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+    .timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:24px 0}.mile{position:relative;border:1px solid #eee1ca;border-radius:16px;padding:20px 16px;background:#fff}.mile b{display:block;font-size:.94rem;margin:12px 0 6px}.mile small{color:#5e6d81;line-height:1.6;display:block}.mile i{display:inline-block;font-style:normal;background:#fff0c1;padding:5px 8px;border-radius:10px;font-size:.73rem;font-weight:800}
+    footer{padding:34px 0;margin-top:30px;border-top:1px solid #eee4d2;color:#7a808b;font-size:.82rem;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+    .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+    @media(max-width:850px){.top{height:auto;min-height:80px;flex-wrap:wrap;padding-top:17px;padding-bottom:16px;gap:16px}.topnav{order:3;width:100%;justify-content:space-between;overflow-x:auto}.nav{font-size:.85rem;padding:10px 12px}.hero{grid-template-columns:1fr;padding:35px 0 40px;gap:30px}.hero-art{width:min(90%,400px);min-height:0}.cards,.timeline{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}
+    @media(max-width:530px){.cert-tools,.cert-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="top wrap">
+    <a class="brand" href="#home" aria-label="뭐따지? 홈" style="text-decoration:none">뭐<span class="warm">따</span>지?</a>
+    <span class="status">🐥 ALEPH MVP · 개발 중</span>
+    <nav class="topnav" aria-label="주 메뉴">
+      <button type="button" class="nav" data-go="home" aria-current="page">홈</button>
+      <button type="button" class="nav" data-go="analyze">채용공고</button>
+      <button type="button" class="nav" data-go="profile">내 역량</button>
+      <button type="button" class="nav" data-go="certifications">자격증</button>
+      <button type="button" class="nav" data-go="roadmap">로드맵</button>
+    </nav>
+  </header>
+  <main class="wrap">
+    <section id="home" class="panel" aria-labelledby="home-title">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">뭘 따야 취업하지? AI가 알려드려요!</div>
+          <h1 id="home-title">나에게 필요한<br><strong>취업 준비,</strong><br>뭐부터 하지?</h1>
+          <p class="desc">채용공고를 읽고 막막하셨나요? 「뭐따지?」는 공고에 필요한 역량과 내가 가진 경험을 비교해 다음 준비를 알려주는 서비스를 만들고 있습니다.</p>
+          <div class="actions">
+            <button type="button" class="primary" data-go="analyze">채용공고 입력하기 <span aria-hidden="true">→</span></button>
+            <button type="button" class="outline" data-go="profile">내 역량 입력하기</button>
+          </div>
+          <p class="subtext" style="margin-top:24px">현재는 첫 UI 구현 단계입니다. AI 분석·추천 기능은 이후 순서대로 연결합니다.</p>
+        </div>
+        <div class="hero-art">
+          <img src="./assets/muttaji-poster.webp" alt="기존 뭐따지? 병아리가 채용공고와 자격증을 고민하는 브랜드 포스터" width="850" height="789" onerror="this.style.display='none';document.getElementById('art-fallback').style.display='flex'">
+          <div id="art-fallback" class="chick-fallback" aria-hidden="true">🐥<b>뭐따지?</b></div>
+        </div>
+      </div>
+      <h2 class="feature-title">뭐따지?가 준비하는 세 가지</h2>
+      <div class="cards">
+        <article class="card"><div class="feature-icon" aria-hidden="true">🔎</div><h3>채용공고 분석</h3><p>공고 속 필수 지원자격과 우대사항을 구분해 쉽게 설명해요.</p><span class="step-num">AI 분석 연결 예정</span></article>
+        <article class="card"><div class="feature-icon" aria-hidden="true">🎓</div><h3>자격증·역량 추천</h3><p>내가 가진 역량과 공고의 요구사항을 비교하고 관련 자격정보를 찾아요.</p><span class="step-num">공식 DB 검증 예정</span></article>
+        <article class="card"><div class="feature-icon" aria-hidden="true">🗺️</div><h3>맞춤형 취업 로드맵</h3><p>무작정 자격증부터 따기보다 중요한 조건부터 준비 순서를 정해요.</p><span class="step-num">로드맵 생성 예정</span></article>
+      </div>
+    </section>
+    <section id="analyze" class="panel" hidden aria-labelledby="analyze-title">
+      <div class="section-top"><div><span class="heading-kicker">01 · 채용공고 입력</span><h1 class="page-title" id="analyze-title">어떤 공고가 궁금하세요?</h1><p class="page-intro">채용공고 내용을 붙여넣거나 캡처 이미지를 선택해 주세요.</p></div><span class="pill">입력 UI 구현 · AI 미연결</span></div>
+      <div class="split">
+        <form id="job-form" class="sheet">
+          <div class="group"><label class="label" for="job-text">공고 텍스트 붙여넣기</label><textarea id="job-text" placeholder="담당업무, 필수 자격요건, 우대사항 등이 포함된 채용공고 내용을 붙여넣어 주세요."></textarea><small class="subtext" id="char-count">0자 입력됨</small></div>
+          <div class="group"><label class="label" for="job-file">또는 채용공고 이미지 업로드</label><div class="upload"><input type="file" id="job-file" accept="image/png,image/jpeg,image/webp"><span class="upload-copy">PNG · JPG · WEBP 파일 1개<br>선택한 이미지는 현재 브라우저에서만 미리 봅니다.</span></div><img id="job-preview" class="preview" alt="선택한 채용공고 이미지 미리보기"></div>
+          <button class="primary" type="submit">입력 내용 확인 <span aria-hidden="true">→</span></button><div id="job-message" class="message" role="status" aria-live="polite"></div>
+        </form>
+        <aside class="notes"><div class="info"><b>📌 개발 안내</b><br>현재 이 버튼은 입력 여부만 확인합니다. AI 분석이나 이미지 문자 인식 결과를 생성하지 않습니다. 외부 API로 내용을 보내지 않습니다.</div><div class="note"><b>필수조건과 우대사항 구분</b><span>이후 AI 분석 단계에서 각 항목의 근거 문장과 함께 제시할 예정입니다.</span></div><div class="note"><b>채용공고 URL은 받지 않아요</b><span>초기 MVP에서는 텍스트와 이미지 입력에 집중합니다.</span></div></aside>
+      </div>
+    </section>
+    <section id="profile" class="panel profile-area" hidden aria-labelledby="profile-title">
+      <div class="section-top"><div><span class="heading-kicker">02 · 나의 역량</span><h1 class="page-title" id="profile-title">지금 가진 경험부터 적어볼까요?</h1><p class="page-intro">확인할 수 있는 사실만 적어주세요. 없는 자격증이나 경력을 임의로 채우지 않습니다.</p></div><span class="pill">입력 UI 구현 · DB 미연결</span></div>
+      <form id="profile-form" class="sheet">
+        <div class="two-col">
+          <div class="group"><label class="label" for="goal-job">목표 직무</label><input id="goal-job" type="text" placeholder="예: 정보보안 컨설팅"></div>
+          <div class="group"><label class="label" for="education">학력·전공</label><input id="education" type="text" placeholder="예: 기관공학 학사"></div>
+        </div>
+        <div class="group"><label class="label" for="experience">경력 및 프로젝트 경험</label><textarea id="experience" placeholder="직접 수행한 업무·프로젝트만 입력해 주세요."></textarea></div>
+        <div class="two-col">
+          <div class="group"><label class="label" for="certs">보유 자격증</label><textarea id="certs" placeholder="취득한 자격증만 입력해 주세요."></textarea></div>
+          <div class="group"><label class="label" for="skills">기술 및 지식</label><textarea id="skills" placeholder="예: 네트워크 설정, 로그 분석 등 확인된 역량"></textarea></div>
+        </div>
+        <button type="submit" class="primary">입력 내용 확인 <span aria-hidden="true">→</span></button>
+        <small class="subtext">현재는 서버 저장 기능이 없습니다. 입력 내용은 이 페이지에서만 유지되며 새로고침하면 사라집니다.</small>
+        <div id="profile-message" class="message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section id="certifications" class="panel" hidden aria-labelledby="certifications-title">
+      <div class="section-top">
+        <div><span class="heading-kicker">03 · 자격증 DB</span>
+        <h1 class="page-title" id="certifications-title">자격증을 찾아볼까요?</h1>
+        <p class="page-intro">작성해 주신 IT·정보보안 분야 자격증 23개를 이름·분야·관련 역량으로 검색합니다.</p></div>
+        <span class="pill">사용자 제공 자료 · 공식 검증 전</span>
+      </div>
+      <div class="sheet">
+        <div class="info"><b>🔎 검색 기능은 동작하지만, 아직 AI 자격증 추천은 아닙니다.</b><br>목록의 자격 구분·시행기관·응시자격 등은 사용자 엑셀에 입력된 <strong>검증 전 정보</strong>입니다. 최신 공식 자료 확인 후 확정되며, 자격증 보유 여부만으로 채용 요건을 충족한다고 판단하지 않습니다.</div>
+        <div class="cert-tools">
+          <div><label class="label" for="cert-search">자격증명 또는 관련 역량 검색</label><input id="cert-search" type="text" autocomplete="off" placeholder="예: CPPG, Linux, 개인정보보호, 네트워크"></div>
+          <div><label class="label" for="cert-field">관련 분야 선택</label><select id="cert-field"><option value="">전체 분야</option></select></div>
+        </div>
+        <div class="cert-count" id="cert-count" role="status" aria-live="polite">자격증 목록을 불러오는 중입니다.</div>
+        <div class="cert-grid" id="cert-results" aria-label="자격증 검색 결과"></div>
+      </div>
+    </section>
+    <section id="roadmap" class="panel" hidden aria-labelledby="roadmap-title">
+      <div class="section-top"><div><span class="heading-kicker">03 · 취업 준비 로드맵</span><h1 class="page-title" id="roadmap-title">막막한 준비를 차근차근</h1><p class="page-intro">준비 순서는 채용공고의 필수조건과 실제 보유역량을 확인한 뒤 정해집니다.</p></div><span class="pill">로드맵 생성 기능 개발 예정</span></div>
+      <div class="sheet"><div class="info"><b>아직 개인별 추천 결과는 없습니다.</b><br>아래 흐름은 서비스 설계도이며, 현재 사용자의 준비 상태를 평가한 결과가 아닙니다.</div>
+        <div class="timeline">
+          <div class="mile"><i>STEP 1</i><b>필수조건 확인</b><small>공고의 필수 자격·경력·기술 조건을 먼저 살펴봐요.</small></div>
+          <div class="mile"><i>STEP 2</i><b>부족한 역량 정리</b><small>보유역량과 비교해 확인이 필요한 부분을 표시해요.</small></div>
+          <div class="mile"><i>STEP 3</i><b>학습·경험 보완</b><small>자격증뿐 아니라 프로젝트와 실무 연습을 제안해요.</small></div>
+          <div class="mile"><i>STEP 4</i><b>지원 준비</b><small>경험을 포트폴리오와 지원 자료로 연결해요.</small></div>
+        </div><button type="button" class="secondary" data-go="analyze">채용공고 먼저 입력하기 <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>초기 MVP 개발 단계 · AI 추천 및 합격 확률 제공 전</div></footer>
+  <script>
+    (function () {
+      "use strict";
+      var pages=["home","analyze","profile","certifications","roadmap"];
+      var nodes=document.querySelectorAll("[data-go]");
+      function show(page) {
+        if(pages.indexOf(page)===-1) page="home";
+        pages.forEach(function(id){document.getElementById(id).hidden=id!==page;});
+        nodes.forEach(function(b){if(b.classList.contains("nav")){if(b.dataset.go===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");}});
+        document.title=(page==="home"?"뭐따지?":({analyze:"채용공고 입력",profile:"내 역량",certifications:"자격증 찾기",roadmap:"준비 로드맵"}[page])+" | 뭐따지?");
+        window.scrollTo({top:0,behavior:"instant"});
+      }
+      function route(){show(location.hash.replace("#",""))}
+      nodes.forEach(function(btn){btn.addEventListener("click",function(){location.hash=btn.dataset.go;route();})});
+      window.addEventListener("hashchange",route);route();
+      var jobText=document.getElementById("job-text"),jobFile=document.getElementById("job-file"),preview=document.getElementById("job-preview"),count=document.getElementById("char-count"),url=null;
+      jobText.addEventListener("input",function(){count.textContent=jobText.value.length+"자 입력됨"});
+      jobFile.addEventListener("change",function(){
+        if(url)URL.revokeObjectURL(url);url=null;preview.style.display="none";preview.removeAttribute("src");
+        var f=jobFile.files&&jobFile.files[0];if(!f)return;
+        if(!["image/png","image/jpeg","image/webp"].includes(f.type)){alert("PNG, JPG 또는 WEBP 이미지만 선택해 주세요.");jobFile.value="";return;}
+        if(f.size>8*1024*1024){alert("이미지는 8MB 이하로 선택해 주세요.");jobFile.value="";return;}
+        url=URL.createObjectURL(f);preview.src=url;preview.style.display="block";
+      });
+      function message(id,text,warning){var box=document.getElementById(id);box.style.display="block";box.classList.toggle("warn",!!warning);box.textContent=text}
+      document.getElementById("job-form").addEventListener("submit",function(e){e.preventDefault();
+        var length=jobText.value.trim().length,hasImage=!!(jobFile.files&&jobFile.files.length);
+        if(!length&&!hasImage){message("job-message","채용공고 텍스트를 입력하거나 이미지를 선택해 주세요.",true);return;}
+        message("job-message","입력 확인: "+(length?("텍스트 "+length+"자"):"")+(hasImage?(length?" · ":"")+"이미지 1개":"")+"\n현재는 입력 UI까지 구현되어 있으며 AI 분석은 다음 개발 단계에서 연결됩니다.",false);
+      });
+      document.getElementById("profile-form").addEventListener("submit",function(e){e.preventDefault();
+        var ids=["goal-job","education","experience","certs","skills"];
+        var filled=ids.filter(function(id){return !!document.getElementById(id).value.trim()}).length;
+        if(!filled){message("profile-message","최소한 한 항목을 입력해 주세요.",true);return;}
+        message("profile-message","입력한 5개 항목 중 "+filled+"개 항목을 확인했습니다.\n현재는 저장·매칭 기능이 연결되지 않았습니다. 새로고침하면 입력 내용이 사라집니다.",false);
+      });
+
+      // Static, user-provided catalog only. No claim of official validation or job eligibility.
+      var certSearch=document.getElementById("cert-search");
+      var certField=document.getElementById("cert-field");
+      var certResults=document.getElementById("cert-results");
+      var certCount=document.getElementById("cert-count");
+      var certifications=[];
+      function normal(text){return String(text==null?"":text).normalize("NFKC").toLocaleLowerCase("ko-KR").trim();}
+      function el(name,className,value){
+        var node=document.createElement(name);if(className)node.className=className;
+        if(value!=null)node.textContent=String(value);return node;
+      }
+      function renderCertifications(){
+        var query=normal(certSearch.value);
+        var field=certField.value;
+        var matches=certifications.filter(function(item){
+          if(field&&item.field!==field)return false;
+          var parts=[item.name,item.aliases,item.field,item.skills,item.job_roles,item.description,item.organization];
+          return !query||normal(parts.join(" ")).includes(query);
+        });
+        certResults.replaceChildren();
+        certCount.textContent="전체 "+certifications.length+"개 중 "+matches.length+"개 표시 · 모두 공식 정보 확인 전";
+        if(!matches.length){certResults.appendChild(el("div","cert-empty","검색 결과가 없습니다. 다른 키워드나 분야로 다시 찾아보세요."));return;}
+        matches.forEach(function(item){
+          var card=el("article","cert-card");
+          card.appendChild(el("h3","",item.name));
+          var meta=el("div","cert-meta");
+          meta.appendChild(el("span","",item.field||"분야 미확인"));
+          meta.appendChild(el("span","",item.type||"분류 미확인"));
+          card.appendChild(meta);
+          if(item.description)card.appendChild(el("p","",item.description));
+          if(item.organization)card.appendChild(el("p","","입력된 시행·발급기관: "+item.organization));
+          var skills=String(item.skills||"").split(";").map(function(x){return x.trim()}).filter(Boolean).slice(0,7);
+          if(skills.length){var tags=el("div","cert-skills");skills.forEach(function(s){tags.appendChild(el("span","",s))});card.appendChild(tags)}
+          if(/^https:\/\/[a-z0-9.-]+(?:\/|$)/i.test(String(item.official_url||""))){
+            var a=el("a","cert-link","입력된 운영기관 웹사이트 ↗");
+            a.href=item.official_url;a.target="_blank";a.rel="noopener noreferrer";card.appendChild(a);
+          }
+          card.appendChild(el("p","","※ 자격 분류·운영기관·관련 역량은 검증 전 사용자 입력값"));
+          certResults.appendChild(card);
+        });
+      }
+      certSearch.addEventListener("input",renderCertifications);
+      certField.addEventListener("change",renderCertifications);
+      fetch("./data/certifications.json").then(function(response){
+        if(!response.ok)throw new Error("HTTP "+response.status);return response.json();
+      }).then(function(data){
+        if(!data||!Array.isArray(data.certifications)||data.certifications.length!==23||data.certifications.some(function(c){return !c.name||c.verification_status!=="needs_official_review"}))throw new Error("잘못된 DB 구조");
+        certifications=data.certifications;
+        Array.from(new Set(certifications.map(function(c){return c.field}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,"ko")}).forEach(function(field){var option=el("option","",field);option.value=field;certField.appendChild(option)});
+        renderCertifications();
+      }).catch(function(){
+        certCount.textContent="자격증 DB를 불러올 수 없습니다.";
+        certResults.replaceChildren(el("div","cert-empty","자격증 데이터를 불러오지 못했습니다. 페이지를 새로고침한 후 다시 시도해 주세요."));
+      });
+    })();
+  </script>
+</body>
+</html>
