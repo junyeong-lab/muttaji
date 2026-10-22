@@ -146,7 +146,7 @@
         <h2 id="job-result-title" class="feature-title" style="margin:9px 0">공고에서 확인된 내용</h2>
         <div id="job-result-summary" class="result-summary" role="status" aria-live="polite"></div>
         <div id="job-result-sections" class="result-grid"></div>
-        <div class="info result-disclaimer">이 결과는 공고 문장의 제목을 이용한 규칙 기반 분류입니다. <b>AI가 의미를 이해하거나 사실을 검증한 결과가 아닙니다.</b> 항목별 근거가 된 원문 줄 번호를 함께 표시합니다. 채용 요건 충족 여부와 자격증 추천은 아직 계산하지 않습니다.</div>
+        <div class="info result-disclaimer">줄바꿈으로 나뉜 글자는 같은 불릿(ㆍ, - 등) 아래에서 이어진 문장으로 합쳐 표시합니다. 임의로 문장을 만들어내지 않으며 원문 대조가 필요합니다. 이 결과는 공고 문장의 제목을 이용한 규칙 기반 분류입니다. <b>AI가 의미를 이해하거나 사실을 검증한 결과가 아닙니다.</b> 항목별 근거가 된 원문 줄 번호를 함께 표시합니다. 채용 요건 충족 여부와 자격증 추천은 아직 계산하지 않습니다.</div>
       </section>
     </section>
     <section id="profile" class="panel profile-area" hidden aria-labelledby="profile-title">
@@ -248,7 +248,7 @@
             items.forEach(function(item){
               var li=el("li","");
               li.appendChild(el("div","result-line",item.text));
-              li.appendChild(el("small","result-evidence","공고 원문 "+item.line+"행"));
+              li.appendChild(el("small","result-evidence","공고 원문 "+item.line+(item.endLine&&item.endLine!==item.line?"~"+item.endLine:"")+"행"));
               ul.appendChild(li);
             });
             card.appendChild(ul);
