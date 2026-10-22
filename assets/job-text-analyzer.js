@@ -29,6 +29,10 @@
   }
   function headingFor(line) {
     var t = withoutBullet(line);
+    // Headings copied from job boards can be numbered ("Ⅱ. 우대사항",
+    // "2) 우대사항", "나. 우대사항") or use decorative symbols.
+    // Strip prefixes ONLY for testing a complete heading, not ordinary text.
+    t=t.replace(/^(?:(?:[0-9]{1,3}|[IVXivx]{1,5}|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[가-하])\s*[.)．、]\s*|[※■□◆◇▶▷▸▹●○▪▫]\s*)/u,"").trim();
     var normalized=normalizeHeader(t.replace(/[:：]\s*$/, ""));
     // Job site compound headings: "[정보보호 컨설턴트] 자격요건".
     var embedded=normalized.match(/^(?:.{2,45}?[\]】)]?\s+)?(자격\s*요건|지원\s*자격|필수\s*조건|우대\s*사항|우대\s*조건)$/i);
@@ -42,6 +46,8 @@
     if(/^(?:포지션\s*상세|채용\s*정보|모집\s*공고|공고\s*상세|공고\s*정보)$/i.test(normalized))
       return {group:"unresolved",value:"",label:"표시용 제목",skip:true};
     var direct = groupForLabel(t.replace(/[:：]\s*$/, ""));
+    // Full-line marker "우대 사항" is a section boundary, not a
+    // requirement item. This must reset the active section for all next rows.
     if (direct) return { group: direct, value: "", label: t.replace(/[:：]\s*$/, "").trim() };
     var m = t.match(/^([^:：]{1,38})\s*[:：]\s*(.*)$/);
     if (m) {
