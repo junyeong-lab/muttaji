@@ -135,7 +135,15 @@
 - **프런트엔드:** `assets/ai-analysis-ui.js`가 새 'AI 의미 분석' 화면을 담당합니다. 기존 규칙 기반 결과는 그대로 유지하며 AI 결과를 별도 표시합니다.
 - **비용·개인정보:** 기본값 `AI_ANALYSIS_ENABLED` 미설정 = 비활성화, 외부 AI 호출 없음. 사용자가 별도의 외부 전송 동의 체크와 비공개 접근 코드 입력 후 직접 실행해야만 공고 텍스트(20~8,000자)가 서버에서 외부 AI Gateway로 전송됩니다. 이미지·프로필은 보내지 않습니다.
 - **접근 보호:** `AI_ANALYSIS_ACCESS_TOKEN`을 Vercel 서버 환경 변수로 설정해야 하며 비밀번호/토큰은 저장소나 정적 JS에 포함하지 않습니다. 서버에서 Origin·토큰·동의·길이를 검사합니다. 공개 서비스 사용 전 **Vercel AI Gateway 사용량 제한/예산 설정**이 별도로 필요합니다. 서버리스 환경의 단순 토큰 검증은 분산 호출량 제한을 대신하지 않습니다.
-- **활성화 조건:** 사용자 승인 후 Vercel 환경 변수 `AI_ANALYSIS_ENABLED=true`, `AI_ANALYSIS_MODEL=<검증된 provider/model ID>`, `AI_ANALYSIS_ACCESS_TOKEN=<추측하기 어려운 개인 접근 코드>` 설정 및 재배포. Vercel OIDC(`VERCEL_OIDC_TOKEN`) 또는 별도 `AI_GATEWAY_API_KEY` 인증이 필요합니다. 활성화 전에 요금 및 모델 데이터 처리 규칙을 확인해야 합니다.
+- **활성화 조건:** 사용자의 비용·외부 전송 승인과 예산 설정 이후에만 Vercel 서버 환경 변수 `AI_ANALYSIS_ENABLED=true`, `AI_ANALYSIS_MODEL=<검증된 provider/model ID>`, `AI_ANALYSIS_ACCESS_TOKEN=<충분히 긴 개인 접근 코드>`, `AI_GATEWAY_API_KEY=<뭐따지 전용 예산 설정된 키>`를 사용합니다. **OIDC 인증은 별도의 API 키 예산을 우회할 수 있으므로 사용하지 않습니다.** 실제 사용 전 제공자 데이터 처리 규칙과 모델의 JSON 스키마 지원을 확인해야 합니다.
 - **테스트:** 자동화된 서버 모의 검사에서 비활성화 시 유료 API 0회, 잘못된 접근 코드·외부 Origin·동의 없음·긴 입력 차단, 가짜 근거 제거 등 **7건 확인**. 동등한 검사용 `tests/ai-analysis-api.test.cjs` 추가.
 - **검증 범위:** GitHub 코드 및 모의 요청 처리와 Vercel 배포 상태만 확인. **유료 AI 모델 실제 호출 및 실제 AI 분석 정확도는 검증하지 않았습니다.**
 - **진행 기준:** 중간 점검 1차 제출 완료, 2차는 실제 AI 분석/역량 비교 기능 검증 후 작성할 예정.
+
+## AI Gateway 비용 보호 계획 · 2026-10-22
+
+- Vercel 공식 가이드 확인: 무료 티어는 팀당 월 $5 무료 크레딧을 제공할 수 있으나 **계정의 실제 잔액 및 결제 상태는 별도 확인**이 필요합니다. 크레딧을 구매하면 유료 티어로 전환되고 무료 월 크레딧이 중단될 수 있습니다.
+- 안전한 초기 테스트 제안: **전용 AI Gateway API key** 생성 시 총 **$1**, refresh **none**, 만료 **7d**, auto top-up **off**, BYOK **미사용**. 이는 별도 과금 없이 사용 가능함을 보장하지 않고, soft cap이므로 마지막 요청에 한해 한도를 넘길 수 있습니다.
+- Vercel Budgets 문서(2026-09-07): API key 지출 제한의 최솟값 $1, API key별 예산 검사는 새 키 생성 후 적용까지 1~2분 걸릴 수 있음. budget은 soft cap으로 제한 초과 요청 한 건이 완결될 수 있음.
+- 서버는 전용 `AI_GATEWAY_API_KEY`가 없으면 AI 기능 준비 상태를 `enabled:false`로 반환하며 유료 모델을 호출하지 않습니다. Vercel의 자동 `VERCEL_OIDC_TOKEN`은 비용 제한을 우회하지 않도록 fallback에서 제외했습니다.
+- **아직 하지 않은 일:** 사용자 계정에서 키 생성, 크레딧 구매, auto top-up 조작, 예산 설정 확인, 실제 유료 분석 호출, AI 분석 결과 품질 검증.
