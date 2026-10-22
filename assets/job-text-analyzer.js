@@ -141,7 +141,7 @@
       if(kind==="role"&&roleHeaderLabel&&/부서/.test(roleHeaderLabel))item.kindHint="모집 부서";
       out[kind].push(item);
       out.totalItems++;
-      prior={item:item,kind:kind,bullet:hasBullet};
+      prior={item:item,kind:kind,bullet:hasBullet && !/^\s*[가-하][.)]/.test(raw)};
     });
     return out;
   }
