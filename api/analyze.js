@@ -110,6 +110,11 @@ async function handler(request) {
     if(raw.length>20000)return json({error:"INPUT_TOO_LARGE"},413);
     body=JSON.parse(raw);
   }catch{return json({error:"INVALID_JSON"},400);}
+  // A local probe isolates application POST/auth/JSON processing from
+  // upstream Gateway availability. No network request or model usage.
+  if(body && body.diagnose==="local")
+    return json({diagnostic:"local_ok",serverConfigured:active(),
+      note:"서버 인증·JSON 처리가 정상입니다. 외부 AI 요청은 하지 않았습니다."});
   if(body && body.diagnose===true)return checkGatewayModel();
   if(!body || body.consent!==true || typeof body.text!=="string")return json({error:"CONSENT_OR_TEXT_MISSING"},400);
   const userText=body.text.trim();
