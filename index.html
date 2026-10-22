@@ -365,6 +365,12 @@
                   comparisonNotice.textContent="공고 분류가 수정되었습니다. 최신 결과를 반영하려면 '요건 비교하기'를 다시 눌러 주세요.";
                 }
                 showJobResult(result,hasImage);
+                // Moving an item between distant groups can look unchanged
+                // without revealing its new location.
+                var destinationIndex=groups.findIndex(function(x){return x.key===destination});
+                var destinationCard=jobResultSections.children[destinationIndex];
+                if(destinationCard&&typeof destinationCard.scrollIntoView==="function")
+                  destinationCard.scrollIntoView({behavior:"smooth",block:"nearest"});
                 message("job-message",correction.scope==="section"
                   ?"원문 기준으로 아래 "+correction.moved+"개 조건을 '"+groups.find(function(x){return x.key===destination}).label+"' 구간에 적용했습니다. 다른 구간까지 바뀌지 않았는지 확인해 주세요."
                   :"선택한 항목의 분류를 수정했습니다. 내 역량 화면에서 비교를 다시 실행하면 반영됩니다.",false);
