@@ -65,6 +65,10 @@
     .req-item textarea{min-height:92px;margin-top:7px;font-size:.85rem}
     .req-item .subtext{min-height:36px}
     .req-explain{font-size:.85rem;color:#4d5971;line-height:1.7;margin:14px 0}
+    .roadmap-certs{margin-top:14px;border:1px dashed #e6d4a7;padding:13px;border-radius:12px;background:#fffbf1;font-size:.8rem}
+    .roadmap-certs strong{display:block;margin-bottom:10px}
+    .roadmap-cert-item{margin:7px 0;line-height:1.6}
+    .roadmap-cert-item a{display:block;font-size:.79rem;color:#21435d;text-decoration:underline}
     .step-num{font-size:.72rem;font-weight:850;background:#fff3ce;color:#81651f;border-radius:999px;padding:5px 10px;display:inline-block;margin-top:16px}
     .section-top{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;margin:36px 0 24px}
     .heading-kicker{font-weight:900;color:#bb7100;font-size:.8rem;letter-spacing:.03em}.page-title{font-size:clamp(1.8rem,3.4vw,2.65rem);letter-spacing:-.07em;line-height:1.2;margin:8px 0 0}.page-intro{color:var(--muted);line-height:1.8;margin:11px 0 0}
@@ -249,15 +253,36 @@
       </div>
     </section>
     <section id="roadmap" class="panel" hidden aria-labelledby="roadmap-title">
-      <div class="section-top"><div><span class="heading-kicker">03 · 취업 준비 로드맵</span><h1 class="page-title" id="roadmap-title">막막한 준비를 차근차근</h1><p class="page-intro">준비 순서는 채용공고의 필수조건과 실제 보유역량을 확인한 뒤 정해집니다.</p></div><span class="pill">로드맵 생성 기능 개발 예정</span></div>
-      <div class="sheet"><div class="info"><b>아직 개인별 추천 결과는 없습니다.</b><br>아래 흐름은 서비스 설계도이며, 현재 사용자의 준비 상태를 평가한 결과가 아닙니다.</div>
-        <div class="timeline">
-          <div class="mile"><i>STEP 1</i><b>필수조건 확인</b><small>공고의 필수 자격·경력·기술 조건을 먼저 살펴봐요.</small></div>
-          <div class="mile"><i>STEP 2</i><b>부족한 역량 정리</b><small>보유역량과 비교해 확인이 필요한 부분을 표시해요.</small></div>
-          <div class="mile"><i>STEP 3</i><b>학습·경험 보완</b><small>자격증뿐 아니라 프로젝트와 실무 연습을 제안해요.</small></div>
-          <div class="mile"><i>STEP 4</i><b>지원 준비</b><small>경험을 포트폴리오와 지원 자료로 연결해요.</small></div>
-        </div><button type="button" class="secondary" data-go="analyze">채용공고 먼저 입력하기 <span aria-hidden="true">→</span></button>
+      <div class="section-top">
+        <div><span class="heading-kicker">04 · 맞춤형 준비 로드맵</span>
+        <h1 class="page-title" id="roadmap-title">어떤 것부터 준비할까요?</h1>
+        <p class="page-intro">사용자가 직접 확인한 요건별 상태와 근거를 바탕으로 준비 순서를 정리합니다.</p></div>
+        <span class="pill">무료 · 규칙 기반 · AI 호출 없음</span>
       </div>
+      <div class="sheet">
+        <div class="info"><strong>자동 합격 판정이나 AI 추천이 아닙니다.</strong>
+          필수조건을 먼저 살피고 직접 선택한 '미충족·부분 충족·확인 필요' 항목을 준비할 순서로 나열합니다.
+          공고에 자격증 이름이 직접 등장할 때만 기존 DB에서 후보를 연결하며, 모든 자격 정보는 공식 검증 전입니다.
+          자격증이나 실습을 실무경력으로 대체할 수는 없습니다.</div>
+        <div class="timeline">
+          <div class="mile"><i>STEP 1</i><b>공고 구분</b><small>원문의 담당업무·필수·우대 조건을 확인하고 오류를 수정</small></div>
+          <div class="mile"><i>STEP 2</i><b>내 역량 대조</b><small>실제 수행 경험과 자격증을 직접 입력하고 요건별 근거 작성</small></div>
+          <div class="mile"><i>STEP 3</i><b>준비 우선순위</b><small>필수조건과 현재 확인 상태를 기준으로 다음 행동 정리</small></div>
+          <div class="mile"><i>STEP 4</i><b>증빙 준비</b><small>프로젝트·공식 자격 정보·채용담당자 확인사항 기록</small></div>
+        </div>
+        <button id="roadmap-generate" type="button" class="primary">내 요건 비교 결과로 로드맵 만들기 <span aria-hidden="true">→</span></button>
+        <button type="button" class="secondary" data-go="profile" style="margin-left:9px">내 역량 비교로 이동</button>
+        <p id="roadmap-message" class="req-explain" hidden role="status" aria-live="polite"></p>
+      </div>
+      <section class="sheet" id="roadmap-result" hidden aria-labelledby="roadmap-result-title">
+        <span class="heading-kicker">규칙 기반 준비 가이드 · 사용자 근거 검토 필요</span>
+        <h2 id="roadmap-result-title" class="feature-title" style="margin:9px 0">나의 준비 순서</h2>
+        <p id="roadmap-count" class="result-summary" role="status"></p>
+        <div id="roadmap-actions" class="req-grid"></div>
+        <div class="info result-disclaimer">각 항목은 사용자가 입력한 사실과 상태를 정리한 실행 후보입니다.
+          자격 취득·경력·프로젝트의 진위 및 채용요건 충족 여부를 자동 확인하지 않습니다.
+          입력 데이터는 서버에 저장되지 않으며 새로고침 시 사라집니다.</div>
+      </section>
     </section>
   </main>
   <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>초기 MVP 개발 단계 · AI 추천 및 합격 확률 제공 전</div></footer>
@@ -357,6 +382,9 @@
                 try{correction=tool.reclassify(result,item,destination,scopeSelect.value);}
                 catch(error){message("job-message","분류 변경에 실패했습니다. 다시 시도해 주세요.",true);return;}
                 // Invalidate any previous self-assessment when the categories change.
+                window.MuttajiComparisonSnapshot=null;
+                var oldRoadmap=document.getElementById("roadmap-result");
+                if(oldRoadmap)oldRoadmap.hidden=true;
                 var oldComparison=document.getElementById("requirements-check");
                 if(oldComparison)oldComparison.hidden=true;
                 var comparisonNotice=document.getElementById("requirements-message");
@@ -488,5 +516,6 @@
   <script src="./assets/job-category-corrections.js"></script>
   <script src="./assets/ai-analysis-ui.js"></script>
   <script src="./assets/requirement-comparison.js"></script>
+  <script src="./assets/roadmap-builder.js"></script>
 </body>
 </html>
