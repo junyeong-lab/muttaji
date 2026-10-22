@@ -58,6 +58,15 @@
     textarea{min-height:170px;line-height:1.7;resize:vertical}.profile-area textarea{min-height:102px}
     .upload{border:2px dashed #e7d2a3;border-radius:18px;background:#fffaf0;padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
     .upload input{max-width:100%;font-size:.84rem}.upload-copy{font-size:.88rem;color:#516078;line-height:1.6}
+    .ocr-review-box{margin-top:16px;padding:18px;background:#fffef9;border:1px solid #e9d5a6;border-radius:17px}
+    .ocr-review-box[hidden]{display:none!important}
+    .ocr-review-box h3{margin:0 0 9px;font-size:1.05rem}
+    .ocr-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+    .ocr-review-card{min-width:0;border:1px solid #e9dfcf;background:white;border-radius:14px;padding:14px}
+    .ocr-review-card .label{font-size:.84rem}
+    .ocr-review-card textarea{min-height:140px;font-size:.85rem}
+    .ocr-review-card select{font-size:.84rem;margin-bottom:12px}
+    .ocr-review-notice{font-size:.86rem;line-height:1.65;color:#4a5870}
     .ocr-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}.ocr-controls button{min-height:44px;padding:11px 15px;font-size:.88rem}.ocr-controls button:disabled{opacity:.6;cursor:default}.ocr-progress{font-size:.84rem;color:#5a687d;line-height:1.6}.preview{display:none;max-width:min(290px,100%);max-height:250px;object-fit:contain;border-radius:12px;margin-top:12px}
     .message{display:none;border-radius:13px;background:#eff8f0;color:#246039;border:1px solid #cae7ce;padding:15px 17px;margin-top:20px;font-size:.9rem;line-height:1.6;white-space:pre-wrap}
     .message.warn{background:#fff7e7;color:#8b5e14;border-color:#f3dea6}.info{background:#fff9e9;border:1px solid #f0ddb4;padding:17px;border-radius:15px;color:#79603b;line-height:1.75;font-size:.89rem}
@@ -68,7 +77,7 @@
     footer{padding:34px 0;margin-top:30px;border-top:1px solid #eee4d2;color:#7a808b;font-size:.82rem;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
     .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
     @media(max-width:850px){.top{height:auto;min-height:80px;flex-wrap:wrap;padding-top:17px;padding-bottom:16px;gap:16px}.topnav{order:3;width:100%;justify-content:space-between;overflow-x:auto}.nav{font-size:.85rem;padding:10px 12px}.hero{grid-template-columns:1fr;padding:35px 0 40px;gap:30px}.hero-art{width:min(90%,400px);min-height:0}.cards,.timeline{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}
-    @media(max-width:530px){.cert-tools,.cert-grid,.result-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
+    @media(max-width:530px){.cert-tools,.cert-grid,.result-grid,.ocr-review-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
@@ -119,7 +128,14 @@
               <button type="button" class="outline" id="ocr-button" disabled>이미지 글자 추출하기</button>
               <span id="ocr-progress" class="ocr-progress" role="status" aria-live="polite">이미지를 선택해 주세요.</span>
             </div>
-            <small class="subtext">이미지 OCR은 브라우저에서 수행하고, 빈 여백을 잘라낸 뒤 표의 열을 나눠 인식합니다. 버튼 클릭 시 외부 CDN에서 OCR 코드·한글·영문 데이터를 다운로드하며 이미지는 서버로 업로드하지 않습니다. 글자 추출 결과는 정확하지 않을 수 있으니 원문과 대조해 수정해 주세요. AI 의미 분석은 아닙니다.</small>
+            <small class="subtext">이미지 OCR은 브라우저에서 수행합니다. 버튼 클릭 시 외부 CDN에서 OCR 코드·언어 데이터를 다운로드하며 이미지는 서버로 업로드하지 않습니다. 인식된 표의 열을 아래에서 직접 검토·수정한 뒤 적용합니다. AI 의미 분석은 아닙니다.</small>
+            <section id="ocr-review" class="ocr-review-box" hidden aria-labelledby="ocr-review-title">
+              <h3 id="ocr-review-title">OCR 결과 검토 · 열별 수정</h3>
+              <p class="subtext">표의 열 위치를 보고 분류를 제안할 수 있지만, <strong>직접 확인한 뒤 적용</strong>해야 합니다. 예를 들어 'ES기술부'는 회사명이 아닌 부서일 수 있습니다. 필수·우대가 섞인 열은 원문 제목을 유지하고 제목 인식 오류를 수정해 주세요.</p>
+              <div id="ocr-review-columns" class="ocr-review-grid"></div>
+              <button type="button" class="secondary" id="ocr-review-apply">검토한 텍스트 적용하기</button>
+              <div id="ocr-review-notice" class="ocr-review-notice" role="status" aria-live="polite"></div>
+            </section>
           </div>
           <button class="primary" type="submit">텍스트 1차 분석하기 <span aria-hidden="true">→</span></button><div id="job-message" class="message" role="status" aria-live="polite"></div>
         </form>
@@ -328,6 +344,7 @@
     })();
   </script>
   <script src="./assets/ocr-image-preprocess.js"></script>
+  <script src="./assets/ocr-column-review.js"></script>
   <script src="./assets/image-ocr.js"></script>
 </body>
 </html>
