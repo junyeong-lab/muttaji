@@ -16,7 +16,7 @@
     const result=reviewed && reviewed.text===posting.trim() &&
       reviewed.result && Array.isArray(reviewed.result.required) && Array.isArray(reviewed.result.preferred)
         ? reviewed.result : parser.analyze(posting);
-    return ["required","preferred"].flatMap(kind=>result[kind].map((item,index)=>({
+    return ["required","preferred"].flatMap(kind=>result[kind].filter(item=>!item.sectionHeading).map((item,index)=>({
       id:kind+"-"+index,kind,text:item.text,source:item.source,
       line:item.line,endLine:item.endLine||item.line
     })));
