@@ -13,6 +13,8 @@
   let libraryPromise = null;
   let workerPromise = null;
   let busy = false;
+  let lastExtraction = "";
+  let lastAppliedText = "";
 
   function library() {
     if (window.Tesseract && typeof window.Tesseract.createWorker === "function") {
@@ -75,24 +77,49 @@
     status.textContent = "한글·영문 OCR 프로그램과 언어 데이터 준비 중...";
     try {
       const engine = await worker();
-      const result = await engine.recognize(image);
+      if (typeof engine.setParameters === "function") {
+        // Single text column per crop; do not read four table cells as one paragraph.
+        await engine.setParameters({
+          tessedit_pageseg_mode: "4",
+          preserve_interword_spaces: "1"
+        });
+      }
+      status.textContent = "표와 여백을 분석하여 글자 인식 영역을 준비 중...";
+      const prepared = window.MuttajiOcrImage
+        ? await window.MuttajiOcrImage.prepare(image)
+        : {regions:[image],columns:1,cropped:false};
+      const parts = [];
+      for (let idx=0; idx<prepared.regions.length; idx++) {
+        status.textContent = "글자 추출 중: " + (idx+1) + "/" + prepared.regions.length +
+          (prepared.columns>1?"번째 표 열":"개 영역");
+        const result = await engine.recognize(prepared.regions[idx]);
+        const part = String(result && result.data && result.data.text || "").trim();
+        if(part) parts.push(part);
+      }
       if (!fileInput.files || fileInput.files[0] !== image) {
         status.textContent = "선택한 이미지가 바뀌어 이전 글자 추출 결과를 적용하지 않았습니다.";
         return;
       }
-      const extracted = String(result && result.data && result.data.text || "").trim();
+      const extracted = parts.join("\n\n").trim();
       if (!extracted) {
-        status.textContent = "읽어낸 글자가 없습니다. 이미지 선명도를 확인하거나 텍스트를 직접 입력해 주세요.";
+        status.textContent = "읽어낸 글자가 없습니다. 원본 이미지를 선명하게 다시 캡처하거나 텍스트를 직접 입력해 주세요.";
         return;
       }
-      const text = textInput.value.trim() ? textInput.value.trim() + "\n\n" + extracted : extracted;
+      // Re-running OCR must not append an identical previous OCR result twice.
+      let previous = textInput.value.trim();
+      if(lastExtraction && previous===lastAppliedText)previous="";
+      const text = previous ? previous+"\n\n"+extracted : extracted;
       if (text.length > 20000) {
         status.textContent = "추출 내용이 20,000자 제한을 초과했습니다. 기존 입력은 변경하지 않았습니다.";
         return;
       }
       textInput.value = text;
+      lastExtraction=extracted;
+      lastAppliedText=text;
       textInput.dispatchEvent(new Event("input", { bubbles: true }));
-      status.textContent = "추출한 " + extracted.length + "자를 텍스트 입력창에 넣었습니다. 오인식한 글자를 수정한 뒤 1차 분석을 눌러 주세요.";
+      status.textContent = prepared.columns>1
+        ? "표의 " + prepared.columns + "개 열을 나눠 읽었습니다. " + extracted.length + "자 추출 · EDR/AV·영문·숫자·줄바꿈 오류를 직접 확인해 주세요."
+        : "여백 정리·확대를 적용해 " + extracted.length + "자를 추출했습니다. 한글·영문·숫자 오류를 확인한 뒤 1차 분석을 눌러 주세요.";
       textInput.focus();
     } catch (error) {
       status.textContent = "글자 추출 실패: " + (error && error.message ? error.message : "OCR 처리에 실패했습니다.") + " 다시 시도하거나 텍스트를 직접 입력해 주세요.";
