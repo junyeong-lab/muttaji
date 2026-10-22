@@ -53,6 +53,7 @@
     const textField=document.getElementById("job-text");
     if(!panel||!container||!apply||!notice||!textField)return null;
     let lastInserted="";
+    let lastBase="";
     function reset(){panel.hidden=true;container.replaceChildren();notice.textContent="";}
     function show(raw){
       if(!Array.isArray(raw)||!raw.length){reset();return;}
@@ -86,10 +87,10 @@
         const result=compose(cols);
         if(!result){notice.textContent="입력된 문장이 없습니다. 원문을 확인해 주세요.";return;}
         let previous=textField.value.trim();
-        if(lastInserted && previous===lastInserted)previous="";
+        if(lastInserted && previous===lastInserted)previous=lastBase;
         const combined=previous?previous+"\n\n"+result:result;
         if(combined.length>20000||combined.split("\n").length>400){notice.textContent="텍스트 길이 제한을 초과했습니다. 원본 또는 기존 입력을 줄여주세요.";return;}
-        textField.value=combined;lastInserted=combined;
+        textField.value=combined;lastBase=previous;lastInserted=combined;
         textField.dispatchEvent(new Event("input",{bubbles:true}));
         notice.textContent="검토한 내용을 공고 입력창에 적용했습니다. 아래 '텍스트 1차 분석하기' 버튼을 눌러 분류 결과를 확인해 주세요.";
         textField.focus();
