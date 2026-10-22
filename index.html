@@ -48,6 +48,15 @@
     .result-line{font-size:.89rem;line-height:1.6;white-space:pre-wrap}
     .result-evidence{font-size:.73rem;color:#7d8390;display:block;margin-top:5px}
     .result-disclaimer{margin-top:20px}
+    .req-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .req-item{border:1px solid #e9dfcf;border-radius:16px;padding:18px;background:#fffdfa;min-width:0}
+    .req-item h3{font-size:.94rem;margin:0 0 10px}
+    .req-source{margin:0 0 18px;background:#fff7e5;border-left:3px solid #edbe59;border-radius:5px;padding:11px;font-size:.92rem;line-height:1.7;overflow-wrap:anywhere;white-space:pre-wrap}
+    .req-item .label{font-size:.84rem}
+    .req-item select{margin-top:7px}
+    .req-item textarea{min-height:92px;margin-top:7px;font-size:.85rem}
+    .req-item .subtext{min-height:36px}
+    .req-explain{font-size:.85rem;color:#4d5971;line-height:1.7;margin:14px 0}
     .step-num{font-size:.72rem;font-weight:850;background:#fff3ce;color:#81651f;border-radius:999px;padding:5px 10px;display:inline-block;margin-top:16px}
     .section-top{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;margin:36px 0 24px}
     .heading-kicker{font-weight:900;color:#bb7100;font-size:.8rem;letter-spacing:.03em}.page-title{font-size:clamp(1.8rem,3.4vw,2.65rem);letter-spacing:-.07em;line-height:1.2;margin:8px 0 0}.page-intro{color:var(--muted);line-height:1.8;margin:11px 0 0}
@@ -77,7 +86,7 @@
     footer{padding:34px 0;margin-top:30px;border-top:1px solid #eee4d2;color:#7a808b;font-size:.82rem;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
     .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
     @media(max-width:850px){.top{height:auto;min-height:80px;flex-wrap:wrap;padding-top:17px;padding-bottom:16px;gap:16px}.topnav{order:3;width:100%;justify-content:space-between;overflow-x:auto}.nav{font-size:.85rem;padding:10px 12px}.hero{grid-template-columns:1fr;padding:35px 0 40px;gap:30px}.hero-art{width:min(90%,400px);min-height:0}.cards,.timeline{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}
-    @media(max-width:530px){.cert-tools,.cert-grid,.result-grid,.ocr-review-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
+    @media(max-width:530px){.cert-tools,.cert-grid,.result-grid,.ocr-review-grid,.req-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
@@ -181,7 +190,7 @@
       </section>
     </section>
     <section id="profile" class="panel profile-area" hidden aria-labelledby="profile-title">
-      <div class="section-top"><div><span class="heading-kicker">02 · 나의 역량</span><h1 class="page-title" id="profile-title">지금 가진 경험부터 적어볼까요?</h1><p class="page-intro">확인할 수 있는 사실만 적어주세요. 없는 자격증이나 경력을 임의로 채우지 않습니다.</p></div><span class="pill">입력 UI 구현 · DB 미연결</span></div>
+      <div class="section-top"><div><span class="heading-kicker">02 · 나의 역량</span><h1 class="page-title" id="profile-title">지금 가진 경험부터 적어볼까요?</h1><p class="page-intro">확인할 수 있는 사실만 적어주세요. 없는 자격증이나 경력을 임의로 채우지 않습니다.</p></div><span class="pill">필수·우대 요건 직접 비교 가능</span></div>
       <form id="profile-form" class="sheet">
         <div class="two-col">
           <div class="group"><label class="label" for="goal-job">목표 직무</label><input id="goal-job" type="text" placeholder="예: 정보보안 컨설팅"></div>
@@ -196,6 +205,22 @@
         <small class="subtext">현재는 서버 저장 기능이 없습니다. 입력 내용은 이 페이지에서만 유지되며 새로고침하면 사라집니다.</small>
         <div id="profile-message" class="message" role="status" aria-live="polite"></div>
       </form>
+      <section class="sheet" aria-labelledby="requirements-title">
+        <span class="heading-kicker">현재 단계 · 보유역량과 공고 비교</span>
+        <h2 class="feature-title" id="requirements-title" style="margin:10px 0">내 역량으로 요건을 점검해 볼까요?</h2>
+        <div class="info">AI를 사용하지 않는 <strong>수동 검토 기능</strong>입니다. 공고의 필수·우대 조건을 가져오고, 사용자가 실제 이력과 대조하여 <strong>충족 / 부분 충족 / 미충족 / 확인 필요</strong>를 직접 선택합니다. 자동으로 충족을 판정하지 않으며, 선택한 상태를 인정하려면 이유·근거를 작성해야 합니다. 입력은 이 브라우저에만 있으며 서버로 전송하거나 저장하지 않습니다.</div>
+        <div class="req-explain">진행 순서: ① 채용공고 텍스트 입력 및 1차 분석 ② 내 역량 입력 ③ 아래 버튼으로 조건별 직접 검토</div>
+        <button type="button" class="primary" id="requirements-run">채용공고와 내 역량 비교하기 <span aria-hidden="true">→</span></button>
+        <p id="requirements-message" class="req-explain" role="status" aria-live="polite" hidden></p>
+      </section>
+      <section class="sheet" id="requirements-check" hidden aria-labelledby="requirements-result-title">
+        <span class="heading-kicker">필수·우대 조건별 본인 확인</span>
+        <h2 class="feature-title" id="requirements-result-title" style="margin:10px 0">요건별 확인 결과</h2>
+        <p class="req-explain">채용공고에서 확인된 항목마다 현재 상태와 근거를 직접 기록하세요. 비어 있는 근거는 '확인 필요'로 집계합니다. 자격증만으로 실무 경력 충족 판정을 해서는 안 됩니다.</p>
+        <div id="requirements-summary" class="result-summary" role="status" aria-live="polite"></div>
+        <div id="requirements-list" class="req-grid"></div>
+        <div class="info result-disclaimer">이 비교 결과는 사용자가 직접 입력한 자체 점검 기록입니다. 기재한 경험의 진위 여부를 자동 검증하지 않으며, 기업의 실제 서류·면접 합격 가능성을 평가하지 않습니다. 브라우저 새로고침 시 초기화됩니다.</div>
+      </section>
     </section>
 
     <section id="certifications" class="panel" hidden aria-labelledby="certifications-title">
@@ -316,7 +341,7 @@
         var ids=["goal-job","education","experience","certs","skills"];
         var filled=ids.filter(function(id){return !!document.getElementById(id).value.trim()}).length;
         if(!filled){message("profile-message","최소한 한 항목을 입력해 주세요.",true);return;}
-        message("profile-message","입력한 5개 항목 중 "+filled+"개 항목을 확인했습니다.\n현재는 저장·매칭 기능이 연결되지 않았습니다. 새로고침하면 입력 내용이 사라집니다.",false);
+        message("profile-message","입력한 5개 항목 중 "+filled+"개 항목을 확인했습니다.\n현재 저장 기능은 없습니다. 아래 버튼에서 공고의 필수·우대 요건을 직접 비교해 볼 수 있습니다. 새로고침하면 입력 내용이 사라집니다.",false);
       });
 
       // Static, user-provided catalog only. No claim of official validation or job eligibility.
@@ -379,5 +404,6 @@
   <script src="./assets/ocr-column-review.js"></script>
   <script src="./assets/image-ocr.js"></script>
   <script src="./assets/ai-analysis-ui.js"></script>
+  <script src="./assets/requirement-comparison.js"></script>
 </body>
 </html>
