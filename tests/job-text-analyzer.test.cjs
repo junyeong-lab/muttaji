@@ -71,7 +71,10 @@ test("실제 EDR/AV 공고 줄바꿈을 하나의 불릿으로 합쳐 2·2·2개
   assert.equal(result.responsibilities.length, 2);
   assert.equal(result.required.length, 2);
   assert.equal(result.preferred.length, 2);
-  assert.equal(result.unresolved.length, 1);
+  assert.equal(result.role.length, 1);
+  assert.equal(result.role[0].text, "ES기술부");
+  assert.equal(result.role[0].kindHint, "부서명 후보 · 직무명인지 확인 필요");
+  assert.equal(result.unresolved.length, 0);
   assert.equal(result.responsibilities[0].text, "엔드포인트 보안솔루션(EDR/AV 등) 구축 및 유지보수");
   assert.equal(result.responsibilities[0].line, 4);
   assert.equal(result.responsibilities[0].endLine, 5);
@@ -88,4 +91,26 @@ test("빈 줄·새 불릿·새 제목은 이어 붙이지 않는다", () => {
   assert.equal(result.responsibilities[1].text, "둘째 업무");
   assert.equal(result.responsibilities[2].text, "뒤 문장");
   assert.equal(result.preferred.length, 1);
+});
+
+test("첫 줄 부서 후보는 구체적 직무로 확정하지 않고 검토 표시한다", () => {
+  const result=analyze("ES기술부\n\n담당업무\n- 보안 점검");
+  assert.equal(result.company.length,0);
+  assert.equal(result.role.length,1);
+  assert.equal(result.role[0].text,"ES기술부");
+  assert.match(result.role[0].kindHint,/부서명 후보/);
+});
+test("명시적인 모집 부서 제목도 인식하지만 직무명으로 단정하지 않는다",()=>{
+  const result=analyze("모집 부서: ES기술부\n담당업무\n- 기술지원");
+  assert.equal(result.role.length,1);
+  assert.equal(result.role[0].kindHint,"모집 부서");
+});
+test("경력/자격증/회사명 등은 부서 후보로 잘못 분류하지 않는다",()=>{
+  for(const value of ["정보보안기사","대리~과장","ES기술부 솔루션 구축","ES기술부: 경력 3년 이상"]){
+    const result=analyze(value);
+    assert.equal(result.role.length,0);
+  }
+  const company=analyze("회사명: ES기술부\n담당업무\n- 기술지원");
+  assert.equal(company.company.length,1);
+  assert.equal(company.role.length,0);
 });
