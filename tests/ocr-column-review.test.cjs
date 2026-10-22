@@ -20,11 +20,12 @@ test("사용자 확인한 열별 구분을 실제 필수·우대·업무로 반�
   ]);
   const result=analyze(source);
   assert.equal(result.company.length,0);
-  assert.equal(result.role.length,0);
+  assert.equal(result.role.length,1);
+  assert.equal(result.role[0].text,"ES기술부");
   assert.equal(result.responsibilities.length,2);
   assert.equal(result.required.length,2);
   assert.equal(result.preferred.length,1);
-  assert.equal(result.unresolved.length,2);
+  assert.equal(result.unresolved.length,1);
 });
 test("인식 결과가 없는 열은 제외하고 분류 제목을 표시한다",()=>{
   assert.equal(compose([{kind:"preferred",text:"  자격증  "},{kind:"required",text:" "}]),"우대사항\n자격증");
@@ -51,7 +52,8 @@ test("OCR 열의 첫 기타와 원문 제목 유지 선택에서 가짜 '기타'
   assert.equal(result.responsibilities[0].text,"EDR/AV 구축 및 유지보수");
   assert.equal(result.required.length,1);
   assert.equal(result.preferred.length,1);
-  assert.equal(result.unresolved.length,1);
+  assert.equal(result.role.length,1);
+  assert.equal(result.unresolved.length,0);
 });
 
 test("이후에 나오는 제목 없는 기타 열은 앞 그룹으로 잘못 분류하지 않는다",()=>{
@@ -62,4 +64,12 @@ test("이후에 나오는 제목 없는 기타 열은 앞 그룹으로 잘못 �
   const result=analyze(assembled);
   assert.equal(result.responsibilities.length,1);
   assert.equal(result.unresolved.length,1);
+});
+
+test("열별 검토에서 모집 부서를 명시하면 직무·부서 결과로 보인다",()=>{
+  const result=analyze(compose([{kind:"role",text:"ES기술부"},{kind:"responsibilities",text:"- EDR/AV 운영"}]));
+  assert.equal(result.role.length,1);
+  assert.equal(result.role[0].text,"ES기술부");
+  assert.equal(result.role[0].kindHint,"모집 부서");
+  assert.equal(result.responsibilities.length,1);
 });
