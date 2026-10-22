@@ -77,7 +77,7 @@
       // Join ONLY immediately adjacent, unbulleted continuation lines of an
       // existing bullet; never join distinct bullets, section headers or blanks.
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind) {
-        prior.item.text += " "+cleaned;
+        prior.item.text += /[\/／]$/.test(prior.item.text) ? cleaned : " "+cleaned;
         prior.item.source += "\n"+original.trim();
         prior.item.endLine=ix+1;
         return;
