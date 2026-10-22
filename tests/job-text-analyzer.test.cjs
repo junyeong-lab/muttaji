@@ -114,3 +114,47 @@ test("경력/자격증/회사명 등은 부서 후보로 잘못 분류하지 않
   assert.equal(company.company.length,1);
   assert.equal(company.role.length,0);
 });
+
+test("컨설팅 채용공고 복합 제목·가나다 업무 항목을 실제 업무와 자격요건으로 분류", () => {
+  const source=[
+    "포지션 상세",
+    "정보보호 컨설턴트 주요업무",
+    "정보보호 컨설턴트(관리/기술) 가. 정보보호 관리체계 점검 및 수립",
+    "주요정보통신기반시설/전자금융기반시설 관리적 부분 취약점 점검",
+    "ISMS, ISO27001 등 정보보호 인증 컨설팅",
+    "정책지침 수립, 정보보호 감사 지원",
+    "라. 인프라 취약점 점검",
+    "서버/네트워크/보안장비/DBMS 등 정보시스템 보안설정 점검",
+    "취약점 점검을 위한 운영체제 스크립트 작성",
+    "다. 웹/모바일앱 취약점 점검",
+    "웹사이트 취약점 점검",
+    "모바일 앱/CS/HTS 취약점 점검",
+    "라. 개인정보 컨설팅",
+    "개인정보영향평가 수행 및 안전성 확보 조치 점검",
+    "ISMS-P 인증의 개인정보 영역 점검",
+    "개인정보 수준평가 및 수탁사 점검 지원",
+    "포지션 상세",
+    "[정보보호 컨설턴트] 자격요건",
+    "학력 : 초대졸 이상",
+    "경력 : 정보보호 컨설팅 2년 이상",
+    "[우대사항]",
+    "ㆍ 개인정보보호 관련 자격증 우대"
+  ].join("\n");
+  const result=analyze(source);
+  assert.equal(result.role.length,1);
+  assert.equal(result.role[0].text,"정보보호 컨설턴트");
+  assert.equal(result.responsibilities.length,14);
+  assert.equal(result.required.length,2);
+  assert.equal(result.preferred.length,1);
+  assert.equal(result.unresolved.length,0);
+  assert.deepEqual(result.responsibilities.slice(6,8).map(x=>x.text),[
+    "취약점 점검을 위한 운영체제 스크립트 작성",
+    "웹/모바일앱 취약점 점검"
+  ]);
+});
+test("회사 소개·공고 상세처럼 내용 없는 제목은 요건으로 세지 않는다",()=>{
+  const result=analyze("포지션 상세\n정보보호 컨설턴트 주요업무\n취약점 점검\n공고 상세\n[자격요건]\n경력 1년 이상");
+  assert.equal(result.responsibilities.length,1);
+  assert.equal(result.required.length,1);
+  assert.equal(result.unresolved.length,0);
+});
