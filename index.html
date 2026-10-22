@@ -51,6 +51,10 @@
     .review-inline label{font-size:.78rem;color:#64748b;font-weight:700}
     .review-inline select{width:auto;max-width:100%;min-height:34px;padding:6px 26px 6px 9px;font-size:.8rem;flex:1;min-width:125px}
     .review-note{font-size:.76rem;color:#795d24;display:block;margin-top:5px}
+    .review-range{margin-top:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .review-range select{width:auto;max-width:100%;min-width:160px;flex:1;padding:6px 22px 6px 9px;font-size:.78rem}
+    .review-range button{padding:7px 12px;font-size:.79rem;min-height:33px}
+    .review-section-heading{font-weight:700;color:#90630f;font-size:.84rem}
     .result-disclaimer{margin-top:20px}
     .req-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
     .req-item{border:1px solid #e9dfcf;border-radius:16px;padding:18px;background:#fffdfa;min-width:0}
@@ -306,15 +310,16 @@
         ];
         jobResultSections.replaceChildren();
         groups.forEach(function(group){
-          var items=result[group.key];
+          var items=result[group.key].slice().sort(function(a,b){return a.line-b.line});
           var card=el("article","result-block");
-          card.appendChild(el("h3","",group.label+" · "+items.length+"개"));
+          card.appendChild(el("h3","",group.label+" · "+items.filter(function(x){return !x.sectionHeading}).length+"개"));
           if(!items.length){card.appendChild(el("p","result-empty","명시적으로 구분된 항목이 없습니다."));}
           else {
             var ul=el("ul","result-list");
             items.forEach(function(item){
               var li=el("li","");
-              li.appendChild(el("div","result-line",item.text));
+              li.appendChild(el("div",item.sectionHeading?"result-line review-section-heading":"result-line",item.text));
+              if(item.sectionHeading)li.appendChild(el("small","review-note","구간 제목 · 요건 집계에서 제외됩니다."));
               if(item.kindHint&&!item.manualReviewed)li.appendChild(el("small","result-evidence","※ "+item.kindHint));
               li.appendChild(el("small","result-evidence","공고 원문 "+item.line+(item.endLine&&item.endLine!==item.line?"~"+item.endLine:"")+"행"));
               if(item.manualReviewed)li.appendChild(el("small","review-note","✓ 사용자가 직접 분류를 변경했습니다."));
@@ -328,30 +333,54 @@
                 correctionSelect.appendChild(opt);
               });
               correctionSelect.value=group.key;
-              correctionSelect.addEventListener("change",function(){
+              var scopeLine=el("div","review-range");
+              var scopeLabel=el("label","","적용 범위");
+              var scopeSelect=el("select","","");
+              scopeSelect.setAttribute("aria-label",item.text.slice(0,45)+" 분류 변경 범위");
+              var single=el("option","","이 항목만");
+              single.value="single";scopeSelect.appendChild(single);
+              var section=el("option","","이 항목부터 다음 제목 전까지");
+              section.value="section";scopeSelect.appendChild(section);
+              var isMarker=window.MuttajiJobCorrections&&window.MuttajiJobCorrections.headingType(item.text);
+              scopeSelect.value=isMarker||item.sectionHeading?"section":"single";
+              var apply=el("button","","구간 적용");
+              apply.type="button";
+              function applyCorrection(){
                 var destination=correctionSelect.value;
-                if(destination===group.key)return;
-                var oldIndex=result[group.key].indexOf(item);
-                if(oldIndex<0)return;
-                result[group.key].splice(oldIndex,1);
-                item.manualReviewed=true;
-                result[destination].push(item);
-                // Any previously generated self-assessment is now stale.
-                var priorComparison=document.getElementById("requirements-check");
-                if(priorComparison)priorComparison.hidden=true;
+                var tool=window.MuttajiJobCorrections;
+                if(!tool){
+                  message("job-message","분류 수정 기능을 불러오지 못했습니다. 페이지를 새로고침해 주세요.",true);
+                  return;
+                }
+                if(destination===group.key && scopeSelect.value==="single")return;
+                var correction;
+                try{correction=tool.reclassify(result,item,destination,scopeSelect.value);}
+                catch(error){message("job-message","분류 변경에 실패했습니다. 다시 시도해 주세요.",true);return;}
+                // Invalidate any previous self-assessment when the categories change.
+                var oldComparison=document.getElementById("requirements-check");
+                if(oldComparison)oldComparison.hidden=true;
                 var comparisonNotice=document.getElementById("requirements-message");
                 if(comparisonNotice){
                   comparisonNotice.hidden=false;
-                  comparisonNotice.textContent="공고 분류를 수정했습니다. 최신 분류를 반영하려면 요건 비교를 다시 실행해 주세요.";
+                  comparisonNotice.textContent="공고 분류가 수정되었습니다. 최신 결과를 반영하려면 '요건 비교하기'를 다시 눌러 주세요.";
                 }
                 showJobResult(result,hasImage);
-                var note=document.getElementById("job-message");
-                note.style.display="block";
-                note.classList.remove("warn");
-                note.textContent="선택한 항목의 분류를 직접 수정했습니다. '내 역량'에서 비교를 다시 실행하면 이 수정 결과가 반영됩니다.";
+                message("job-message",correction.scope==="section"
+                  ?"원문 기준으로 아래 "+correction.moved+"개 조건을 '"+groups.find(function(x){return x.key===destination}).label+"' 구간에 적용했습니다. 다른 구간까지 바뀌지 않았는지 확인해 주세요."
+                  :"선택한 항목의 분류를 수정했습니다. 내 역량 화면에서 비교를 다시 실행하면 반영됩니다.",false);
+              }
+              correctionSelect.addEventListener("change",applyCorrection);
+              apply.addEventListener("click",function(){
+                scopeSelect.value="section";
+                applyCorrection();
               });
+              scopeLine.appendChild(scopeLabel);
+              scopeLine.appendChild(scopeSelect);
+              scopeLine.appendChild(apply);
               editor.appendChild(correctionLabel);
               editor.appendChild(correctionSelect);
+              editor.appendChild(scopeLine);
+
               li.appendChild(editor);
               ul.appendChild(li);
             });
@@ -359,8 +388,8 @@
           }
           jobResultSections.appendChild(card);
         });
-        var classified=result.responsibilities.length+result.required.length+result.preferred.length;
-        jobResultSummary.textContent="원문 "+result.sourceLines+"개 행 중 담당업무·필수·우대 항목 "+classified+"개를 분류했습니다. 미분류·기타 "+result.unresolved.length+"개. 분류가 틀린 항목은 바로 아래에서 변경할 수 있습니다."+(hasImage?" 이미지는 직접 분석하지 않았으며, 텍스트 입력창의 내용만 분류했습니다.":"")+" 모든 항목은 원문 확인이 필요합니다.";
+        var classified=["responsibilities","required","preferred"].reduce(function(n,k){return n+result[k].filter(function(x){return !x.sectionHeading}).length},0);
+        jobResultSummary.textContent="원문 "+result.sourceLines+"개 행 중 담당업무·필수·우대 항목 "+classified+"개를 분류했습니다. 미분류·기타 "+result.unresolved.filter(function(x){return !x.sectionHeading}).length+"개. 항목의 분류와 적용 범위를 아래에서 변경할 수 있습니다."+(hasImage?" 이미지는 직접 분석하지 않았으며, 텍스트 입력창의 내용만 분류했습니다.":"")+" 모든 항목은 원문 확인이 필요합니다.";
         jobResult.hidden=false;
       }
       document.getElementById("job-form").addEventListener("submit",function(e){e.preventDefault();
@@ -450,6 +479,7 @@
   <script src="./assets/ocr-image-preprocess.js"></script>
   <script src="./assets/ocr-column-review.js"></script>
   <script src="./assets/image-ocr.js"></script>
+  <script src="./assets/job-category-corrections.js"></script>
   <script src="./assets/ai-analysis-ui.js"></script>
   <script src="./assets/requirement-comparison.js"></script>
 </body>
