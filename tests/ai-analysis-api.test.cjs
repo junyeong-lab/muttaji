@@ -66,3 +66,42 @@ test("model JSON is validated against exact quote in posting",async()=>{
   assert.equal(output.needsHumanReview,true);
   assert.equal(calls,1);
 });
+
+test("no-inference diagnostic verifies configured model via GET only",async()=>{
+  let calls=[];
+  const api=load(on,async(url,init)=>{
+    calls.push({url,method:init.method});
+    return {ok:true,text:async()=>JSON.stringify({data:[{id:"openai/gpt-4o-mini"},{id:"other/model"}]})};
+  });
+  const r=await api.fetch(request("POST",{diagnose:true}));
+  assert.equal(r.status,200);
+  const result=await r.json();
+  assert.equal(result.diagnostic,"ready");
+  assert.equal(result.credentialAccepted,true);
+  assert.equal(result.modelListed,false); // the test env intentionally uses provider/model
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].method,"GET");
+  assert.equal(calls[0].url,"https://ai-gateway.vercel.sh/v1/models");
+});
+test("diagnostic also requires private application access code",async()=>{
+  let calls=0;
+  const api=load(on,async()=>{calls++;throw Error("unexpected Gateway request")});
+  const r=await api.fetch(request("POST",{diagnose:true},"wrong-code"));
+  assert.equal(r.status,403);
+  assert.equal(calls,0);
+});
+test("Gateway rejection safely exposes status, never private upstream message",async()=>{
+  const api=load(on,async()=>({
+    ok:false,status:402,text:async()=>JSON.stringify({
+      error:{type:"quota_for_entity_exceeded",message:"PRIVATE ACCOUNT DATA NEVER DISPLAY"}
+    })
+  }));
+  const r=await api.fetch(request("POST",{
+    text:"ES기술부 담당업무 엔드포인트 보안솔루션 구축",consent:true
+  }));
+  assert.equal(r.status,502);
+  const out=await r.json();
+  assert.equal(out.gatewayStatus,402);
+  assert.equal(out.gatewayCode,"quota_for_entity_exceeded");
+  assert.equal(JSON.stringify(out).includes("PRIVATE ACCOUNT DATA"),false);
+});
