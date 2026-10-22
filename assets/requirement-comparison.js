@@ -100,6 +100,7 @@
         const select=el("select","req-verdict");
         const selectId="req-verdict-"+i;select.id=selectId;selectLabel.htmlFor=selectId;
         verdicts.forEach(v=>{const opt=el("option","",v);opt.value=v;select.appendChild(opt);});
+        select.value="확인 필요";
         selectLabel.appendChild(select);
         card.appendChild(selectLabel);
         const reasonLabel=el("label","label","판단 근거 또는 부족한 점");
