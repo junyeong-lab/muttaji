@@ -231,7 +231,7 @@
       function showJobResult(result,hasImage){
         var groups=[
           {key:"company",label:"기업명"},
-          {key:"role",label:"모집 직무"},
+          {key:"role",label:"모집 직무·부서"},
           {key:"responsibilities",label:"담당업무"},
           {key:"required",label:"필수조건"},
           {key:"preferred",label:"우대사항"},
@@ -248,6 +248,7 @@
             items.forEach(function(item){
               var li=el("li","");
               li.appendChild(el("div","result-line",item.text));
+              if(item.kindHint)li.appendChild(el("small","result-evidence","※ "+item.kindHint));
               li.appendChild(el("small","result-evidence","공고 원문 "+item.line+(item.endLine&&item.endLine!==item.line?"~"+item.endLine:"")+"행"));
               ul.appendChild(li);
             });
