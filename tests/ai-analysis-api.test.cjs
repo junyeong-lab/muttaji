@@ -105,3 +105,21 @@ test("Gateway rejection safely exposes status, never private upstream message",a
   assert.equal(out.gatewayCode,"quota_for_entity_exceeded");
   assert.equal(JSON.stringify(out).includes("PRIVATE ACCOUNT DATA"),false);
 });
+
+test("local-only diagnostic validates auth and never calls upstream",async()=>{
+  let calls=0;
+  const api=load(on,async()=>{calls++;throw Error("unexpected upstream")});
+  const response=await api.fetch(request("POST",{diagnose:"local"}));
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.equal(body.diagnostic,"local_ok");
+  assert.equal(body.serverConfigured,true);
+  assert.equal(calls,0);
+});
+test("local-only diagnostic rejects invalid password before any upstream",async()=>{
+  let calls=0;
+  const api=load(on,async()=>{calls++;throw Error("unexpected upstream")});
+  const response=await api.fetch(request("POST",{diagnose:"local"},"incorrect"));
+  assert.equal(response.status,403);
+  assert.equal(calls,0);
+});
