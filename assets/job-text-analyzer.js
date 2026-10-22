@@ -30,11 +30,11 @@
   function headingFor(line) {
     var t = withoutBullet(line);
     var direct = groupForLabel(t.replace(/[:：]\s*$/, ""));
-    if (direct) return { group: direct, value: "" };
+    if (direct) return { group: direct, value: "", label: t.replace(/[:：]\s*$/, "").trim() };
     var m = t.match(/^([^:：]{1,38})\s*[:：]\s*(.*)$/);
     if (m) {
       var group = groupForLabel(m[1]);
-      if (group) return { group: group, value: m[2].trim() };
+      if (group) return { group: group, value: m[2].trim(), label: m[1].trim() };
     }
     return null;
   }
