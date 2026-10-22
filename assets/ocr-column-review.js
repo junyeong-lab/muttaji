@@ -15,7 +15,7 @@
     {value:"preferred",label:"우대사항"},
     {value:"headings",label:"원문 속 제목(필수·우대 등) 유지"}
   ];
-  const headings={unresolved:"기타",responsibilities:"담당업무",required:"필수 자격요건",preferred:"우대사항",headings:"기타"};
+  const headings={unresolved:"기타",responsibilities:"담당업무",required:"필수 자격요건",preferred:"우대사항",headings:""};
   function normalize(part){
     const text=String(part==null?"":part).replace(/\r\n?/g,"\n").trim();
     return text;
@@ -27,7 +27,18 @@
       const value=normalize(column.text);
       if(!value)continue;
       if(!Object.prototype.hasOwnProperty.call(headings,column.kind))throw new Error("분류를 선택해 주세요.");
-      blocks.push(headings[column.kind]+"\n"+value);
+      // The initial unlabeled column is already unresolved by default.
+      // "원문 속 제목 유지" must NOT insert a fake "기타" heading.
+      // When later unlabeled content follows a categorized block, reset the section
+      // to avoid accidentally treating a department or grade as a requirement.
+      if (column.kind === "headings") {
+        const startsWithKnownHeading = /^(?:[\[【(]?\s*(?:자격\s*요건|지원\s*자격|필수\s*(?:자격\s*)?요건|필수\s*조건|필수|우대\s*사항|우대|담당\s*업무|주요\s*업무)\s*[\]】)]?\s*(?:[:：]|\n|$))/i.test(value);
+        blocks.push(startsWithKnownHeading || blocks.length === 0 ? value : "기타\n"+value);
+      } else if (column.kind === "unresolved" && blocks.length === 0) {
+        blocks.push(value);
+      } else {
+        blocks.push(headings[column.kind]+"\n"+value);
+      }
     }
     const output=blocks.join("\n\n");
     if(output.length>20000)throw new RangeError("20,000자 제한을 초과했습니다. 텍스트를 줄여주세요.");
