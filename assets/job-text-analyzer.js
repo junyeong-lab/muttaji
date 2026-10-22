@@ -14,8 +14,10 @@
     { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus)$/i },
     { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*방법|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
   ];
+  // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
+  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■▶]|(?:\d{1,2}[.)]))\s*/;
   function withoutBullet(s) {
-    return s.replace(/^\s*(?:[-*•·▪◦◆■▶]|(?:\d{1,2}[.)]))\s*/, "").trim();
+    return s.replace(BULLET, "").trim();
   }
   function normalizeHeader(s) {
     return s.replace(/^\s*#{1,5}\s*/, "").replace(/^[\s[【(]+|[\s\]】)]+$/g, "").replace(/\s+/g, " ").trim();
@@ -51,24 +53,39 @@
     var section="unresolved";
     var lines=text.split("\n");
     if (lines.length > 400) throw new RangeError("최대 400줄까지 분석할 수 있습니다.");
+    var prior=null;
     lines.forEach(function(original, ix) {
       var raw=original.trim();
-      if(!raw)return;
+      // A blank line separates paragraphs even if the previous item was bulleted.
+      if(!raw){prior=null;return;}
       out.sourceLines++;
       var head=headingFor(raw);
       if (head) {
         section=head.group;
+        prior=null;
         if (!head.value) return;
         raw=head.value;
       }
+      var hasBullet=BULLET.test(raw);
       var cleaned=withoutBullet(raw);
-      if (!cleaned) return;
+      if (!cleaned) {prior=null;return;}
       var kind=head?head.group:section;
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if (!head && kind==="unresolved") kind=directGroup(cleaned)||"unresolved";
-      out[kind].push({ text: cleaned, line: ix+1, source: original.trim() });
+      // OCR often wraps a long bullet over two or more physical lines.
+      // Join ONLY immediately adjacent, unbulleted continuation lines of an
+      // existing bullet; never join distinct bullets, section headers or blanks.
+      if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind) {
+        prior.item.text += " "+cleaned;
+        prior.item.source += "\n"+original.trim();
+        prior.item.endLine=ix+1;
+        return;
+      }
+      var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim()};
+      out[kind].push(item);
       out.totalItems++;
+      prior={item:item,kind:kind,bullet:hasBullet};
     });
     return out;
   }
