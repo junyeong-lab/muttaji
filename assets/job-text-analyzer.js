@@ -60,6 +60,7 @@
     var text = input.replace(/\r\n?/g,"\n");
     var out = { method: "rule-based", company: [], role: [], responsibilities: [], required: [], preferred: [], unresolved: [], totalItems: 0, sourceLines: 0 };
     var section="unresolved";
+    var roleHeaderLabel=null;
     var lines=text.split("\n");
     if (lines.length > 400) throw new RangeError("최대 400줄까지 분석할 수 있습니다.");
     var prior=null;
@@ -71,6 +72,7 @@
       var head=headingFor(raw);
       if (head) {
         section=head.group;
+        roleHeaderLabel=section==="role"?head.label:null;
         prior=null;
         if (!head.value) return;
         raw=head.value;
@@ -102,7 +104,7 @@
       }
       var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim()};
       if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
-      if(head&&kind==="role"&&/부서/.test(head.label||""))item.kindHint="모집 부서";
+      if(kind==="role"&&roleHeaderLabel&&/부서/.test(roleHeaderLabel))item.kindHint="모집 부서";
       out[kind].push(item);
       out.totalItems++;
       prior={item:item,kind:kind,bullet:hasBullet};
