@@ -10,12 +10,13 @@
   "use strict";
   const options=[
     {value:"unresolved",label:"확인 필요 / 부서·직급 등"},
+    {value:"role",label:"모집 직무·부서"},
     {value:"responsibilities",label:"담당업무"},
     {value:"required",label:"필수조건"},
     {value:"preferred",label:"우대사항"},
     {value:"headings",label:"원문 속 제목(필수·우대 등) 유지"}
   ];
-  const headings={unresolved:"기타",responsibilities:"담당업무",required:"필수 자격요건",preferred:"우대사항",headings:""};
+  const headings={unresolved:"기타",role:"모집 부서",responsibilities:"담당업무",required:"필수 자격요건",preferred:"우대사항",headings:""};
   function normalize(part){
     const text=String(part==null?"":part).replace(/\r\n?/g,"\n").trim();
     return text;
