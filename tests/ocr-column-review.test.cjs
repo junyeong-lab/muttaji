@@ -36,3 +36,30 @@ test("20,000자 또는 400줄 제한을 지킨다",()=>{
   assert.throws(()=>compose([{kind:"unresolved",text:"a".repeat(21000)}]),RangeError);
   assert.throws(()=>compose([{kind:"unresolved",text:("a\n").repeat(402)}]),RangeError);
 });
+
+test("OCR 열의 첫 기타와 원문 제목 유지 선택에서 가짜 '기타' 제목을 넣지 않는다",()=>{
+  const assembled=compose([
+    {kind:"unresolved",text:"ES기술부"},
+    {kind:"responsibilities",text:"ㆍ EDR/AV 구축 및\n유지보수"},
+    {kind:"headings",text:"[자격 요건]\nㆍ 보안솔루션 구축 경험\n[우대 사항]\nㆍ Threat Hunting"}
+  ]);
+  assert.equal(assembled.startsWith("기타\n"),false);
+  assert.equal(assembled.includes("기타\n[자격 요건]"),false);
+  assert.equal(assembled.includes("\n\n[자격 요건]"),true);
+  const result=analyze(assembled);
+  assert.equal(result.responsibilities.length,1);
+  assert.equal(result.responsibilities[0].text,"EDR/AV 구축 및 유지보수");
+  assert.equal(result.required.length,1);
+  assert.equal(result.preferred.length,1);
+  assert.equal(result.unresolved.length,1);
+});
+
+test("이후에 나오는 제목 없는 기타 열은 앞 그룹으로 잘못 분류하지 않는다",()=>{
+  const assembled=compose([
+    {kind:"responsibilities",text:"ㆍ 로그 분석"},
+    {kind:"unresolved",text:"ES기술부"}
+  ]);
+  const result=analyze(assembled);
+  assert.equal(result.responsibilities.length,1);
+  assert.equal(result.unresolved.length,1);
+});
