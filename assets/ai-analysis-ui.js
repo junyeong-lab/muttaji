@@ -43,27 +43,73 @@
   textInput.addEventListener("input",()=>{clear();controlsState();});
   consent.addEventListener("change",controlsState);
   access.addEventListener("input",()=>{diagnosticStatus.textContent="";controlsState();});
+  // Parse API errors conservatively. Non-JSON Vercel 5xx pages must never
+  // masquerade as unspecified Gateway authentication errors.
+  async function diagnosticRequest(payload){
+    let response;
+    try{
+      response=await fetch("/api/analyze",{
+        method:"POST",headers:{"content-type":"application/json","x-ai-access-token":access.value},
+        body:JSON.stringify(payload),cache:"no-store",
+        signal:AbortSignal.timeout(15000)
+      });
+    }catch(error){
+      return {ok:false,kind:error?.name==="TimeoutError"?"CLIENT_TIMEOUT":"NETWORK_ERROR",
+        label:error?.name==="TimeoutError"?"서버 응답이 15초 안에 도착하지 않았습니다.":"서버 요청이 네트워크 단계에서 실패했습니다."};
+    }
+    const contentType=response.headers.get("content-type")||"";
+    if(!/\bapplication\/(?:[a-z0-9.+-]*\+)?json\b/i.test(contentType)){
+      return {ok:false,kind:"NON_JSON_RESPONSE",status:response.status,
+        label:"서버가 JSON 대신 다른 형식의 응답을 보냈습니다 (HTTP "+response.status+", "+(/html/i.test(contentType)?"HTML":"Content-Type 확인 필요")+")."};
+    }
+    let result;
+    try{result=await response.json();}
+    catch{
+      return {ok:false,kind:"INVALID_JSON_RESPONSE",status:response.status,
+        label:"서버의 JSON 응답을 해석하지 못했습니다 (HTTP "+response.status+")."};
+    }
+    if(!response.ok){
+      const detail=result.gatewayStatus?" / Gateway HTTP "+result.gatewayStatus:"";
+      const rawCode=String(result.error||"UNKNOWN_ERROR");
+      const safeCode=/^[A-Z0-9_]{1,60}$/.test(rawCode)?rawCode:"UNKNOWN_ERROR";
+      const gatewayCode=typeof result.gatewayCode==="string" && /^[a-zA-Z0-9_.-]{1,60}$/.test(result.gatewayCode)?" / "+result.gatewayCode:"";
+      return {ok:false,kind:safeCode,status:response.status,
+        label:"서버 응답 HTTP "+response.status+" / "+safeCode+detail+gatewayCode+
+          ". "+(typeof result.message==="string"?result.message.slice(0,150):"")};
+    }
+    return {ok:true,data:result};
+  }
   diagnosticButton.addEventListener("click",async function(){
     if(!enabled||busy||!access.value)return;
-    busy=true;controlsState();diagnosticStatus.textContent="키와 모델 목록을 확인하고 있습니다. 모델 생성 요청은 하지 않습니다.";
+    busy=true;controlsState();
+    diagnosticStatus.textContent="1/2단계: 앱 서버 요청·접근 코드를 확인하고 있습니다.";
     try{
-      const response=await fetch("/api/analyze",{
-        method:"POST",headers:{"content-type":"application/json","x-ai-access-token":access.value},
-        body:JSON.stringify({diagnose:true}),cache:"no-store"
-      });
-      const output=await response.json();
-      if(!response.ok){
-        diagnosticStatus.textContent="연결 진단 실패: "+(output.message||"Gateway HTTP "+(output.gatewayStatus||response.status))+
-          " (AI 텍스트 분석은 실행하지 않았습니다.)";
-      }else if(output.diagnostic==="ready"){
-        diagnosticStatus.textContent=output.modelListed?
-          "연결 진단 통과: API 키가 승인됐고 설정된 모델이 목록에 있습니다. AI 생성 요청은 하지 않았습니다.":
-          "API 키 인증은 통과했지만 설정한 모델이 목록에 없습니다. 관리자에게 모델 이름 확인이 필요합니다. AI 생성 요청은 하지 않았습니다.";
-      }else{
-        diagnosticStatus.textContent="연결 확인 응답 형식이 예상과 다릅니다. 모델 생성 요청은 하지 않았습니다.";
+      const local=await diagnosticRequest({diagnose:"local"});
+      if(!local.ok){
+        diagnosticStatus.textContent="1/2단계 · 앱 서버 점검 실패: "+local.label+
+          " AI Gateway 연결은 시도하지 않았습니다.";
+        return;
       }
-    }catch(e){
-      diagnosticStatus.textContent="진단 실패: 연결이나 서버 응답을 확인하지 못했습니다. 유료 모델 요청은 실행하지 않았습니다.";
+      if(local.data.diagnostic!=="local_ok"){
+        diagnosticStatus.textContent="1/2단계 · 서버에서 예상과 다른 진단 응답이 왔습니다. 새로고침 후 다시 실행해 주세요.";
+        return;
+      }
+      diagnosticStatus.textContent="1/2단계 · 앱 서버 정상. 2/2단계: AI Gateway 인증·모델 목록을 확인하고 있습니다.";
+      const gateway=await diagnosticRequest({diagnose:true});
+      if(!gateway.ok){
+        diagnosticStatus.textContent="1/2단계 · 앱 서버 정상. 2/2단계 · Gateway 연결 실패: "+
+          gateway.label+" 모델 생성 요청은 실행하지 않았습니다.";
+        return;
+      }
+      if(gateway.data.diagnostic==="ready"){
+        diagnosticStatus.textContent=gateway.data.modelListed
+          ?"1/2단계 · 앱 서버 정상. 2/2단계 · Gateway 키 인증 및 모델 목록 확인 완료. 유료 AI 생성은 실행하지 않았습니다."
+          :"1/2단계 · 앱 서버 정상. 2/2단계 · Gateway 키 인증 성공, 하지만 설정한 모델이 목록에 없습니다. 유료 AI 생성은 실행하지 않았습니다.";
+      }else{
+        diagnosticStatus.textContent="1/2단계 · 앱 서버 정상. 2/2단계 · Gateway 응답 형식이 예상과 다릅니다.";
+      }
+    }catch{
+      diagnosticStatus.textContent="진단 UI 처리 중 오류가 발생했습니다. 페이지를 새로고침하고 다시 시도해 주세요.";
     }finally{busy=false;controlsState()}
   });
   async function check(){
