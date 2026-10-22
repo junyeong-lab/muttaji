@@ -119,7 +119,7 @@
               <button type="button" class="outline" id="ocr-button" disabled>이미지 글자 추출하기</button>
               <span id="ocr-progress" class="ocr-progress" role="status" aria-live="polite">이미지를 선택해 주세요.</span>
             </div>
-            <small class="subtext">이미지 OCR은 브라우저에서 수행하며, 버튼 클릭 시 외부 CDN에서 OCR 코드와 한글·영문 언어 데이터를 다운로드합니다. 이미지를 OCR 서버로 업로드하지 않습니다. 인식 결과는 오류가 있을 수 있으며 AI 분석은 아닙니다.</small>
+            <small class="subtext">이미지 OCR은 브라우저에서 수행하고, 빈 여백을 잘라낸 뒤 표의 열을 나눠 인식합니다. 버튼 클릭 시 외부 CDN에서 OCR 코드·한글·영문 데이터를 다운로드하며 이미지는 서버로 업로드하지 않습니다. 글자 추출 결과는 정확하지 않을 수 있으니 원문과 대조해 수정해 주세요. AI 의미 분석은 아닙니다.</small>
           </div>
           <button class="primary" type="submit">텍스트 1차 분석하기 <span aria-hidden="true">→</span></button><div id="job-message" class="message" role="status" aria-live="polite"></div>
         </form>
@@ -327,6 +327,7 @@
       });
     })();
   </script>
+  <script src="./assets/ocr-image-preprocess.js"></script>
   <script src="./assets/image-ocr.js"></script>
 </body>
 </html>
