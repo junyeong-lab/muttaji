@@ -1,0 +1,35 @@
+name: Migrate original approved poster assets
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/migrate-muttaji-assets.yml]
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout standalone repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: true
+      - name: Download verified poster assets from original public repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          base="https://raw.githubusercontent.com/junyeong-lab/Project/1b7cf4b9dc44132d0ab9555e72f4f272a442126d/muttaji/assets"
+          curl --fail --show-error --silent --location --retry 3 "$base/muttaji-poster.webp" --output assets/muttaji-poster.webp
+          curl --fail --show-error --silent --location --retry 3 "$base/brand-poster.webp" --output assets/brand-poster.webp
+          test "$(git hash-object assets/muttaji-poster.webp)" = "5f26dd124af08c1bcd720a16fd3821448c88df05"
+          test "$(git hash-object assets/brand-poster.webp)" = "1e4c5ac4f38b0a55e4eaf2f3e7fe863a9555439f"
+      - name: Commit original poster files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add assets/muttaji-poster.webp assets/brand-poster.webp
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: copy original approved poster images from Project/muttaji"
+          git push origin HEAD:main
