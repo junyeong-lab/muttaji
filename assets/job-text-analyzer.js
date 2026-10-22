@@ -8,7 +8,7 @@
   "use strict";
   var CATEGORY = [
     { group: "company", label: /^(?:기업명|회사명|회사|기업)$/i },
-    { group: "role", label: /^(?:모집\s*(?:직무|분야|포지션)|직무\s*명|직무|포지션)$/i },
+    { group: "role", label: /^(?:모집\s*(?:직무|분야|포지션|부서)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
     { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일)$/i },
     { group: "required", label: /^(?:필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications)$/i },
     { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus)$/i },
@@ -45,6 +45,15 @@
     if (/^(?:담당\s*업무|주요\s*업무)\s*[:：\s]/.test(s)) return "responsibilities";
     return null;
   }
+  // A short, unlabeled organization/team name at the top of a posting is
+  // only a candidate for a recruiting department, NEVER a verified job title.
+  // No keyword matching against skills or certifications here.
+  function organizationCandidate(value) {
+    var v=String(value||"").trim();
+    return v.length>=3 && v.length<=26
+      && /^[A-Za-z0-9가-힣·&/_+ -]+(?:사업부|기술부|본부|센터|팀|실|부)$/.test(v)
+      && !/\s{2,}|[:：]/.test(v);
+  }
   function analyze(input) {
     if (typeof input !== "string") throw new TypeError("채용공고는 문자열이어야 합니다.");
     if (input.length > 20000) throw new RangeError("최대 20,000자까지 분석할 수 있습니다.");
@@ -70,6 +79,15 @@
       var cleaned=withoutBullet(raw);
       if (!cleaned) {prior=null;return;}
       var kind=head?head.group:section;
+      var candidate=false;
+      // The first unlabeled short team name (e.g. "ES기술부") may be a
+      // recruiting department. Surface it in the shared role/department card
+      // with an explicit candidate flag rather than hiding it under 기타.
+      if (!head && !hasBullet && section==="unresolved" &&
+          out.totalItems===0 && organizationCandidate(cleaned)) {
+        kind="role";
+        candidate=true;
+      }
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if (!head && kind==="unresolved") kind=directGroup(cleaned)||"unresolved";
@@ -83,6 +101,8 @@
         return;
       }
       var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim()};
+      if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
+      if(head&&kind==="role"&&/부서/.test(head.label||""))item.kindHint="모집 부서";
       out[kind].push(item);
       out.totalItems++;
       prior={item:item,kind:kind,bullet:hasBullet};
