@@ -134,6 +134,12 @@
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if (!head && kind==="unresolved") kind=directGroup(cleaned)||"unresolved";
+      // A short typo/variant that starts like a section title should remain
+      // independently reviewable, not be merged into the preceding bullet.
+      // Do NOT silently assume it is a valid heading or a preferred criterion.
+      var suspectedHeading=!head&&!hasBullet&&
+        /^(?:우대|필수|자격|지원)[가-힣\s]{0,8}$/.test(cleaned)&&cleaned.length<=15;
+      if(suspectedHeading)prior=null;
       // OCR often wraps a long bullet over two or more physical lines.
       // Join ONLY immediately adjacent, unbulleted continuation lines of an
       // existing bullet; never join distinct bullets, section headers or blanks.
@@ -146,6 +152,7 @@
       }
       var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim(),sectionLine:sectionLine};
       if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
+      if(suspectedHeading)item.kindHint="제목으로 보이는 문구 · 분류 및 아래 구간을 확인해 주세요";
       if(kind==="role"&&roleHeaderLabel&&/부서/.test(roleHeaderLabel))item.kindHint="모집 부서";
       out[kind].push(item);
       out.totalItems++;
