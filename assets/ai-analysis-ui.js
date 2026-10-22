@@ -8,10 +8,12 @@
   const access=document.getElementById("ai-access");
   const button=document.getElementById("ai-run");
   const feedback=document.getElementById("ai-feedback");
+  const diagnosticButton=document.getElementById("ai-test-connection");
+  const diagnosticStatus=document.getElementById("ai-test-result");
   const results=document.getElementById("ai-results");
   const summary=document.getElementById("ai-result-summary");
   const cards=document.getElementById("ai-result-cards");
-  if(!textInput||!availability||!controls||!consent||!access||!button||!feedback||!results||!summary||!cards)return;
+  if(!textInput||!availability||!controls||!consent||!access||!button||!feedback||!diagnosticButton||!diagnosticStatus||!results||!summary||!cards)return;
   const categories=[
     {key:"company",label:"기업명"},
     {key:"department",label:"모집 부서"},
@@ -36,10 +38,34 @@
   function controlsState(){
     const length=textInput.value.trim().length;
     button.disabled=!enabled||busy||!consent.checked||!access.value||length<20||length>8000;
+    diagnosticButton.disabled=!enabled||busy||!access.value;
   }
   textInput.addEventListener("input",()=>{clear();controlsState();});
   consent.addEventListener("change",controlsState);
-  access.addEventListener("input",controlsState);
+  access.addEventListener("input",()=>{diagnosticStatus.textContent="";controlsState();});
+  diagnosticButton.addEventListener("click",async function(){
+    if(!enabled||busy||!access.value)return;
+    busy=true;controlsState();diagnosticStatus.textContent="키와 모델 목록을 확인하고 있습니다. 모델 생성 요청은 하지 않습니다.";
+    try{
+      const response=await fetch("/api/analyze",{
+        method:"POST",headers:{"content-type":"application/json","x-ai-access-token":access.value},
+        body:JSON.stringify({diagnose:true}),cache:"no-store"
+      });
+      const output=await response.json();
+      if(!response.ok){
+        diagnosticStatus.textContent="연결 진단 실패: "+(output.message||"Gateway HTTP "+(output.gatewayStatus||response.status))+
+          " (AI 텍스트 분석은 실행하지 않았습니다.)";
+      }else if(output.diagnostic==="ready"){
+        diagnosticStatus.textContent=output.modelListed?
+          "연결 진단 통과: API 키가 승인됐고 설정된 모델이 목록에 있습니다. AI 생성 요청은 하지 않았습니다.":
+          "API 키 인증은 통과했지만 설정한 모델이 목록에 없습니다. 관리자에게 모델 이름 확인이 필요합니다. AI 생성 요청은 하지 않았습니다.";
+      }else{
+        diagnosticStatus.textContent="연결 확인 응답 형식이 예상과 다릅니다. 모델 생성 요청은 하지 않았습니다.";
+      }
+    }catch(e){
+      diagnosticStatus.textContent="진단 실패: 연결이나 서버 응답을 확인하지 못했습니다. 유료 모델 요청은 실행하지 않았습니다.";
+    }finally{busy=false;controlsState()}
+  });
   async function check(){
     try{
       const response=await fetch("/api/analyze",{method:"GET",cache:"no-store"});
