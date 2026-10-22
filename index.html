@@ -315,7 +315,7 @@
             items.forEach(function(item){
               var li=el("li","");
               li.appendChild(el("div","result-line",item.text));
-              if(item.kindHint)li.appendChild(el("small","result-evidence","※ "+item.kindHint));
+              if(item.kindHint&&!item.manualReviewed)li.appendChild(el("small","result-evidence","※ "+item.kindHint));
               li.appendChild(el("small","result-evidence","공고 원문 "+item.line+(item.endLine&&item.endLine!==item.line?"~"+item.endLine:"")+"행"));
               if(item.manualReviewed)li.appendChild(el("small","review-note","✓ 사용자가 직접 분류를 변경했습니다."));
               var editor=el("div","review-inline");
@@ -336,6 +336,14 @@
                 result[group.key].splice(oldIndex,1);
                 item.manualReviewed=true;
                 result[destination].push(item);
+                // Any previously generated self-assessment is now stale.
+                var priorComparison=document.getElementById("requirements-check");
+                if(priorComparison)priorComparison.hidden=true;
+                var comparisonNotice=document.getElementById("requirements-message");
+                if(comparisonNotice){
+                  comparisonNotice.hidden=false;
+                  comparisonNotice.textContent="공고 분류를 수정했습니다. 최신 분류를 반영하려면 요건 비교를 다시 실행해 주세요.";
+                }
                 showJobResult(result,hasImage);
                 var note=document.getElementById("job-message");
                 note.style.display="block";
