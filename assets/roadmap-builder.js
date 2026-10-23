@@ -30,6 +30,53 @@
       verification:"공식 세부정보 미검증 · 원문 자격요건과 별도 대조 필요"
     }));
   }
+  // Small, explainable, human-review-only links. Both the exact requirement
+  // phrase and an exact skills field token must be present, no AI inference.
+  const skillRules=[
+    {id:"privacy",pattern:/개인정보(?:보호|처리|관리|영향평가|보안)/i,skills:["개인정보보호"],fields:["개인정보보호"],limit:1},
+    {id:"privacyLaw",pattern:/개인정보\s*보호법/i,skills:["개인정보보호법"],fields:["개인정보보호"],limit:1},
+    {id:"networkSecurity",pattern:/네트워크\s*보안/i,skills:["네트워크보안"],fields:["정보보안","네트워크"],limit:2},
+    {id:"systemSecurity",pattern:/시스템\s*보안/i,skills:["시스템보안"],fields:["정보보안","시스템"],limit:2},
+    {id:"vulnerability",pattern:/취약점\s*(?:분석|진단|점검)/i,skills:["취약점분석"],fields:["정보보안"],limit:1},
+    {id:"sql",pattern:/(?:^|[^a-z0-9])sql(?![a-z0-9])/i,skills:["SQL"],fields:["데이터"],limit:1},
+    {id:"database",pattern:/데이터베이스|(?:^|[^a-z])dbms(?![a-z])/i,skills:["데이터베이스"],fields:["데이터","IT"],limit:2},
+    {id:"linux",pattern:/리눅스|linux/i,skills:["Linux"],fields:["시스템"],limit:1},
+    {id:"networkBuild",pattern:/네트워크\s*구축/i,skills:["네트워크구축"],fields:["네트워크"],limit:1},
+    {id:"networkDesign",pattern:/네트워크\s*설계/i,skills:["네트워크설계"],fields:["네트워크"],limit:1},
+    {id:"dataAnalysis",pattern:/데이터\s*분석/i,skills:["데이터분석"],fields:["데이터분석"],limit:1},
+    {id:"cloud",pattern:/클라우드\s*(?:기초|개념|이해)/i,skills:["클라우드개념"],fields:["클라우드"],limit:2}
+  ];
+  function relatedSkillCandidates(requirement,certifications,profileCerts,alreadyNamed){
+    if(!Array.isArray(certifications))return [];
+    const text=String(requirement||"");
+    // A qualification cannot substitute for required years or hands-on work.
+    if(/(?:실무\s*경력|동종\s*경력|경력\s*[0-9]|[0-9]+\s*년\s*이상|구축\s*및\s*유지관리\s*경험|[가-힣]+\s*경험\s*보유)/i.test(text))return [];
+    const results=[],seen=new Set(alreadyNamed||[]);
+    for(const rule of skillRules){
+      const match=text.match(rule.pattern);
+      if(!match)continue;
+      let count=0;
+      for(const cert of certifications){
+        if(count>=rule.limit||results.length>=3)break;
+        if(!cert||cert.verification_status!=="needs_official_review"||
+           cert.name==="ISMS-P 인증심사원"||seen.has(cert.name)||
+           !rule.fields.includes(cert.field))continue;
+        const fields=String(cert.skills||"").split(";").map(norm);
+        const tag=rule.skills.find(skill=>fields.includes(norm(skill)));
+        if(!tag)continue;
+        seen.add(cert.name);count++;
+        results.push({
+          id:cert.id,name:cert.name,field:cert.field||"분야 확인 필요",
+          official_url:/^https:\/\/[a-z0-9.-]+(?:\/|$)/i.test(cert.official_url||"")?cert.official_url:null,
+          heldClaim:tokens(cert).some(t=>norm(profileCerts).includes(t)),
+          relation:"related_skill",matchedPhrase:match[0].trim(),skillEvidence:tag,
+          verification:"사용자 작성 DB의 관련 역량 참고 후보 · 공식 정보 미검증 · 자격요건 충족 의미 아님"
+        });
+      }
+      if(results.length>=3)break;
+    }
+    return results;
+  }
   function action(item){
     const t=norm(item.text),s=item.status;
     if(s==="충족")return "직접 선택하신 충족 판단의 근거 문서·수행 역할·기간을 정리하고, 공고의 표현과 정확히 일치하는지 재확인하세요.";
@@ -49,12 +96,16 @@
       const aGroup=a.item.kind==="required"?0:1,bGroup=b.item.kind==="required"?0:1;
       return aGroup-bGroup || priority[a.item.status]-priority[b.item.status]||a.index-b.index;
     });
-    return ordered.map(({item},index)=>({
-      sequence:index+1,kind:item.kind,status:item.status,requirement:String(item.text||""),
-      line:item.line??null,reason:String(item.explanation||""),
-      action:action(item),certificates:explicitCertMatches(item.text,certifications,profileCerts),
-      requiresValidation:true
-    }));
+    return ordered.map(({item},index)=>{
+      const directlyNamed=explicitCertMatches(item.text,certifications,profileCerts)
+        .map(c=>({...c,relation:"explicit",matchedPhrase:c.name,skillEvidence:null}));
+      const related=item.status==="충족"?[]:
+        relatedSkillCandidates(item.text,certifications,profileCerts,directlyNamed.map(c=>c.name));
+      return {sequence:index+1,kind:item.kind,status:item.status,
+        requirement:String(item.text||""),line:item.line??null,
+        reason:String(item.explanation||""),action:action(item),
+        certificates:[...directlyNamed,...related],requiresValidation:true};
+    });
   }
   function create(){
     const generate=document.getElementById("roadmap-generate");
@@ -109,10 +160,13 @@
           }
           if(step.certificates.length){
             const section=el("div","roadmap-certs");
-            section.appendChild(el("strong","", "원문에 직접 언급된 자격증 후보 (공식 검증 전)"));
+            section.appendChild(el("strong","", "자격증 DB 연결 · 공고 직접 언급 / 관련 역량 참고 (공식 검증 전)"));
             for(const cert of step.certificates){
               const text=cert.name+(cert.heldClaim?" · 보유 입력에 언급됨":" · 실제 보유·응시 가능 여부 확인");
               const p=el("p","roadmap-cert-item",text);
+              p.appendChild(el("small","subtext",cert.relation==="related_skill"
+                ?"관련 역량 참고: 공고 표현 '"+cert.matchedPhrase+"' ↔ DB 기술 '"+cert.skillEvidence+"' · 채용요건 충족과 무관"
+                :"공고에 자격증명이 직접 등장 · 취득·공식 요건 확인 필요"));
               if(cert.official_url){
                 const a=el("a","","입력된 운영기관 홈페이지 ↗");
                 a.href=cert.official_url;a.target="_blank";a.rel="noopener noreferrer";
@@ -120,7 +174,7 @@
               }
               section.appendChild(p);
             }
-            section.appendChild(el("small","subtext","자격증 DB가 공식 검증 전이므로 자동 추천·요건 충족 판정이 아닙니다."));
+            section.appendChild(el("small","subtext","DB의 관련 역량 태그와 공고 원문만으로 연결한 참고 후보입니다. 공식 정보 미검증이며 자격 취득·응시 가능 여부 또는 실무경력을 인정하지 않습니다."));
             card.appendChild(section);
           }
           list.appendChild(card);
@@ -138,5 +192,5 @@
     return {generatePlan};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {build,explicitCertMatches,action};
+  return {build,explicitCertMatches,relatedSkillCandidates,action};
 });
