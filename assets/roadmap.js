@@ -90,7 +90,7 @@
             const fulfilled=item.status==="충족";
             const card=node("article",fulfilled?"roadmap-task roadmap-task--fulfilled":"roadmap-task");
             card.appendChild(node("p",fulfilled?"roadmap-rank roadmap-rank--fulfilled":"roadmap-rank",
-              fulfilled?"✓ 충족! · "+item.category+" · 본인 입력 기준":"우선 확인 "+item.priority+" · "+item.category+" · "+item.status));
+              fulfilled?"✓ 충족 · "+item.category+" · 본인 입력 기준":"우선 확인 "+item.priority+" · "+item.category+" · "+item.status));
             card.appendChild(node("h4","roadmap-item-title",item.text));
             if(item.line)card.appendChild(node("small","subtext","채용공고 원문 "+item.line+"행"));
             card.appendChild(node("p","roadmap-action",fulfilled

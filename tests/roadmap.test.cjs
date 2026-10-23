@@ -77,7 +77,7 @@ test("브라우저 이벤트로 로드맵 갱신·비교 취소 시 초기화",(
     "확인 필요 · 2개","미충족 · 1개","부분 충족 · 1개","충족 · 2개"
   ]);
   assert.match(elements["roadmap-list"].children[0].children[1].children[0].children[1].textContent,/서버 관리 역량/);
-  assert.match(elements["roadmap-list"].children[3].children[1].children[0].children[0].textContent,/충족!/);
+  assert.match(elements["roadmap-list"].children[3].children[1].children[0].children[0].textContent,/충족/);
   handlers["muttaji:comparison-changed"]({detail:{items:null}});
   assert.equal(elements["roadmap-results"].hidden,true);
   assert.equal(elements["roadmap-empty"].hidden,false);
