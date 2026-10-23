@@ -65,6 +65,12 @@
     .req-item textarea{min-height:92px;margin-top:7px;font-size:.85rem}
     .req-item .subtext{min-height:36px}
     .req-explain{font-size:.85rem;color:#4d5971;line-height:1.7;margin:14px 0}
+    .roadmap-list{display:grid;gap:13px;margin:18px 0}
+    .roadmap-task{border:1px solid #e9dfcf;border-radius:16px;background:#fffdfa;padding:20px}
+    .roadmap-rank{margin:0 0 8px;font-weight:850;font-size:.8rem;color:#966312}
+    .roadmap-task h3{font-size:1rem;line-height:1.55;overflow-wrap:anywhere;margin:0 0 10px}
+    .roadmap-action{margin:11px 0 0;font-size:.89rem;line-height:1.7;color:#34475e}
+    .roadmap-evidence{margin:10px 0 0;font-size:.83rem;line-height:1.6;color:#63728a;white-space:pre-wrap;overflow-wrap:anywhere}
     .step-num{font-size:.72rem;font-weight:850;background:#fff3ce;color:#81651f;border-radius:999px;padding:5px 10px;display:inline-block;margin-top:16px}
     .section-top{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;margin:36px 0 24px}
     .heading-kicker{font-weight:900;color:#bb7100;font-size:.8rem;letter-spacing:.03em}.page-title{font-size:clamp(1.8rem,3.4vw,2.65rem);letter-spacing:-.07em;line-height:1.2;margin:8px 0 0}.page-intro{color:var(--muted);line-height:1.8;margin:11px 0 0}
@@ -132,7 +138,7 @@
       <div class="cards">
         <article class="card"><div class="feature-icon" aria-hidden="true">🔎</div><h3>채용공고 분석</h3><p>공고 속 필수 지원자격과 우대사항을 구분해 쉽게 설명해요.</p><span class="step-num">텍스트 1차 분류 제공 · AI 예정</span></article>
         <article class="card"><div class="feature-icon" aria-hidden="true">🎓</div><h3>자격증·역량 추천</h3><p>내가 가진 역량과 공고의 요구사항을 비교하고 관련 자격정보를 찾아요.</p><span class="step-num">공식 DB 검증 예정</span></article>
-        <article class="card"><div class="feature-icon" aria-hidden="true">🗺️</div><h3>맞춤형 취업 로드맵</h3><p>무작정 자격증부터 따기보다 중요한 조건부터 준비 순서를 정해요.</p><span class="step-num">로드맵 생성 예정</span></article>
+        <article class="card"><div class="feature-icon" aria-hidden="true">🗺️</div><h3>맞춤형 취업 로드맵</h3><p>무작정 자격증부터 따기보다 중요한 조건부터 준비 순서를 정해요.</p><span class="step-num">비교 결과 기반 준비 순서 제공</span></article>
       </div>
     </section>
     <section id="analyze" class="panel" hidden aria-labelledby="analyze-title">
@@ -228,6 +234,7 @@
         <p class="req-explain">자격증명만으로 이루어진 조건은 보유 자격증 입력을 근거로 자동 표시됩니다. 나머지 조건은 직접 검토해 주세요. 자격증 취득만으로 실무 경력이나 학력 요건을 충족했다고 판단하지 않습니다.</p>
         <div id="requirements-summary" class="result-summary" role="status" aria-live="polite"></div>
         <div id="requirements-list" class="req-grid"></div>
+        <button type="button" class="secondary" data-go="roadmap" style="margin-top:18px">비교 결과로 준비 순서 확인하기 →</button>
         <div class="info result-disclaimer">이 비교 결과는 본인이 입력한 자격증명과 공고 문구의 규칙 기반 일치 여부를 포함한 자체 점검 기록입니다. 보유 자격증의 증빙은 별도 확인이 필요하며, 기업의 실제 지원 자격 인정이나 합격 가능성을 평가하지 않습니다. 내 역량 입력만 이 브라우저에 저장되며 비교 결과는 새로고침 시 다시 실행해야 합니다.</div>
       </section>
     </section>
@@ -250,15 +257,19 @@
       </div>
     </section>
     <section id="roadmap" class="panel" hidden aria-labelledby="roadmap-title">
-      <div class="section-top"><div><span class="heading-kicker">03 · 취업 준비 로드맵</span><h1 class="page-title" id="roadmap-title">막막한 준비를 차근차근</h1><p class="page-intro">준비 순서는 채용공고의 필수조건과 실제 보유역량을 확인한 뒤 정해집니다.</p></div><span class="pill">로드맵 생성 기능 개발 예정</span></div>
-      <div class="sheet"><div class="info"><b>아직 개인별 추천 결과는 없습니다.</b><br>아래 흐름은 서비스 설계도이며, 현재 사용자의 준비 상태를 평가한 결과가 아닙니다.</div>
-        <div class="timeline">
-          <div class="mile"><i>STEP 1</i><b>필수조건 확인</b><small>공고의 필수 자격·경력·기술 조건을 먼저 살펴봐요.</small></div>
-          <div class="mile"><i>STEP 2</i><b>부족한 역량 정리</b><small>보유역량과 비교해 확인이 필요한 부분을 표시해요.</small></div>
-          <div class="mile"><i>STEP 3</i><b>학습·경험 보완</b><small>자격증뿐 아니라 프로젝트와 실무 연습을 제안해요.</small></div>
-          <div class="mile"><i>STEP 4</i><b>지원 준비</b><small>경험을 포트폴리오와 지원 자료로 연결해요.</small></div>
-        </div><button type="button" class="secondary" data-go="analyze">채용공고 먼저 입력하기 <span aria-hidden="true">→</span></button>
-      </div>
+      <div class="section-top"><div><span class="heading-kicker">04 · 취업 준비 로드맵</span><h1 class="page-title" id="roadmap-title">지금 확인할 것부터 차근차근</h1><p class="page-intro">채용공고와 내 역량 비교 결과를 바탕으로 필수조건부터 확인·보완할 순서를 정리합니다.</p></div><span class="pill">규칙 기반 · AI 추천 아님</span></div>
+      <section class="sheet" id="roadmap-empty" aria-labelledby="roadmap-empty-title">
+        <h2 id="roadmap-empty-title" class="feature-title">아직 비교한 결과가 없어요</h2>
+        <div class="info">먼저 채용공고의 필수·우대 조건과 내 역량을 비교해 주세요. 요건별 상태를 입력하면 이 브라우저에서만 준비 순서가 생성됩니다. 비교 결과는 새로고침하면 사라지며 자동으로 경력이나 합격 가능성을 평가하지 않습니다.</div>
+        <button type="button" class="secondary" data-go="profile" style="margin-top:17px">내 역량 비교 화면으로 이동하기 →</button>
+      </section>
+      <section class="sheet" id="roadmap-results" hidden aria-labelledby="roadmap-results-title">
+        <h2 id="roadmap-results-title" class="feature-title">나의 요건별 준비 순서</h2>
+        <p id="roadmap-summary" class="result-summary" role="status" aria-live="polite"></p>
+        <div id="roadmap-list" class="roadmap-list" aria-label="우선순위별 준비 항목"></div>
+        <div id="roadmap-notice" class="info result-disclaimer"></div>
+        <button type="button" class="outline" data-go="profile" style="margin-top:18px">비교 상태·근거 다시 수정하기 →</button>
+      </section>
     </section>
   </main>
   <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>초기 MVP 개발 단계 · AI 추천 및 합격 확률 제공 전</div></footer>
@@ -295,6 +306,9 @@
       function clearJobResult(){
         jobResult.hidden=true;
         window.MuttajiReviewedPosting=null;
+        var existingComparison=document.getElementById("requirements-check");
+        if(existingComparison)existingComparison.hidden=true;
+        window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
         document.getElementById("job-message").style.display="none";
       }
       function showJobResult(result,hasImage){
@@ -360,6 +374,7 @@
                 // Invalidate any previous self-assessment when the categories change.
                 var oldComparison=document.getElementById("requirements-check");
                 if(oldComparison)oldComparison.hidden=true;
+                window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
                 var comparisonNotice=document.getElementById("requirements-message");
                 if(comparisonNotice){
                   comparisonNotice.hidden=false;
@@ -446,6 +461,7 @@
         profileFieldsToStore.forEach(function(id){document.getElementById(id).value="";});
         try{localStorage.removeItem(profileStorageKey);}catch(error){}
         document.getElementById("requirements-check").hidden=true;
+        window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
         message("profile-message","이 브라우저에 저장된 내 역량 정보를 삭제하고 입력란을 비웠습니다.",false);
       });
       document.getElementById("profile-form").addEventListener("submit",function(e){e.preventDefault();
@@ -517,5 +533,6 @@
   <script src="./assets/job-category-corrections.js"></script>
   <script src="./assets/ai-analysis-ui.js"></script>
   <script src="./assets/requirement-comparison.js"></script>
+  <script src="./assets/roadmap.js"></script>
 </body>
 </html>
