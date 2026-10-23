@@ -200,16 +200,26 @@
       for(const group of (step.alternativeCertGroups||[])){
         if(!Array.isArray(group)||group.length<2)continue;
         for(const name of group)groupedNames.add(name);
+        // The profile is user-entered data: display a claim, not proof of
+        // certificate ownership or fulfillment of an educational condition.
+        const entered=cands.filter(c=>group.includes(c.name)&&c.heldClaim).map(c=>c.name);
+        const claimNotice=entered.length
+          ?"내 역량의 보유 자격증란에 입력됨: "+entered.join(", ")+" (실제 취득·유효성 미확인). "
+          :"내 역량의 보유 자격증란에서 일치하는 자격 이름을 찾지 못했습니다. ";
         add("자격증","choose-"+group.join("-"),"공고 명시 자격 확인(택1): "+group.join(" 또는 "),
-          "공고에서 'or/또는'로 연결된 대체 자격입니다. 모두 취득할 필요는 없지만 전공·학력 등 공고의 다른 조건은 별도 확인해야 합니다. 발급기관 공식 요건과 실제 취득 여부를 확인하세요.");
+          claimNotice+"공고에서 'or/또는'로 연결된 대체 자격입니다. 두 자격을 모두 취득할 필요는 없지만 학력·전공 등 조건의 적용 여부는 별도로 확인하세요. 실제 취득·유효성과 발급기관 공식 요건을 확인하세요. 이 입력만으로 채용요건을 자동 충족 처리하지 않습니다.");
       }
       for(const cert of cands.filter(c=>c&&c.relation==="explicit"&&!groupedNames.has(c.name)).slice(0,2)){
+        const claimNotice=cert.heldClaim
+          ?"내 역량의 보유 자격증란에 '"+cert.name+"' 입력됨 (실제 취득·유효성 미확인). "
+          :"내 역량의 보유 자격증란에서 '"+cert.name+"' 일치 항목을 찾지 못했습니다. ";
         add("자격증","explicit-"+String(cert.id),"공고 명시 자격 확인: "+cert.name,
-          "발급기관의 최신 공식 요건을 확인하고 실제 취득 여부·유효성을 따로 기록하세요.");
+          claimNotice+"발급기관의 최신 공식 요건을 확인하고 실제 취득·유효성을 따로 기록하세요. 체크 표시가 채용요건 충족을 뜻하지 않습니다.");
       }
       if(step.status!=="충족"&&!isExperience){
         const related=cands.find(c=>c&&c.relation==="related_skill");
         if(related)add("자격증","related-"+String(related.id),"관련 자격 참고 검토: "+related.name,
+          (related.heldClaim?"내 역량의 보유 자격증란에 이름 입력됨 (실제 취득 미확인). ":"")+
           "공고 문구 '"+related.matchedPhrase+"'와 DB 역량 '"+related.skillEvidence+"'의 관련성을 본인이 검토하세요. 공식 정보 검증 전이며 채용요건 충족을 뜻하지 않습니다.");
       }
     }
