@@ -45,6 +45,30 @@
       verification:"공식 세부정보 미검증 · 원문 자격요건과 별도 대조 필요"
     }));
   }
+  // Only group alternatives explicitly joined by "or"/"또는"/"혹은".
+  // This is an informational label; never infer eligibility from this alone.
+  function alternativeCertGroups(requirement,named){
+    if(!Array.isArray(named)||named.length<2)return [];
+    const text=norm(requirement);
+    const occurrences=named.map(cert=>{
+      const needle=norm(cert.name),start=text.indexOf(needle);
+      return {name:cert.name,start,end:start+needle.length};
+    }).filter(x=>x.start>=0).sort((a,b)=>a.start-b.start);
+    const groups=[];
+    let current=[];
+    for(let i=1;i<occurrences.length;i++){
+      const left=occurrences[i-1],right=occurrences[i];
+      const joiner=text.slice(left.end,right.start);
+      if(/^\s*(?:or|또는|혹은)\s*$/i.test(joiner)){
+        if(!current.length)current=[left.name];
+        if(!current.includes(right.name))current.push(right.name);
+      }else if(current.length>=2){
+        groups.push(current);current=[];
+      }
+    }
+    if(current.length>=2)groups.push(current);
+    return groups;
+  }
   // Small, explainable, human-review-only links. Both the exact requirement
   // phrase and an exact skills field token must be present, no AI inference.
   const skillRules=[
@@ -114,12 +138,13 @@
     return ordered.map(({item},index)=>{
       const directlyNamed=explicitCertMatches(item.text,certifications,profileCerts)
         .map(c=>({...c,relation:"explicit",matchedPhrase:c.name,skillEvidence:null}));
+      const alternativeGroups=alternativeCertGroups(item.text,directlyNamed);
       const related=item.status==="충족"?[]:
         relatedSkillCandidates(item.text,certifications,profileCerts,directlyNamed.map(c=>c.name));
       return {sequence:index+1,kind:item.kind,status:item.status,
         requirement:String(item.text||""),line:item.line??null,
         reason:String(item.explanation||""),action:action(item),
-        certificates:[...directlyNamed,...related],requiresValidation:true};
+        certificates:[...directlyNamed,...related],alternativeCertGroups:alternativeGroups,requiresValidation:true};
     });
   }
   const taskCategories=["학습","프로젝트","자격증","지원 준비"];
@@ -171,7 +196,14 @@
       // Explicit certificate names are employer requirements; related ones
       // are only background reading candidates from an unverified workbook.
       const cands=Array.isArray(step.certificates)?step.certificates:[];
-      for(const cert of cands.filter(c=>c&&c.relation==="explicit").slice(0,2)){
+      const groupedNames=new Set();
+      for(const group of (step.alternativeCertGroups||[])){
+        if(!Array.isArray(group)||group.length<2)continue;
+        for(const name of group)groupedNames.add(name);
+        add("자격증","choose-"+group.join("-"),"공고 명시 자격 확인(택1): "+group.join(" 또는 "),
+          "공고에서 'or/또는'로 연결된 대체 자격입니다. 모두 취득할 필요는 없지만 전공·학력 등 공고의 다른 조건은 별도 확인해야 합니다. 발급기관 공식 요건과 실제 취득 여부를 확인하세요.");
+      }
+      for(const cert of cands.filter(c=>c&&c.relation==="explicit"&&!groupedNames.has(c.name)).slice(0,2)){
         add("자격증","explicit-"+String(cert.id),"공고 명시 자격 확인: "+cert.name,
           "발급기관의 최신 공식 요건을 확인하고 실제 취득 여부·유효성을 따로 기록하세요.");
       }
@@ -332,6 +364,9 @@
           if(step.certificates.length){
             const section=el("div","roadmap-certs");
             section.appendChild(el("strong","", "자격증 DB 연결 · 공고 직접 언급 / 관련 역량 참고 (공식 검증 전)"));
+            for(const group of (step.alternativeCertGroups||[])){
+              section.appendChild(el("p","review-note","원문에 명시된 대체 자격(택1): "+group.join(" 또는 ")+". 전공·학력 등 다른 요구사항도 별도로 확인하세요."));
+            }
             for(const cert of step.certificates){
               const text=cert.name+(cert.heldClaim?" · 자격증 입력란에 이름 있음(취득 확인 필요)":" · 실제 보유·응시 가능 여부 확인");
               const p=el("p","roadmap-cert-item",text);
@@ -363,5 +398,5 @@
     return {generatePlan};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {build,explicitCertMatches,relatedSkillCandidates,action,planTasks,taskCounts,formatChecklist,taskCategories};
+  return {build,explicitCertMatches,alternativeCertGroups,relatedSkillCandidates,action,planTasks,taskCounts,formatChecklist,taskCategories};
 });
