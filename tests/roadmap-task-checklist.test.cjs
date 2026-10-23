@@ -72,3 +72,46 @@ test("잘못된 작업 입력 거부, 빈 작업에도 카테고리는 유지",(
   assert.equal(empty.total,0);
   assert.equal(empty.byCategory["지원 준비"].total,0);
 });
+
+test("정보처리기사 or 정보보안기사는 동시에 필요한 두 작업이 아니라 택1 작업",()=>{
+  const catalog=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  const text="학력 : 초대졸 이상 (정보통신 비전공자 및 초대졸의 경우, 정보처리기사 or 정보보안기사 자격증 보유 必)";
+  const steps=build([{kind:"required",status:"확인 필요",text,line:13}],catalog,"정보처리기사");
+  assert.deepEqual(steps[0].alternativeCertGroups,[["정보처리기사","정보보안기사"]]);
+  assert.equal(steps[0].certificates.length,2);
+  assert.equal(steps[0].certificates.find(x=>x.name==="정보처리기사").heldClaim,true);
+  const certTasks=planTasks(steps).filter(x=>x.category==="자격증");
+  assert.equal(certTasks.length,1);
+  assert.match(certTasks[0].title,/\(택1\).*정보처리기사 또는 정보보안기사/);
+  assert.match(certTasks[0].detail,/전공·학력/);
+  const output=formatChecklist(planTasks(steps),new Set());
+  assert.equal((output.match(/공고 명시 자격 확인/g)||[]).length,1);
+});
+
+test("공고에서 자격증 두 개를 쉼표로 나열하면 택1이라고 임의 판단하지 않는다",()=>{
+  const catalog=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  const steps=build([{kind:"preferred",status:"확인 필요",text:"정보처리기사, 정보보안기사 우대"}],catalog,"");
+  assert.deepEqual(steps[0].alternativeCertGroups,[]);
+  assert.equal(planTasks(steps).filter(x=>x.category==="자격증").length,2);
+});
+
+test("또는으로 연결된 대체 자격과 별도 요건의 자격은 구분한다",()=>{
+  const catalog=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  const steps=build([
+    {kind:"required",status:"확인 필요",text:"정보처리기사 또는 정보보안기사 자격증 보유"},
+    {kind:"preferred",status:"확인 필요",text:"정보보안기사 자격 보유자 우대"}
+  ],catalog,"");
+  const tasks=planTasks(steps).filter(x=>x.category==="자격증");
+  assert.equal(tasks.length,2);
+  assert.match(tasks[0].title,/택1/);
+  assert.equal(tasks[1].title,"공고 명시 자격 확인: 정보보안기사");
+});
