@@ -51,6 +51,12 @@
       return node;
     };
     let current=[],sourceText="",sourceProfile="";
+    function invalidateRoadmap(){
+      const result=document.getElementById("roadmap-result");
+      if(result)result.hidden=true;
+      const notice=document.getElementById("roadmap-message");
+      if(notice){notice.hidden=false;notice.textContent="요건별 평가가 변경됐습니다. 최신 비교 결과로 로드맵을 다시 생성해 주세요.";}
+    }
     window.MuttajiComparisonSnapshot=null;
     function snapshot(){
       return profileFields.map(id=>String(document.getElementById(id)?.value||"")).join("\n---\n");
@@ -64,6 +70,7 @@
     }
     function update(){
       const outcomes=collect();
+      invalidateRoadmap();
       const total=tally(outcomes);
       // In-memory snapshot used by the separate roadmap screen. Never uploaded.
       window.MuttajiComparisonSnapshot={posting:sourceText,profile:sourceProfile,
@@ -84,6 +91,7 @@
       if(job.value!==sourceText||snapshot()!==sourceProfile){
         panel.hidden=true;
         window.MuttajiComparisonSnapshot=null;
+        invalidateRoadmap();
         help.textContent="채용공고 또는 프로필이 변경되었습니다. 아래 '요건 비교하기'를 다시 눌러 최신 내용으로 검토하세요.";
         help.hidden=false;
       }
@@ -92,6 +100,7 @@
     button.addEventListener("click",()=>{
       list.replaceChildren();panel.hidden=true;
       window.MuttajiComparisonSnapshot=null;
+      invalidateRoadmap();
       const parser=window.JobTextAnalyzer;
       if(!parser){help.textContent="공고 분류기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.";help.hidden=false;return;}
       const text=job.value.trim();
