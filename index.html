@@ -89,21 +89,20 @@
     .group{margin:19px 0}.label{font-weight:850;display:block;margin-bottom:10px;font-size:.93rem}.subtext{display:block;color:var(--muted);font-size:.8rem;margin-top:8px;line-height:1.6}
     textarea,input[type=text],input[type=password],select{width:100%;border:1px solid #dfe4ea;border-radius:13px;padding:14px 15px;outline:none;background:#fcfdff;color:#14213d}
     textarea{min-height:170px;line-height:1.7;resize:vertical}.profile-area textarea{min-height:102px}
-    .upload{border:2px dashed #e7d2a3;border-radius:18px;background:#fffaf0;padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-    .upload input{max-width:100%;font-size:.84rem}.upload-copy{font-size:.88rem;color:#516078;line-height:1.6}
-    .ocr-review-box{margin-top:16px;padding:18px;background:#fffef9;border:1px solid #e9d5a6;border-radius:17px}
-    .ocr-review-box[hidden]{display:none!important}
-    .ocr-review-box h3{margin:0 0 9px;font-size:1.05rem}
-    .ocr-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
-    .ocr-review-card{min-width:0;border:1px solid #e9dfcf;background:white;border-radius:14px;padding:14px}
-    .ocr-review-card .label{font-size:.84rem}
-    .ocr-review-card textarea{min-height:140px;font-size:.85rem}
-    .ocr-review-card select{font-size:.84rem;margin-bottom:12px}
-    .ocr-review-notice{font-size:.86rem;line-height:1.65;color:#4a5870}
-    .ocr-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}.ocr-controls button{min-height:44px;padding:11px 15px;font-size:.88rem}.ocr-controls button:disabled{opacity:.6;cursor:default}.ocr-progress{font-size:.84rem;color:#5a687d;line-height:1.6}
-    #ocr-mode{max-width:260px;font-size:.83rem}
-    .ocr-source-link{display:inline-block;margin:9px 0;text-decoration:underline;color:#21435d;font-weight:700;font-size:.86rem}
-    .ocr-source-link[hidden]{display:none!important}.preview{display:none;max-width:min(290px,100%);max-height:250px;object-fit:contain;border-radius:12px;margin-top:12px}
+    .external-ocr-guide{margin-top:20px;padding:18px;border:1px solid #e9d5a6;border-radius:17px;background:#fffaf0}
+    .external-ocr-guide h3{margin:0 0 10px;font-size:1.03rem}
+    .external-ocr-guide a{color:#18517c;text-decoration:underline;text-underline-offset:3px}
+    .external-ocr-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:15px 0}
+    .external-ocr-option{padding:16px;border:1px solid #eadfcf;background:#fff;border-radius:14px;line-height:1.7;font-size:.88rem;overflow-wrap:anywhere}
+    .external-ocr-option strong{display:block;margin:0 0 9px}
+    .external-ocr-option ol{padding-left:19px;margin:0 0 9px}
+    .external-ocr-option li{margin:7px 0}
+    .external-ocr-option p{margin:10px 0}
+    .external-ocr-option small{display:block;color:#647187}
+    .external-ocr-option kbd{font-family:inherit;font-size:.78rem;padding:2px 5px;border:1px solid #dccdbe;border-radius:5px;background:#faf7f0;white-space:nowrap}
+    .external-ocr-prompt{padding:12px;background:#f1f5fa;border-radius:10px;color:#384f67}
+    .external-ocr-verify{font-size:.83rem;line-height:1.7;margin:10px 0 0;color:#765a20}
+    @media(max-width:720px){.external-ocr-options{grid-template-columns:1fr}}
     .message{display:none;border-radius:13px;background:#eff8f0;color:#246039;border:1px solid #cae7ce;padding:15px 17px;margin-top:20px;font-size:.9rem;line-height:1.6;white-space:pre-wrap}
     .message.warn{background:#fff7e7;color:#8b5e14;border-color:#f3dea6}.info{background:#fff9e9;border:1px solid #f0ddb4;padding:17px;border-radius:15px;color:#79603b;line-height:1.75;font-size:.89rem}
     .split{display:grid;grid-template-columns:1.15fr .85fr;gap:23px;align-items:start}.notes{display:grid;gap:14px}
@@ -113,7 +112,7 @@
     footer{padding:34px 0;margin-top:30px;border-top:1px solid #eee4d2;color:#7a808b;font-size:.82rem;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
     .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
     @media(max-width:850px){.top{height:auto;min-height:80px;flex-wrap:wrap;padding-top:17px;padding-bottom:16px;gap:16px}.topnav{order:3;width:100%;justify-content:space-between;overflow-x:auto}.nav{font-size:.85rem;padding:10px 12px}.hero{grid-template-columns:1fr;padding:35px 0 40px;gap:30px}.hero-art{width:min(90%,400px);min-height:0}.cards,.timeline{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}
-    @media(max-width:530px){.cert-tools,.cert-grid,.result-grid,.ocr-review-grid,.req-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
+    @media(max-width:530px){.cert-tools,.cert-grid,.result-grid,.req-grid{grid-template-columns:1fr}.wrap{padding:0 16px}.hero h1{font-size:2.7rem}.hero-art{width:min(96%,370px)}.cards,.timeline,.two-col{grid-template-columns:1fr}.sheet{padding:20px}.status{font-size:.7rem}.card{padding:23px}.actions>*{width:100%}.topnav{gap:1px}.nav{padding:11px 8px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
@@ -159,31 +158,31 @@
       <div class="split">
         <form id="job-form" class="sheet">
           <div class="group"><label class="label" for="job-text">공고 텍스트 붙여넣기</label><textarea id="job-text" maxlength="20000" aria-describedby="job-char-guide" placeholder="예:&#10;담당업무&#10;- 보안 로그 분석&#10;필수 자격요건&#10;- 네트워크 이해&#10;우대사항&#10;- 정보보안기사"></textarea><small class="subtext" id="char-count">0자 입력됨</small><small class="subtext" id="job-char-guide">최대 20,000자 · 명시된 항목 제목을 기준으로 구분하며, 추측은 하지 않습니다.</small></div>
-          <div class="group"><label class="label" for="job-file">또는 채용공고 이미지 업로드</label><div class="upload"><input type="file" id="job-file" accept="image/png,image/jpeg,image/webp"><span class="upload-copy">PNG · JPG · WEBP 파일 1개<br>이미지를 선택한 뒤 버튼을 누르면 한글·영문 글자를 추출할 수 있습니다.</span></div><img id="job-preview" class="preview" alt="선택한 채용공고 이미지 미리보기">
-            <div class="ocr-controls">
-              <label class="label" for="ocr-mode">인식 방식
-                <select id="ocr-mode" aria-describedby="ocr-mode-guide">
-                  <option value="table">표·문단 기본 인식</option>
-                  <option value="single-block">작은 글자 재시도 (단일 열 집중)</option>
-                </select>
-              </label>
-              <button type="button" class="outline" id="ocr-button" disabled>이미지 글자 추출하기</button>
-              <span id="ocr-progress" class="ocr-progress" role="status" aria-live="polite">이미지를 선택해 주세요.</span>
+          <section class="external-ocr-guide" aria-labelledby="external-ocr-title">
+            <h3 id="external-ocr-title">📋 이미지 속 채용공고는 텍스트로 복사해서 붙여넣으세요</h3>
+            <p class="subtext">이 앱은 이미지를 직접 업로드받거나 OCR로 읽지 않습니다. 아래 방법으로 글자를 복사해 위 입력창에 붙여넣고, 원본과 대조하여 수정해 주세요.</p>
+            <div class="external-ocr-options">
+              <div class="external-ocr-option">
+                <strong>방법 1 · Windows에서 화면 글자 복사 (추천)</strong>
+                <ol>
+                  <li><a href="https://learn.microsoft.com/ko-kr/windows/powertoys/text-extractor" target="_blank" rel="noopener noreferrer">Microsoft PowerToys Text Extractor</a>를 설치하고 활성화합니다. <small>※ Windows 기본 탑재 기능이 아니라 별도 설치 도구입니다.</small></li>
+                  <li><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>로 영역을 드래그합니다. <small>기본 단축키이며 PowerToys 설정에서 바꿀 수 있습니다.</small></li>
+                  <li>위 입력창에 <kbd>Ctrl</kbd> + <kbd>V</kbd>로 붙여넣습니다.</li>
+                </ol>
+                <p class="subtext"><strong>별도 설치가 어렵다면:</strong> Windows <strong>캡처 도구</strong>의 <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>로 캡처 → <strong>텍스트 작업</strong> → 텍스트 복사 기능을 이용하세요.</p>
+              </div>
+              <div class="external-ocr-option">
+                <strong>방법 2 · 비전 AI로 글자 추출 (선택)</strong>
+                <p>이미지를 <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT</a>나 <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer">Claude</a>에 직접 업로드하고 글자를 옮겨 적어 달라고 요청하세요.</p>
+                <p class="external-ocr-prompt">“이 스크린샷의 채용공고를 원문 그대로 옮겨 적어줘. 임의로 교정하거나 추측하지 말고 읽을 수 없는 부분은 [판독 불가]로 표시해줘. 제목·줄바꿈·필수조건·우대사항을 유지해줘.”</p>
+                <p class="subtext">비전 AI도 글자를 잘못 읽거나 문장을 만들어낼 수 있습니다. <strong>개인정보나 비공개 자료는 외부 AI에 업로드하지 마세요.</strong> 외부 서비스 사용·요금·개인정보 처리 조건을 직접 확인하세요.</p>
+              </div>
             </div>
-            <small class="subtext" id="ocr-mode-guide">오인식이 많다면 인식 방식을 바꿔 다시 추출해 보세요. 재추출 시 아래에서 아직 적용하지 않은 OCR 수정 내용은 교체됩니다. 정확성을 보장하지 않습니다.</small>
-            <small class="subtext">이미지 OCR은 브라우저에서 수행합니다. 버튼 클릭 시 외부 CDN에서 OCR 코드·언어 데이터를 다운로드하며 이미지는 서버로 업로드하지 않습니다. 인식된 표의 열을 아래에서 직접 검토·수정한 뒤 적용합니다. AI 의미 분석은 아닙니다.</small>
-            <section id="ocr-review" class="ocr-review-box" hidden aria-labelledby="ocr-review-title">
-              <h3 id="ocr-review-title">OCR 결과 검토 · 열별 수정</h3>
-              <a id="ocr-original-link" class="ocr-source-link" href="#" target="_blank" rel="noopener noreferrer" hidden>원본 이미지 새 탭에서 크게 보기 ↗</a>
-              <p class="subtext">표의 열 위치를 보고 분류를 제안할 수 있지만, <strong>직접 확인한 뒤 적용</strong>해야 합니다. 예를 들어 'ES기술부'는 회사명이 아닌 부서일 수 있습니다. 필수·우대가 섞인 열은 원문 제목을 유지하고 제목 인식 오류를 수정해 주세요.</p>
-              <div id="ocr-review-columns" class="ocr-review-grid"></div>
-              <button type="button" class="secondary" id="ocr-review-apply">검토한 텍스트 적용하기</button>
-              <div id="ocr-review-notice" class="ocr-review-notice" role="status" aria-live="polite"></div>
-            </section>
-          </div>
+            <p class="external-ocr-verify"><strong>꼭 확인하세요:</strong> 기술명(EDR/AV 등), 경력 연차, 모집 부서, 필수·우대 제목은 원본과 대조한 뒤 <strong>텍스트 1차 분석하기</strong>를 누르세요.</p>
+          </section>
           <button class="primary" type="submit">텍스트 1차 분석하기 <span aria-hidden="true">→</span></button><div id="job-message" class="message" role="status" aria-live="polite"></div>
         </form>
-        <aside class="notes"><div class="info"><b>🔎 현재 분석 방식</b><br>AI가 아닌 <strong>브라우저 내 규칙 기반 1차 구분</strong>입니다. 공고 텍스트는 서버나 외부 AI API로 전송하지 않습니다.</div><div class="note"><b>필수조건과 우대사항을 어떻게 나누나요?</b><span>공고에 적힌 「담당업무」「필수 자격요건」「우대사항」 같은 제목을 기준으로 해당 문장을 구분합니다. 애매한 항목은 확인 필요로 남깁니다.</span></div><div class="note"><b>이미지 글자 추출(Beta)</b><span>이미지에서 OCR로 텍스트를 추출해 입력창으로 옮깁니다. 잘못 읽힌 글자를 수정하고 1차 분석 버튼을 누르세요. AI 의미 분석은 이후 단계에서 연결합니다.</span></div></aside>
+        <aside class="notes"><div class="info"><b>🔎 현재 분석 방식</b><br>AI가 아닌 <strong>브라우저 내 규칙 기반 1차 구분</strong>입니다. 공고 텍스트는 서버나 외부 AI API로 전송하지 않습니다.</div><div class="note"><b>필수조건과 우대사항을 어떻게 나누나요?</b><span>공고에 적힌 「담당업무」「필수 자격요건」「우대사항」 같은 제목을 기준으로 해당 문장을 구분합니다. 애매한 항목은 확인 필요로 남깁니다.</span></div><div class="note"><b>이미지 속 공고는 어떻게 입력하나요?</b><span>PowerToys 또는 Windows 캡처 도구로 글자를 복사해 붙여넣으세요. ChatGPT·Claude 같은 외부 비전 AI도 선택할 수 있지만 개인정보 보호와 원문 대조가 필요합니다.</span></div></aside>
       </div>
       <section id="job-result" class="sheet" hidden aria-labelledby="job-result-title">
         <span class="heading-kicker">텍스트 분석 결과 · 1차</span>
@@ -195,7 +194,7 @@
       <section class="sheet" id="ai-analysis-panel" aria-labelledby="ai-analysis-title">
         <span class="heading-kicker">02 · AI 의미 분석 · 선택 기능</span>
         <h2 id="ai-analysis-title" class="feature-title" style="margin:10px 0">AI로 공고의 의미 분석하기</h2>
-        <div class="info">현재 사용하는 텍스트 1차 분류는 AI가 아닙니다. 이 기능은 별도의 서버 설정을 마친 후 실제 AI 모델이 공고 문장을 해석하도록 만들어졌습니다. <strong>사용자가 동의하고 버튼을 눌렀을 때만</strong> 텍스트를 외부 AI 제공자에게 전송합니다. 이미지 파일과 내 역량 입력은 전송하지 않습니다.</div>
+        <div class="info">현재 사용하는 텍스트 1차 분류는 AI가 아닙니다. 이 기능은 별도의 서버 설정을 마친 후 실제 AI 모델이 공고 문장을 해석하도록 만들어졌습니다. <strong>사용자가 동의하고 버튼을 눌렀을 때만</strong> 텍스트를 외부 AI 제공자에게 전송합니다. 내 역량 입력은 전송하지 않으며, 이 앱은 이미지 업로드를 제공하지 않습니다.</div>
         <p id="ai-availability" class="result-summary" role="status">AI 분석 서버 설정을 확인하고 있습니다.</p>
         <div id="ai-controls" hidden>
           <div class="group">
@@ -334,18 +333,8 @@
       function route(){show(location.hash.replace("#",""))}
       nodes.forEach(function(btn){btn.addEventListener("click",function(){location.hash=btn.dataset.go;route();})});
       window.addEventListener("hashchange",route);route();
-      var jobText=document.getElementById("job-text"),jobFile=document.getElementById("job-file"),preview=document.getElementById("job-preview"),count=document.getElementById("char-count"),originalOcrLink=document.getElementById("ocr-original-link"),url=null;
+      var jobText=document.getElementById("job-text"),count=document.getElementById("char-count");
       jobText.addEventListener("input",function(){count.textContent=jobText.value.length+"자 입력됨";clearJobResult();});
-      jobFile.addEventListener("change",function(){
-        clearJobResult();
-        if(url)URL.revokeObjectURL(url);url=null;preview.style.display="none";preview.removeAttribute("src");
-        if(originalOcrLink){originalOcrLink.hidden=true;originalOcrLink.removeAttribute("href");}
-        var f=jobFile.files&&jobFile.files[0];if(!f)return;
-        if(!["image/png","image/jpeg","image/webp"].includes(f.type)){alert("PNG, JPG 또는 WEBP 이미지만 선택해 주세요.");jobFile.value="";return;}
-        if(f.size>8*1024*1024){alert("이미지는 8MB 이하로 선택해 주세요.");jobFile.value="";return;}
-        url=URL.createObjectURL(f);preview.src=url;preview.style.display="block";
-        if(originalOcrLink){originalOcrLink.href=url;originalOcrLink.hidden=false;}
-      });
       function message(id,text,warning){var box=document.getElementById(id);box.style.display="block";box.classList.toggle("warn",!!warning);box.textContent=text}
       var jobResult=document.getElementById("job-result");
       var jobResultSummary=document.getElementById("job-result-summary");
@@ -355,7 +344,7 @@
         window.MuttajiReviewedPosting=null;
         document.getElementById("job-message").style.display="none";
       }
-      function showJobResult(result,hasImage){
+      function showJobResult(result){
         // In-memory only; allows manually corrected group labels to be reused
         // in the user's requirement-comparison page without an AI call.
         window.MuttajiReviewedPosting={text:jobText.value.trim(),result:result};
@@ -426,7 +415,7 @@
                   comparisonNotice.hidden=false;
                   comparisonNotice.textContent="공고 분류가 수정되었습니다. 최신 결과를 반영하려면 '요건 비교하기'를 다시 눌러 주세요.";
                 }
-                showJobResult(result,hasImage);
+                showJobResult(result);
                 // Moving an item between distant groups can look unchanged
                 // without revealing its new location.
                 var destinationIndex=groups.findIndex(function(x){return x.key===destination});
@@ -457,15 +446,14 @@
           jobResultSections.appendChild(card);
         });
         var classified=["responsibilities","required","preferred"].reduce(function(n,k){return n+result[k].filter(function(x){return !x.sectionHeading}).length},0);
-        jobResultSummary.textContent="원문 "+result.sourceLines+"개 행 중 담당업무·필수·우대 항목 "+classified+"개를 분류했습니다. 미분류·기타 "+result.unresolved.filter(function(x){return !x.sectionHeading}).length+"개. 항목의 분류와 적용 범위를 아래에서 변경할 수 있습니다."+(hasImage?" 이미지는 직접 분석하지 않았으며, 텍스트 입력창의 내용만 분류했습니다.":"")+" 모든 항목은 원문 확인이 필요합니다.";
+        jobResultSummary.textContent="원문 "+result.sourceLines+"개 행 중 담당업무·필수·우대 항목 "+classified+"개를 분류했습니다. 미분류·기타 "+result.unresolved.filter(function(x){return !x.sectionHeading}).length+"개. 항목의 분류와 적용 범위를 아래에서 변경할 수 있습니다."+" 모든 항목은 원문 확인이 필요합니다.";
         jobResult.hidden=false;
       }
       document.getElementById("job-form").addEventListener("submit",function(e){e.preventDefault();
         var text=jobText.value.trim();
-        var hasImage=!!(jobFile.files&&jobFile.files.length);
         clearJobResult();
         if(!text){
-          message("job-message",hasImage?"이미지 글자 추출하기 버튼으로 텍스트를 가져온 뒤 확인하거나, 채용공고 내용을 직접 입력해 주세요.":"채용공고 텍스트를 입력해 주세요.",true);
+          message("job-message","채용공고 텍스트를 입력해 주세요. 이미지 공고는 위 안내에 따라 글자를 복사한 뒤 붙여넣으세요.",true);
           return;
         }
         if(!window.JobTextAnalyzer||typeof window.JobTextAnalyzer.analyze!=="function"){
@@ -474,7 +462,7 @@
         }
         try{
           var result=window.JobTextAnalyzer.analyze(text);
-          showJobResult(result,hasImage);
+          showJobResult(result);
           message("job-message","규칙 기반 텍스트 1차 분류가 끝났습니다. 아래 원문 근거를 확인해 주세요. AI 분석·자격증 추천은 아직 연결되지 않았습니다.",false);
           jobResult.scrollIntoView({behavior:"smooth",block:"start"});
         }catch(err){
@@ -544,9 +532,6 @@
       });
     })();
   </script>
-  <script src="./assets/ocr-image-preprocess.js"></script>
-  <script src="./assets/ocr-column-review.js"></script>
-  <script src="./assets/image-ocr.js"></script>
   <script src="./assets/job-category-corrections.js"></script>
   <script src="./assets/ai-analysis-ui.js"></script>
   <script src="./assets/requirement-comparison.js"></script>
