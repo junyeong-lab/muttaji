@@ -313,7 +313,7 @@
       </section>
     </section>
   </main>
-  <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>초기 MVP 개발 단계 · AI 추천 및 합격 확률 제공 전</div></footer>
+  <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>개발 미리보기 검증 r9 · AI 의미 분석 비활성화</div></footer>
   <script src="./assets/job-text-analyzer.js"></script>
   <script>
     (function () {
@@ -322,6 +322,13 @@
       var nodes=document.querySelectorAll("[data-go]");
       function show(page) {
         if(pages.indexOf(page)===-1) page="home";
+        // Always validate visible comparison/roadmap against current inputs
+        // BEFORE rendering a tab. Relying on hashchange alone can miss direct
+        // router calls, browser autofill, or programmatically edited fields.
+        if(page==="profile"||page==="roadmap"){
+          window.MuttajiCheckRequirementFreshness?.();
+          window.MuttajiCheckRoadmapFreshness?.();
+        }
         pages.forEach(function(id){document.getElementById(id).hidden=id!==page;});
         nodes.forEach(function(b){if(b.classList.contains("nav")){if(b.dataset.go===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");}});
         document.title=(page==="home"?"뭐따지?":({analyze:"채용공고 입력",profile:"내 역량",certifications:"자격증 찾기",roadmap:"준비 로드맵"}[page])+" | 뭐따지?");
