@@ -214,7 +214,13 @@
     const count=document.getElementById("roadmap-count");
     const list=document.getElementById("roadmap-actions");
     const job=document.getElementById("job-text");
-    if(!generate||!warning||!output||!count||!list||!job)return null;
+    const board=document.getElementById("roadmap-task-board");
+    const progress=document.getElementById("roadmap-task-progress");
+    const copyButton=document.getElementById("roadmap-copy");
+    const copyMessage=document.getElementById("roadmap-copy-message");
+    if(!generate||!warning||!output||!count||!list||!job||
+       !board||!progress||!copyButton||!copyMessage)return null;
+    let activeTasks=[],checkedTasks=new Set();
     function el(tag,cls,text){
       const node=document.createElement(tag);
       if(cls)node.className=cls;
@@ -222,9 +228,64 @@
       return node;
     }
     function reset(message){
-      output.hidden=true;list.replaceChildren();
+      output.hidden=true;list.replaceChildren();board.replaceChildren();
+      activeTasks=[];checkedTasks=new Set();copyMessage.textContent="";progress.textContent="";
       warning.hidden=false;warning.textContent=message;
     }
+    function updateProgress(){
+      const stats=taskCounts(activeTasks,checkedTasks);
+      progress.textContent="실행 항목 "+stats.total+"개 중 직접 체크한 항목 "+
+        stats.done+"개 · 완료 표시가 채용조건 충족을 의미하지는 않습니다.";
+      for(const cat of taskCategories){
+        const counter=document.getElementById("task-count-"+({"학습":"learning","프로젝트":"project","자격증":"certificate","지원 준비":"application"}[cat]));
+        if(counter)counter.textContent=stats.byCategory[cat].done+" / "+stats.byCategory[cat].total;
+      }
+    }
+    function showTasks(steps){
+      activeTasks=planTasks(steps);
+      checkedTasks=new Set();copyMessage.textContent="";
+      board.replaceChildren();
+      const groupIds={"학습":"learning","프로젝트":"project","자격증":"certificate","지원 준비":"application"};
+      for(const cat of taskCategories){
+        const group=el("section","roadmap-task-group");
+        const heading=el("h3","roadmap-task-heading",cat+" · ");
+        const counter=el("span","roadmap-task-count","0 / 0");
+        counter.id="task-count-"+groupIds[cat];
+        heading.appendChild(counter);
+        group.appendChild(heading);
+        const tasks=activeTasks.filter(t=>t.category===cat);
+        if(!tasks.length)group.appendChild(el("p","subtext","현재 비교 결과에서 생성된 실행 항목이 없습니다."));
+        for(const task of tasks){
+          const label=el("label","roadmap-task");
+          const checkbox=el("input");checkbox.type="checkbox";
+          checkbox.checked=false;checkbox.setAttribute("aria-label",task.title+" 완료 표시");
+          const body=el("span","roadmap-task-body");
+          body.appendChild(el("strong","", "우선 "+task.priority+" · "+task.title));
+          body.appendChild(el("small","roadmap-task-requirement","공고 요건: "+task.requirement));
+          body.appendChild(el("small","roadmap-task-detail",task.detail));
+          label.appendChild(checkbox);label.appendChild(body);
+          checkbox.addEventListener("change",()=>{
+            if(checkbox.checked)checkedTasks.add(task.id);
+            else checkedTasks.delete(task.id);
+            copyMessage.textContent="";
+            updateProgress();
+          });
+          group.appendChild(label);
+        }
+        board.appendChild(group);
+      }
+      updateProgress();
+    }
+    copyButton.addEventListener("click",async ()=>{
+      if(!activeTasks.length){copyMessage.textContent="먼저 로드맵을 생성해 주세요.";return;}
+      try{
+        if(!navigator.clipboard||!navigator.clipboard.writeText)throw new Error("CLIPBOARD_UNAVAILABLE");
+        await navigator.clipboard.writeText(formatChecklist(activeTasks,checkedTasks));
+        copyMessage.textContent="현재 체크 상태를 포함한 준비 목록을 복사했습니다. 원하는 문서에 직접 붙여넣어 보관하세요.";
+      }catch{
+        copyMessage.textContent="브라우저에서 복사할 수 없습니다. 체크리스트 내용을 직접 선택해 복사해 주세요.";
+      }
+    });
     async function generatePlan(){
       const snapshot=window.MuttajiComparisonSnapshot;
       if(!snapshot||snapshot.posting!==job.value ||
@@ -253,6 +314,7 @@
         const steps=build(snapshot.items,certifications,snapshot.profileCerts||"");
         if(!steps.length){reset("검토할 필수·우대 요건이 없습니다. 채용공고 분류를 확인해 주세요.");return;}
         list.replaceChildren();
+        showTasks(steps);
         steps.forEach(step=>{
           const card=el("article","req-item");
           card.appendChild(el("h3","", "STEP "+step.sequence+" · "+
