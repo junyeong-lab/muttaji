@@ -87,12 +87,16 @@
       });
     }
     function checkStale(){
-      if(panel.hidden)return;
+      // The comparison must become invalid even if the result panel is already
+      // hidden or the browser/autofill changed values without an input event.
+      if(!sourceText)return;
       if(job.value!==sourceText||snapshot()!==sourceProfile){
         panel.hidden=true;
         window.MuttajiComparisonSnapshot=null;
         invalidateRoadmap();
-        help.textContent="채용공고 또는 프로필이 변경되었습니다. 아래 '요건 비교하기'를 다시 눌러 최신 내용으로 검토하세요.";
+        current=[];
+        sourceText="";sourceProfile="";
+        help.textContent="채용공고 또는 프로필이 변경되었습니다. 아래 '채용공고와 내 역량 비교하기'를 다시 눌러 최신 내용으로 검토하세요.";
         help.hidden=false;
       }
     }
@@ -137,7 +141,15 @@
       panel.scrollIntoView({behavior:"smooth",block:"start"});
     });
     job.addEventListener("input",checkStale);
-    profileFields.forEach(id=>document.getElementById(id)?.addEventListener("input",checkStale));
+    job.addEventListener("change",checkStale);
+    profileFields.forEach(id=>{
+      const input=document.getElementById(id);
+      input?.addEventListener("input",checkStale);
+      input?.addEventListener("change",checkStale);
+    });
+    // A form submit can follow browser autofill or script-driven updates that
+    // did not dispatch input events. Treat the confirmation as a second guard.
+    form.addEventListener("submit",checkStale);
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
