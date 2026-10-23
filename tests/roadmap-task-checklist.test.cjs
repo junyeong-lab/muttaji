@@ -51,11 +51,11 @@ test("완료 체크는 사용자 진행 기록일 뿐, 상태를 바꾸지 않�
   assert.equal(steps[0].status,"미충족");
 });
 test("복사 텍스트에 선택 상태, 공고 원문, 작업 내용이 포함되고 서버 저장 없음",()=>{
-  const items=planTasks(build([{kind:"required",status:"부분 충족",text:"개인정보보호 이해"}],[],""));
+  const items=planTasks(build([{kind:"required",status:"부분 충족",text:"네트워크 보안 점검"}],[],""));
   const output=formatChecklist(items,new Set([items[0].id]));
-  assert.match(output,/\\[x\\]/);
-  assert.match(output,/\\[ \\]/);
-  assert.match(output,/개인정보보호 이해/);
+  assert.ok(output.includes("- [x]"));
+  assert.ok(output.includes("- [ ]"));
+  assert.match(output,/네트워크 보안 점검/);
   assert.match(output,/공식 검증 전/);
   for(const cat of taskCategories)assert.ok(output.includes("["+cat+"]"));
 });
