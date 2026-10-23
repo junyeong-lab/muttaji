@@ -133,8 +133,13 @@
       if(!step||!Number.isInteger(step.sequence)||step.sequence<1||
          !validStatuses.includes(step.status)||!["required","preferred"].includes(step.kind))continue;
       const isExperience=experiencePattern.test(step.requirement);
-      const hasCertificate=certificatePattern.test(step.requirement)||step.certificates?.some(c=>c.relation==="explicit");
+      const namedCerts=Array.isArray(step.certificates)?
+        step.certificates.filter(c=>c&&c.relation==="explicit"):[];
+      const hasCertificate=certificatePattern.test(step.requirement)||namedCerts.length>0;
       const isPractice=practicePattern.test(step.requirement);
+      // "정보보안기사 취득" is a certification condition, NOT a project task.
+      const onlyCertificate=hasCertificate &&
+        !/(?:점검|분석|개발|구축|운영|실무|프로젝트|설계|기술|실습|유지보수|설정)/i.test(step.requirement);
       function add(category,key,title,detail){
         tasks.push({
           id:"step-"+step.sequence+"-"+key,category,title,detail,
@@ -156,7 +161,7 @@
           "요건에서 부족한 사항을 확인하고, 실제로 수행했거나 취득한 사실만 지원 자료에 작성하세요.");
       }
       if(step.status==="미충족"||step.status==="부분 충족"){
-        if(isPractice&&!isExperience){
+        if(isPractice&&!isExperience&&!onlyCertificate){
           add("학습","learn","요구 기술·용어 학습",
             "공고에 나온 기술·점검 방법을 공부하고, 이해한 내용을 본인 언어로 요약하세요.");
           add("프로젝트","practice","직접 수행하는 실습 과제",
