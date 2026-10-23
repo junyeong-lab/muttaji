@@ -410,7 +410,12 @@
     }
     generate.addEventListener("click",generatePlan);
     function resetIfChanged(){
-      if(!output.hidden)reset("공고 또는 내 역량이 변경되었습니다. 요건을 다시 비교한 뒤 로드맵을 생성해 주세요.");
+      if(output.hidden)return;
+      const snapshot=window.MuttajiComparisonSnapshot;
+      if(!snapshot||snapshot.posting!==job.value||
+         snapshot.profile!==currentProfile()){
+        reset("공고 또는 내 역량이 변경되었습니다. 요건을 다시 비교한 뒤 로드맵을 생성해 주세요.");
+      }
     }
     job.addEventListener("input",resetIfChanged);
     job.addEventListener("change",resetIfChanged);
@@ -419,6 +424,8 @@
       field?.addEventListener("input",resetIfChanged);
       field?.addEventListener("change",resetIfChanged);
     });
+    document.getElementById("profile-form")?.addEventListener("submit",resetIfChanged);
+    window.addEventListener?.("hashchange",resetIfChanged);
     return {generatePlan};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
