@@ -59,6 +59,13 @@ test("복사 텍스트에 선택 상태, 공고 원문, 작업 내용이 포함�
   assert.match(output,/공식 검증 전/);
   for(const cat of taskCategories)assert.ok(output.includes("["+cat+"]"));
 });
+test("자격증 취득만 요구하는 문장에는 프로젝트를 잘못 생성하지 않는다",()=>{
+  const steps=build([{kind:"required",status:"미충족",text:"정보보안기사 자격증 취득"}],
+    [{id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"}],"");
+  const tasks=planTasks(steps);
+  assert.deepEqual(tasks.map(x=>x.category),["자격증"]);
+  assert.match(tasks[0].title,/정보보안기사/);
+});
 test("잘못된 작업 입력 거부, 빈 작업에도 카테고리는 유지",()=>{
   assert.throws(()=>planTasks(null),TypeError);
   const empty=taskCounts([],new Set());
