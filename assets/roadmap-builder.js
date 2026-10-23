@@ -323,10 +323,14 @@
         copyMessage.textContent="브라우저에서 복사할 수 없습니다. 체크리스트 내용을 직접 선택해 복사해 주세요.";
       }
     });
+    const profileFields=["goal-job","education","experience","certs","skills"];
+    function currentProfile(){
+      return profileFields.map(id=>String(document.getElementById(id)?.value||"")).join("\n---\n");
+    }
     async function generatePlan(){
       const snapshot=window.MuttajiComparisonSnapshot;
       if(!snapshot||snapshot.posting!==job.value ||
-         !Array.isArray(snapshot.items)){
+         snapshot.profile!==currentProfile()||!Array.isArray(snapshot.items)){
         reset("최신 채용공고와 '내 역량' 비교 결과가 없습니다. 내 역량에서 요건별 상태·근거를 확인하고 다시 시도해 주세요.");
         return;
       }
@@ -344,7 +348,8 @@
           // The roadmap must still work offline without a certification list.
           warning.textContent="자격증 DB를 불러오지 못했습니다. 자격증 연결 없이 준비 순서만 안내합니다.";
         }
-        if(window.MuttajiComparisonSnapshot!==snapshot || job.value!==snapshot.posting){
+        if(window.MuttajiComparisonSnapshot!==snapshot || job.value!==snapshot.posting ||
+           currentProfile()!==snapshot.profile){
           reset("비교 결과가 변경됐습니다. 최신 요건 비교를 확인하고 로드맵을 다시 생성해 주세요.");
           return;
         }
@@ -394,7 +399,16 @@
       }finally{generate.disabled=false;}
     }
     generate.addEventListener("click",generatePlan);
-    job.addEventListener("input",()=>{if(!output.hidden)reset("채용공고가 바뀌었습니다. 비교를 다시 실행한 뒤 로드맵을 생성해 주세요.");});
+    function resetIfChanged(){
+      if(!output.hidden)reset("공고 또는 내 역량이 변경되었습니다. 요건을 다시 비교한 뒤 로드맵을 생성해 주세요.");
+    }
+    job.addEventListener("input",resetIfChanged);
+    job.addEventListener("change",resetIfChanged);
+    profileFields.forEach(id=>{
+      const field=document.getElementById(id);
+      field?.addEventListener("input",resetIfChanged);
+      field?.addEventListener("change",resetIfChanged);
+    });
     return {generatePlan};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
