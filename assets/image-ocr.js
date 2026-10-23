@@ -8,6 +8,7 @@
   const textInput = document.getElementById("job-text");
   const button = document.getElementById("ocr-button");
   const status = document.getElementById("ocr-progress");
+  const modeSelect = document.getElementById("ocr-mode");
   if (!fileInput || !textInput || !button || !status) return;
 
   let libraryPromise = null;
@@ -77,10 +78,16 @@
     status.textContent = "한글·영문 OCR 프로그램과 언어 데이터 준비 중...";
     try {
       const engine = await worker();
+      // Both modes require the same manual review; OCR never silently
+      // corrects a user-visible qualification or employer requirement.
+      const selectedMode=modeSelect&&modeSelect.value==="single-block"?"single-block":"table";
+      const pageMode=window.MuttajiOcrImage&&window.MuttajiOcrImage.segmentationMode
+        ?window.MuttajiOcrImage.segmentationMode(selectedMode)
+        :(selectedMode==="single-block"?"6":"4");
       if (typeof engine.setParameters === "function") {
         // Single text column per crop; do not read four table cells as one paragraph.
         await engine.setParameters({
-          tessedit_pageseg_mode: "4",
+          tessedit_pageseg_mode: pageMode,
           preserve_interword_spaces: "1"
         });
       }
@@ -112,7 +119,11 @@
         return;
       }
       reviewer.show(parts);
-      status.textContent = "총 "+parts.filter(Boolean).length+"개 열에서 "+extracted.length+"자를 읽었습니다. 아래에서 잘못된 글자와 담당업무·필수·우대 분류를 수정한 뒤 적용해 주세요.";
+      const small=window.MuttajiOcrImage&&window.MuttajiOcrImage.lowResolution
+        &&window.MuttajiOcrImage.lowResolution(prepared.originalWidth,prepared.originalHeight);
+      status.textContent="총 "+parts.filter(Boolean).length+"개 열에서 "+extracted.length+"자를 읽었습니다. "
+        +(small?"원본 "+prepared.originalWidth+"×"+prepared.originalHeight+"px은 글자가 작아 OCR 오류가 생길 수 있습니다. 가능하면 더 선명하게 캡처해 주세요. ":"")
+        +"원본을 보며 잘못된 글자와 분류를 직접 수정하세요. 결과가 나쁘면 인식 방식을 바꿔 다시 시도할 수 있습니다.";
       const panel=document.getElementById("ocr-review");
       if(panel&&typeof panel.scrollIntoView==="function")panel.scrollIntoView({behavior:"smooth",block:"nearest"});
     } catch (error) {
