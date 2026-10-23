@@ -30,6 +30,77 @@
       explanation:effective===status?explanation:"",
       needsReason:status!=="확인 필요"&&effective==="확인 필요"};
   }
+  // A certificate match means user-reported name equality, not verified possession.
+  const catalog=[
+    ["정보처리기사","정처기"],["정보보안기사"],["정보보안산업기사"],
+    ["네트워크관리사 1급","네관사 1급"],["네트워크관리사 2급","네관사 2급"],
+    ["리눅스마스터 1급"],["리눅스마스터 2급"],["SQLD","SQL 개발자"],
+    ["SQLP","SQL 전문가"],["ADsP","데이터분석 준전문가"],["ADP","데이터분석 전문가"],
+    ["CPPG","개인정보관리사"],["정보통신기사"],["빅데이터분석기사"],
+    ["컴퓨터활용능력 1급","컴활1급","컴활 1급"],["컴퓨터활용능력 2급","컴활2급","컴활 2급"],
+    ["AWS Certified Cloud Practitioner","AWS CCP"],
+    ["AWS Certified Solutions Architect - Associate","AWS SAA"],
+    ["Microsoft Azure Fundamentals (AZ-900)","AZ-900"],["ISMS-P 인증심사원"],
+    ["CompTIA Security+","Security+"],["Cisco CCNA","CCNA"],["CISSP"]
+  ];
+  const normCert=value=>String(value||"").normalize("NFKC").toLowerCase().replace(/\s+/g,"");
+  function mentions(text,term){
+    const source=normCert(text),needle=normCert(term);
+    if(!needle)return false;
+    let i=source.indexOf(needle);
+    while(i>=0){
+      const before=source[i-1]||"",after=source[i+needle.length]||"";
+      // Prevent substring hits for acronyms such as SQLD vs SQLDP.
+      if((!/[a-z0-9]/.test(needle[0])||!/[a-z0-9]/.test(before)) &&
+        (!/[a-z0-9]/.test(needle[needle.length-1])||!/[a-z0-9]/.test(after)))return true;
+      i=source.indexOf(needle,i+1);
+    }
+    return false;
+  }
+  function ownedCertificates(input){
+    return String(input||"").split(/[\n,;，]+/).map(x=>x.trim()
+      .replace(/^[·ㆍ•*\-\d.)\s]+/,"")
+      .replace(/^(?:취득한?\s*자격증|보유\s*자격증|자격증)\s*[:：]\s*/,"")
+      .replace(/\s*[\[(]?(?:취득(?:완료)?|보유|합격)[\])]?\s*$/,"").trim())
+      .filter(Boolean).map(entry=>{
+        const names=catalog.find(group=>group.some(name=>normCert(name)===normCert(entry)));
+        return names?names[0]:entry;
+      });
+  }
+  function credentialSuggestion(item,profileCertificates){
+    if(!item||typeof item.text!=="string"||!String(profileCertificates||"").trim())return null;
+    const owned=ownedCertificates(profileCertificates);
+    const mentioned=catalog.map(group=>{
+      const match=group.slice().sort((a,b)=>b.length-a.length).find(term=>mentions(item.text,term));
+      return match?{name:group[0],term:match}:null;
+    }).filter(Boolean);
+    // Additional explicit credentials are accepted if they look like certificate
+    // names; generic skills or job experience must never auto-match.
+    for(const name of owned){
+      if(mentioned.some(x=>normCert(x.name)===normCert(name)))continue;
+      if(!/(?:기사|산업기사|기능사|관리사|마스터|인증심사원|certified|certification)/i.test(name) &&
+        !/^[a-z][a-z0-9+.-]{2,15}$/i.test(name))continue;
+      if(mentions(item.text,name))mentioned.push({name,term:name});
+    }
+    if(!mentioned.length)return null;
+    const alternatives=/(?:또는|혹은|택\s*1|택일|중\s*(?:한|1)|[/|])/i.test(item.text);
+    const conjunction=/(?:및|모두|둘\s*다|동시|전부)/i.test(item.text);
+    if(mentioned.length>1&&alternatives===conjunction)return null;
+    let remainder=normCert(item.text);
+    mentioned.sort((a,b)=>normCert(b.term).length-normCert(a.term).length)
+      .forEach(x=>{remainder=remainder.split(normCert(x.term)).join("");});
+    remainder=remainder.replace(
+      /(?:공고명시|명시된|필수자격증|필수자격요건|자격요건|필수조건|필수자격|우대사항|자격증명|자격증|자격|소지자|소지|보유자|보유|취득자|취득|필수|우대|해당|조건|택일|택1|중에서|중|한개이상|한개|한가지|하나|둘다|모두|또는|혹은|및|요구)/g,""
+    ).replace(/[\s.,:;·ㆍ()[\]{}\/|\-+]+/g,"");
+    // Any remaining skill, education or experience condition blocks auto-success.
+    if(remainder)return null;
+    const matched=mentioned.filter(x=>owned.some(name=>normCert(name)===normCert(x.name)));
+    if(!matched.length)return null;
+    if(mentioned.length>1&&!alternatives&&matched.length!==mentioned.length)return null;
+    const names=matched.map(x=>x.name);
+    return {status:"충족",names,
+      reason:"보유 자격증 입력란의 '"+names.join(", ")+"'와 공고의 자격증명이 일치합니다. 본인 입력 기준이며 증빙 및 공식 검증은 별도입니다."};
+  }
   function tally(items){
     const sum={"충족":0,"부분 충족":0,"미충족":0,"확인 필요":0};
     for(const item of items)sum[item.status==="충족"||item.status==="부분 충족"||item.status==="미충족"?item.status:"확인 필요"]++;
@@ -126,5 +197,5 @@
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {requirements,assessment,tally};
+  return {requirements,assessment,tally,credentialSuggestion,ownedCertificates};
 });
