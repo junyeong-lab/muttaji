@@ -122,6 +122,91 @@
         certificates:[...directlyNamed,...related],requiresValidation:true};
     });
   }
+  const taskCategories=["학습","프로젝트","자격증","지원 준비"];
+  const experiencePattern=/(?:실무\s*경력|동종\s*경력|경력\s*[0-9]|[0-9]+\s*년\s*이상|구축\s*및\s*유지관리\s*경험|[가-힣]+\s*경험\s*보유)/i;
+  const practicePattern=/(?:점검|취약점|분석|네트워크|서버|보안|로그|클라우드|DBMS|데이터베이스|SQL|웹|모바일|Linux|리눅스|프로그래밍|개발|운영|구축|실습)/i;
+  const certificatePattern=/(?:자격증|기사|산업기사|자격\s*보유|certification|certified|cissp|cppg|sqld)/i;
+  function planTasks(steps){
+    if(!Array.isArray(steps))throw new TypeError("로드맵이 없습니다.");
+    const tasks=[];
+    for(const step of steps){
+      if(!step||!Number.isInteger(step.sequence)||step.sequence<1||
+         !validStatuses.includes(step.status)||!["required","preferred"].includes(step.kind))continue;
+      const isExperience=experiencePattern.test(step.requirement);
+      const hasCertificate=certificatePattern.test(step.requirement)||step.certificates?.some(c=>c.relation==="explicit");
+      const isPractice=practicePattern.test(step.requirement);
+      function add(category,key,title,detail){
+        tasks.push({
+          id:"step-"+step.sequence+"-"+key,category,title,detail,
+          priority:step.sequence,kind:step.kind,status:step.status,
+          requirement:step.requirement,line:step.line
+        });
+      }
+      if(step.status==="충족"){
+        add("지원 준비","evidence","입력한 충족 근거 정리",
+          "수행 역할·기간·성과를 확인 가능한 자료로 정리하고, 공고 요건과 다시 대조하세요.");
+      }else if(step.status==="확인 필요"){
+        add("지원 준비","verify","충족 여부와 요구 범위 확인",
+          "경력·자격·업무 범위를 원문과 비교하세요. 불분명하면 채용담당자에게 확인할 질문을 기록하세요.");
+      }else if(isExperience){
+        add("지원 준비","experience","실제 실무경력 조건 확인",
+          "실제로 수행한 직무·근무기간·고용 형태가 공고 요건에 해당하는지 확인하세요. 실습이나 자격증을 동등한 경력이라고 주장하지 마세요.");
+      }else if(!isPractice&&!hasCertificate){
+        add("지원 준비","gap","부족한 조건과 증빙 준비",
+          "요건에서 부족한 사항을 확인하고, 실제로 수행했거나 취득한 사실만 지원 자료에 작성하세요.");
+      }
+      if(step.status==="미충족"||step.status==="부분 충족"){
+        if(isPractice&&!isExperience){
+          add("학습","learn","요구 기술·용어 학습",
+            "공고에 나온 기술·점검 방법을 공부하고, 이해한 내용을 본인 언어로 요약하세요.");
+          add("프로젝트","practice","직접 수행하는 실습 과제",
+            "요구역량과 관련된 작은 실습을 직접 수행하고 설정·점검 기록과 본인 기여를 남기세요. 실습은 실무경력의 대체가 아닙니다.");
+        }
+      }
+      // Explicit certificate names are employer requirements; related ones
+      // are only background reading candidates from an unverified workbook.
+      const cands=Array.isArray(step.certificates)?step.certificates:[];
+      for(const cert of cands.filter(c=>c&&c.relation==="explicit").slice(0,2)){
+        add("자격증","explicit-"+String(cert.id),"공고 명시 자격 확인: "+cert.name,
+          "발급기관의 최신 공식 요건을 확인하고 실제 취득 여부·유효성을 따로 기록하세요.");
+      }
+      if(step.status!=="충족"&&!isExperience){
+        const related=cands.find(c=>c&&c.relation==="related_skill");
+        if(related)add("자격증","related-"+String(related.id),"관련 자격 참고 검토: "+related.name,
+          "공고 문구 '"+related.matchedPhrase+"'와 DB 역량 '"+related.skillEvidence+"'의 관련성을 본인이 검토하세요. 공식 정보 검증 전이며 채용요건 충족을 뜻하지 않습니다.");
+      }
+    }
+    return tasks;
+  }
+  function taskCounts(tasks,completed){
+    const checked=completed instanceof Set?completed:new Set(completed||[]);
+    const counts={total:tasks.length,done:0,byCategory:{}};
+    for(const name of taskCategories)counts.byCategory[name]={total:0,done:0};
+    for(const task of tasks){
+      if(!counts.byCategory[task.category])continue;
+      counts.byCategory[task.category].total++;
+      if(checked.has(task.id)){counts.done++;counts.byCategory[task.category].done++;}
+    }
+    return counts;
+  }
+  function formatChecklist(tasks,completed){
+    const checked=completed instanceof Set?completed:new Set(completed||[]);
+    const lines=["뭐따지? · 직접 확인하는 취업 준비 체크리스트",
+      "※ AI 분석이나 채용요건 충족 판정이 아닙니다. 자격증 정보는 공식 검증 전입니다.",""];
+    for(const category of taskCategories){
+      lines.push("["+category+"]");
+      const group=tasks.filter(t=>t.category===category);
+      if(!group.length)lines.push("- 해당 작업 없음");
+      for(const task of group){
+        const mark=checked.has(task.id)?"x":" ";
+        lines.push("- ["+mark+"] 우선 "+task.priority+" · "+task.title);
+        lines.push("  요건: "+task.requirement);
+        lines.push("  실행: "+task.detail);
+      }
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
   function create(){
     const generate=document.getElementById("roadmap-generate");
     const warning=document.getElementById("roadmap-message");
@@ -211,5 +296,5 @@
     return {generatePlan};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {build,explicitCertMatches,relatedSkillCandidates,action};
+  return {build,explicitCertMatches,relatedSkillCandidates,action,planTasks,taskCounts,formatChecklist,taskCategories};
 });
