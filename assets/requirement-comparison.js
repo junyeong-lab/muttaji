@@ -150,6 +150,9 @@
     // A form submit can follow browser autofill or script-driven updates that
     // did not dispatch input events. Treat the confirmation as a second guard.
     form.addEventListener("submit",checkStale);
+    // Switching tabs can reveal a saved view after autofill or changes that
+    // did not dispatch an input event. Verify freshness on every navigation.
+    window.addEventListener?.("hashchange",checkStale);
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
