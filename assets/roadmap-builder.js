@@ -15,6 +15,21 @@
     const names=[cert.name,...String(cert.aliases||"").split(";")];
     return [...new Set(names.map(norm).filter(x=>x.length>=3&&x!=="추후 확인"))];
   }
+  // ASCII certificate acronyms must stand alone: "SIS" is not the "sis"
+  // inside an unrelated English word such as "analysis".
+  function containsCertToken(haystack,needle){
+    if(!needle)return false;
+    let from=0,at;
+    while((at=haystack.indexOf(needle,from))!==-1){
+      const before=at===0?"":haystack[at-1];
+      const after=at+needle.length>=haystack.length?"":haystack[at+needle.length];
+      if((!/[a-z0-9]/.test(needle[0])||!/[a-z0-9]/.test(before)) &&
+         (!/[a-z0-9]/.test(needle[needle.length-1])||!/[a-z0-9]/.test(after)))
+        return true;
+      from=at+1;
+    }
+    return false;
+  }
   function explicitCertMatches(requirement,certifications,profileCerts){
     const text=norm(requirement),held=norm(profileCerts);
     return (Array.isArray(certifications)?certifications:[]).filter(cert=>{
@@ -22,11 +37,11 @@
       // "ISMS-P 인증심사원" may be a role/qualification rather than a
       // conventional licensable examination, so do not auto-suggest it.
       if(cert.name==="ISMS-P 인증심사원")return false;
-      return tokens(cert).some(t=>text.includes(t));
+      return tokens(cert).some(t=>containsCertToken(text,t));
     }).slice(0,5).map(cert=>({
       id:cert.id,name:cert.name,field:cert.field||"분야 확인 필요",
       official_url:/^https:\/\/[a-z0-9.-]+(?:\/|$)/i.test(cert.official_url||"")?cert.official_url:null,
-      heldClaim:tokens(cert).some(t=>held.includes(t)),
+      heldClaim:tokens(cert).some(t=>containsCertToken(held,t)),
       verification:"공식 세부정보 미검증 · 원문 자격요건과 별도 대조 필요"
     }));
   }
@@ -68,7 +83,7 @@
         results.push({
           id:cert.id,name:cert.name,field:cert.field||"분야 확인 필요",
           official_url:/^https:\/\/[a-z0-9.-]+(?:\/|$)/i.test(cert.official_url||"")?cert.official_url:null,
-          heldClaim:tokens(cert).some(t=>norm(profileCerts).includes(t)),
+          heldClaim:tokens(cert).some(t=>containsCertToken(norm(profileCerts),t)),
           relation:"related_skill",matchedPhrase:match[0].trim(),skillEvidence:tag,
           verification:"사용자 작성 DB의 관련 역량 참고 후보 · 공식 정보 미검증 · 자격요건 충족 의미 아님"
         });
@@ -146,6 +161,10 @@
           // The roadmap must still work offline without a certification list.
           warning.textContent="자격증 DB를 불러오지 못했습니다. 자격증 연결 없이 준비 순서만 안내합니다.";
         }
+        if(window.MuttajiComparisonSnapshot!==snapshot || job.value!==snapshot.posting){
+          reset("비교 결과가 변경됐습니다. 최신 요건 비교를 확인하고 로드맵을 다시 생성해 주세요.");
+          return;
+        }
         const steps=build(snapshot.items,certifications,snapshot.profileCerts||"");
         if(!steps.length){reset("검토할 필수·우대 요건이 없습니다. 채용공고 분류를 확인해 주세요.");return;}
         list.replaceChildren();
@@ -162,7 +181,7 @@
             const section=el("div","roadmap-certs");
             section.appendChild(el("strong","", "자격증 DB 연결 · 공고 직접 언급 / 관련 역량 참고 (공식 검증 전)"));
             for(const cert of step.certificates){
-              const text=cert.name+(cert.heldClaim?" · 보유 입력에 언급됨":" · 실제 보유·응시 가능 여부 확인");
+              const text=cert.name+(cert.heldClaim?" · 자격증 입력란에 이름 있음(취득 확인 필요)":" · 실제 보유·응시 가능 여부 확인");
               const p=el("p","roadmap-cert-item",text);
               p.appendChild(el("small","subtext",cert.relation==="related_skill"
                 ?"관련 역량 참고: 공고 표현 '"+cert.matchedPhrase+"' ↔ DB 기술 '"+cert.skillEvidence+"' · 채용요건 충족과 무관"
