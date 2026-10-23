@@ -135,15 +135,20 @@
     function update(){
       const outcomes=collect();
       const total=tally(outcomes);
+      const automatic=outcomes.filter((outcome,i)=>outcome.status==="충족" &&
+        list.children[i]?.dataset.autoReason===outcome.explanation && !!outcome.explanation).length;
       summary.textContent="총 "+outcomes.length+"개 요건 · 충족 "+total["충족"]+" · 부분 충족 "+total["부분 충족"]+
         " · 미충족 "+total["미충족"]+" · 확인 필요 "+total["확인 필요"]+
-        ". 사용자 확인·입력 기준이며 자동 검증 또는 합격 가능성 평가가 아닙니다.";
+        " · 자격증명 자동 일치 "+automatic+"개. 사용자 입력 기준이며 공식 자격증 검증 또는 합격 가능성 판정이 아닙니다.";
       outcomes.forEach((outcome,i)=>{
         const card=list.children[i],flag=card.querySelector("[data-assessment-note]");
+        const isAutomatic=outcome.status==="충족" &&
+          card.dataset.autoReason===outcome.explanation && !!outcome.explanation;
         if(flag)flag.textContent=outcome.needsReason
           ?"사유가 5자 이상 입력되기 전에는 '확인 필요'로 집계합니다."
+          :(isAutomatic?"자격증명 자동 일치 · 보유 여부는 본인 입력 기준이며 실제 증빙은 별도 확인이 필요합니다."
           :(outcome.status==="확인 필요"?"확인 필요: 입력하신 이력만으로 해당 요건 충족을 단정하지 않습니다."
-          :"선택한 상태: "+outcome.status+" · 본인이 입력한 근거 기준");
+          :"선택한 상태: "+outcome.status+" · 본인이 입력한 근거 기준"));
       });
     }
     function checkStale(){
@@ -175,16 +180,22 @@
         const select=el("select","req-verdict");
         const selectId="req-verdict-"+i;select.id=selectId;selectLabel.htmlFor=selectId;
         verdicts.forEach(v=>{const opt=el("option","",v);opt.value=v;select.appendChild(opt);});
-        select.value="확인 필요";
+        const suggested=credentialSuggestion(item,document.getElementById("certs").value);
+        select.value=suggested?suggested.status:"확인 필요";
+        if(suggested)card.dataset.autoReason=suggested.reason;
         selectLabel.appendChild(select);
         card.appendChild(selectLabel);
         const reasonLabel=el("label","label","판단 근거 또는 부족한 점");
         const reason=el("textarea","req-reason");reason.rows=3;
         reason.placeholder="예: 실제로 수행한 프로젝트, 취득 자격증, 확인할 경력 조건 또는 아직 경험이 없는 이유. 자격증과 실무경력은 구분해 주세요.";
+        if(suggested)reason.value=suggested.reason;
         const reasonId="req-reason-"+i;reason.id=reasonId;reasonLabel.htmlFor=reasonId;reasonLabel.appendChild(reason);
         card.appendChild(reasonLabel);
         const note=el("small","subtext");note.dataset.assessmentNote="1";card.appendChild(note);
-        select.addEventListener("change",update);
+        select.addEventListener("change",()=>{
+          if(suggested && reason.value===suggested.reason)reason.value="";
+          update();
+        });
         reason.addEventListener("input",update);
         list.appendChild(card);
       });
