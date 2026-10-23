@@ -20,7 +20,10 @@ test("필수 미확인·미충족 항목이 우대보다 앞서고 사용자 상
   assert.equal(result.total,6);
   assert.equal(result.alreadyMarked,2);
   assert.equal(result.requiredOpen,2);
-  assert.deepEqual(result.tasks.map(x=>x.id),["r2","r1","p2","p1"]);
+  assert.deepEqual(result.groups.map(group=>group.status),["확인 필요","미충족","부분 충족","충족"]);
+  assert.deepEqual(result.completed.map(x=>x.id),["r0","p0"]);
+  assert.deepEqual(result.groups.map(x=>x.items.length),[2,1,1,2]);
+  assert.deepEqual(result.tasks.map(x=>x.id),["r2","p2","r1","p1"]);
   assert.deepEqual(result.tasks.map(x=>x.priority),[1,2,3,4]);
   assert.deepEqual(result.totals,{"충족":2,"부분 충족":1,"미충족":1,"확인 필요":2});
 });
@@ -42,6 +45,8 @@ test("전부 충족인 경우 빈 할 일 목록과 현재 상태 숫자만 반�
   const result=buildRoadmap([{kind:"required",text:"정보처리기사",status:"충족"}]);
   assert.equal(result.tasks.length,0);
   assert.equal(result.alreadyMarked,1);
+  assert.equal(result.completed.length,1);
+  assert.equal(result.groups[3].items.length,1);
 });
 test("빈 입력·잘못된 항목·텍스트는 안전하게 처리",()=>{
   assert.deepEqual(buildRoadmap([]).tasks,[]);
@@ -68,7 +73,11 @@ test("브라우저 이벤트로 로드맵 갱신·비교 취소 시 초기화",(
   assert.equal(elements["roadmap-empty"].hidden,true);
   assert.equal(elements["roadmap-list"].children.length,4);
   assert.match(elements["roadmap-summary"].textContent,/확인 필요 2개/);
-  assert.match(elements["roadmap-list"].children[0].children[1].textContent,/서버 관리 역량/);
+  assert.deepEqual(elements["roadmap-list"].children.map(x=>x.children[0].textContent),[
+    "확인 필요 · 2개","미충족 · 1개","부분 충족 · 1개","충족 · 2개"
+  ]);
+  assert.match(elements["roadmap-list"].children[0].children[1].children[0].children[1].textContent,/서버 관리 역량/);
+  assert.match(elements["roadmap-list"].children[3].children[1].children[0].children[0].textContent,/충족!/);
   handlers["muttaji:comparison-changed"]({detail:{items:null}});
   assert.equal(elements["roadmap-results"].hidden,true);
   assert.equal(elements["roadmap-empty"].hidden,false);

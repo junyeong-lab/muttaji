@@ -8,8 +8,9 @@
   if(root)root.MuttajiRoadmap=api;
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
+  // Keep all four states visible in user-requested order.
   const states=["확인 필요","미충족","부분 충족","충족"];
-  const order={"확인 필요":0,"미충족":1,"부분 충족":2};
+  const order={"확인 필요":0,"미충족":1,"부분 충족":2,"충족":3};
   function nextAction(item){
     if(item.status==="확인 필요")
       return "공고 원문과 본인의 실제 이력·증빙을 대조하고, 내 역량 화면에서 상태를 직접 확정하세요.";
@@ -35,16 +36,21 @@
         status,reason:typeof item.explanation==="string"?item.explanation.trim():"",
         index,line:Number.isInteger(item.line)&&item.line>0?item.line:null};
     });
-    const tasks=normalized.filter(item=>item.status!=="충족").sort((a,b)=>{
+    const sorted=normalized.sort((a,b)=>{
       const groupA=a.kind==="required"?0:1,groupB=b.kind==="required"?0:1;
-      return groupA-groupB||order[a.status]-order[b.status]||a.index-b.index;
-    }).map((item,index)=>({
-      ...item,priority:index+1,
-      category:item.kind==="required"?"필수조건":"우대사항",
-      action:nextAction(item)
+      return order[a.status]-order[b.status]||groupA-groupB||a.index-b.index;
+    }).map(item=>({...item,category:item.kind==="required"?"필수조건":"우대사항"}));
+    // Distinguish actual work to do from conditions the user marked fulfilled.
+    let priority=0;
+    const tasks=sorted.filter(item=>item.status!=="충족")
+      .map(item=>({...item,priority:++priority,action:nextAction(item)}));
+    const completed=sorted.filter(item=>item.status==="충족");
+    const groups=states.map(status=>({
+      status,
+      items:status==="충족"?completed:tasks.filter(item=>item.status===status)
     }));
     return {
-      total:normalized.length,totals,tasks,
+      total:normalized.length,totals,tasks,completed,groups,
       requiredOpen:tasks.filter(item=>item.kind==="required").length,
       alreadyMarked:totals["충족"]
     };
@@ -73,23 +79,34 @@
       summary.textContent="비교한 조건 "+plan.total+"개 · 충족(본인 입력) "+plan.alreadyMarked+
         "개 · 확인 필요 "+plan.totals["확인 필요"]+"개 · 미충족 "+plan.totals["미충족"]+
         "개 · 부분 충족 "+plan.totals["부분 충족"]+"개. 이 순서는 필수조건을 먼저 살피기 위한 참고용입니다.";
-      if(!plan.tasks.length){
-        list.appendChild(node("p","req-explain","현재 점검 기록에서는 추가 확인·보완으로 표시된 조건이 없습니다. 충족으로 표시된 내용의 증빙과 채용공고 원문을 최종 확인하세요."));
-      }else{
-        plan.tasks.forEach(item=>{
-          const card=node("article","roadmap-task");
-          card.appendChild(node("p","roadmap-rank","우선 확인 "+item.priority+" · "+item.category+" · "+item.status));
-          card.appendChild(node("h3","",item.text));
-          if(item.line)card.appendChild(node("small","subtext","채용공고 원문 "+item.line+"행"));
-          card.appendChild(node("p","roadmap-action",item.action));
-          if(item.reason)card.appendChild(node("p","roadmap-evidence","내가 입력한 근거: "+item.reason));
-          list.appendChild(card);
-        });
-      }
+      plan.groups.forEach(group=>{
+        const section=node("section","roadmap-group");
+        section.appendChild(node("h3","roadmap-group-title",group.status+" · "+group.items.length+"개"));
+        const cards=node("div","roadmap-group-items");
+        if(!group.items.length){
+          cards.appendChild(node("p","roadmap-none","해당 조건 없음"));
+        }else{
+          group.items.forEach(item=>{
+            const fulfilled=item.status==="충족";
+            const card=node("article",fulfilled?"roadmap-task roadmap-task--fulfilled":"roadmap-task");
+            card.appendChild(node("p",fulfilled?"roadmap-rank roadmap-rank--fulfilled":"roadmap-rank",
+              fulfilled?"✓ 충족! · "+item.category+" · 본인 입력 기준":"우선 확인 "+item.priority+" · "+item.category+" · "+item.status));
+            card.appendChild(node("h4","roadmap-item-title",item.text));
+            if(item.line)card.appendChild(node("small","subtext","채용공고 원문 "+item.line+"행"));
+            card.appendChild(node("p","roadmap-action",fulfilled
+              ?"본인 입력으로 충족 표시한 조건입니다. 실제 증빙과 기업의 자격 인정 여부는 별도로 확인해 주세요."
+              :item.action));
+            if(item.reason)card.appendChild(node("p","roadmap-evidence","내가 입력한 근거: "+item.reason));
+            cards.appendChild(card);
+          });
+        }
+        section.appendChild(cards);
+        list.appendChild(section);
+      });
       notice.textContent=(plan.requiredOpen
-        ?"현재 아직 확인하거나 보완할 필수조건 "+plan.requiredOpen+"개를 우대사항보다 앞에 표시했습니다."
-        :"현재 비교 결과에서 미확인·미충족 필수조건은 없습니다.")+
-        " 자격증 일치 표시는 본인 입력 기준이며, 공식 자격 검증·대체 경력 인정·합격 확률은 판단하지 않습니다.";
+        ?"현재 아직 확인하거나 보완할 필수조건 "+plan.requiredOpen+"개가 있습니다."
+        :"현재 비교 결과에서 추가 확인·보완으로 표시된 필수조건은 없습니다.")+
+        " 확인 필요 → 미충족 → 부분 충족 → 충족 순서로 표시합니다. 모든 상태는 본인 입력 기준이며, 공식 자격 검증·대체 경력 인정·합격 확률을 판단하지 않습니다.";
     }
     window.addEventListener("muttaji:comparison-changed",event=>{
       render(event&&event.detail&&event.detail.items);
