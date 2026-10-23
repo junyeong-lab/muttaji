@@ -139,3 +139,31 @@ test("라우터에서 직접 호출 가능한 두 종류의 최신 입력 가드
   assert.equal(typeof env.window.MuttajiCheckRequirementFreshness,"function");
   assert.equal(typeof env.window.MuttajiCheckRoadmapFreshness,"function");
 });
+test("내 역량 보유 자격증과 단순 자격 요건이 같으면 비교 화면 및 집계가 자동 충족",()=>{
+  const env=environment();
+  env.window.MuttajiCertCatalog=[
+    {name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  env.nodes["certs"].value="정보보안기사";
+  compare(env);
+  const card=env.nodes["requirements-list"].children[0];
+  assert.equal(card.querySelector("select").value,"충족");
+  assert.match(card.querySelector("textarea").value,/정보보안기사/);
+  assert.match(env.nodes["requirements-summary"].textContent,/충족 1/);
+  assert.equal(env.window.MuttajiComparisonSnapshot.items[0].status,"충족");
+  assert.equal(env.window.MuttajiComparisonSnapshot.items[0].needsReason,false);
+});
+test("자동 표시된 자격증 충족도 사용자가 확인 필요로 되돌릴 수 있음",()=>{
+  const env=environment();
+  env.window.MuttajiCertCatalog=[
+    {name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"}
+  ];
+  env.nodes["certs"].value="정보보안기사";
+  compare(env);
+  const select=env.nodes["requirements-list"].children[0].querySelector("select");
+  select.value="확인 필요";
+  select.dispatch("change");
+  assert.equal(env.window.MuttajiComparisonSnapshot.items[0].status,"확인 필요");
+  assert.match(env.nodes["requirements-summary"].textContent,/확인 필요 1/);
+});
