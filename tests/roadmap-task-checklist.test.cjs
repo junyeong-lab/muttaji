@@ -1,0 +1,67 @@
+"use strict";
+const test=require("node:test");
+const assert=require("node:assert/strict");
+const {build,planTasks,taskCounts,formatChecklist,taskCategories}=require("../assets/roadmap-builder.js");
+
+test("학습과 프로젝트는 실제 기술 부족 항목에서만, 근거 문구를 유지하여 나온다",()=>{
+  const steps=build([{kind:"required",status:"미충족",text:"정보보호 취약점 점검"}],[],"");
+  const items=planTasks(steps);
+  assert.deepEqual(items.map(x=>x.category),["학습","프로젝트"]);
+  assert.ok(items.every(x=>x.priority===1&&x.requirement==="정보보호 취약점 점검"));
+  assert.match(items[1].detail,/실무경력의 대체가 아닙니다/);
+});
+test("경력 연차 조건은 실습과 자격증으로 대체하지 않고 지원 준비만 안내",()=>{
+  const items=planTasks(build([{kind:"required",status:"미충족",text:"엔드포인트 솔루션 유지관리 실무 경력 3년 이상"}],[],""));
+  assert.deepEqual(items.map(x=>x.category),["지원 준비"]);
+  assert.match(items[0].detail,/실습이나 자격증/);
+});
+test("확인 필요면 학습 강요 없이 먼저 채용요건 확인, 충족이면 증빙만 준비",()=>{
+  const items=planTasks(build([
+    {kind:"required",status:"확인 필요",text:"보안 점검"},
+    {kind:"preferred",status:"충족",text:"SQL 데이터베이스 설계"}
+  ],[],""));
+  assert.deepEqual(items.map(x=>x.category),["지원 준비","지원 준비"]);
+  assert.match(items[0].detail,/채용담당자/);
+  assert.match(items[1].title,/증빙|근거/);
+});
+test("공고 명시 자격증과 단순 관련 자격증은 구분하여 검증 할 일로 제시",()=>{
+  const catalog=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:7,name:"CPPG",aliases:"CPPG",field:"개인정보보호",skills:"개인정보보호",verification_status:"needs_official_review"}
+  ];
+  const steps=build([
+    {kind:"required",status:"미충족",text:"정보보안기사 취득"},
+    {kind:"preferred",status:"부분 충족",text:"개인정보보호 업무 이해"}
+  ],catalog,"");
+  const items=planTasks(steps);
+  assert.ok(items.some(t=>t.category==="자격증"&&t.title.includes("공고 명시 자격 확인: 정보보안기사")));
+  assert.ok(items.some(t=>t.category==="자격증"&&t.title.includes("관련 자격 참고 검토: CPPG")));
+  assert.ok(!items.some(t=>/정보보안기사/.test(t.title)&&t.title.includes("프로젝트")));
+});
+test("완료 체크는 사용자 진행 기록일 뿐, 상태를 바꾸지 않고 집계된다",()=>{
+  const steps=build([{kind:"required",status:"미충족",text:"네트워크 보안 점검"}],[],"");
+  const items=planTasks(steps);
+  const set=new Set([items[0].id]);
+  const stats=taskCounts(items,set);
+  assert.equal(stats.total,2);
+  assert.equal(stats.done,1);
+  assert.equal(stats.byCategory["학습"].done,1);
+  assert.equal(stats.byCategory["프로젝트"].total,1);
+  assert.deepEqual(taskCategories,["학습","프로젝트","자격증","지원 준비"]);
+  assert.equal(steps[0].status,"미충족");
+});
+test("복사 텍스트에 선택 상태, 공고 원문, 작업 내용이 포함되고 서버 저장 없음",()=>{
+  const items=planTasks(build([{kind:"required",status:"부분 충족",text:"개인정보보호 이해"}],[],""));
+  const output=formatChecklist(items,new Set([items[0].id]));
+  assert.match(output,/\\[x\\]/);
+  assert.match(output,/\\[ \\]/);
+  assert.match(output,/개인정보보호 이해/);
+  assert.match(output,/공식 검증 전/);
+  for(const cat of taskCategories)assert.ok(output.includes("["+cat+"]"));
+});
+test("잘못된 작업 입력 거부, 빈 작업에도 카테고리는 유지",()=>{
+  assert.throws(()=>planTasks(null),TypeError);
+  const empty=taskCounts([],new Set());
+  assert.equal(empty.total,0);
+  assert.equal(empty.byCategory["지원 준비"].total,0);
+});
