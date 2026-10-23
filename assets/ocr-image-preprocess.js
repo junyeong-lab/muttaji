@@ -9,6 +9,11 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   function gray(r,g,b){return 0.299*r + 0.587*g + 0.114*b;}
+  function segmentationMode(mode){return mode==="single-block"?"6":"4";}
+  function lowResolution(width,height){
+    return Number.isFinite(width)&&Number.isFinite(height)&&
+      width>0&&height>0&&(width<1100||height<320);
+  }
   function inspect(pixels, width, height) {
     if (!pixels || !width || !height) throw new TypeError("Invalid image data");
     let left=width,top=height,right=-1,bottom=-1,dark=0;
@@ -126,14 +131,14 @@
       ctx.drawImage(image,0,0,source.width,source.height);
       const pixels=ctx.getImageData(0,0,source.width,source.height).data;
       const layout=inspect(pixels,source.width,source.height);
-      if(layout.blank)return {regions:[upscale(source,layout.regions[0],false)],columns:1,cropped:false};
+      if(layout.blank)return {regions:[upscale(source,layout.regions[0],false)],columns:1,cropped:false,originalWidth,originalHeight};
       // Mostly-white screenshots get text contrast normalization; photos do not.
       const enhance=layout.regions.length>1 || (layout.cropped && layout.regions[0].width*layout.regions[0].height<source.width*source.height*.82);
-      return {regions:layout.regions.map(rect=>upscale(source,rect,enhance)),columns:layout.columns,cropped:layout.cropped};
+      return {regions:layout.regions.map(rect=>upscale(source,rect,enhance)),columns:layout.columns,cropped:layout.cropped,originalWidth,originalHeight};
     }finally{
       if(revoke)revoke();
       if(image && typeof image.close==="function")image.close();
     }
   }
-  return {inspect,prepare};
+  return {inspect,prepare,segmentationMode,lowResolution};
 });
