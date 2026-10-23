@@ -51,3 +51,40 @@ test("유효하지 않은 입력은 거부하고 규칙이 해석 불가한 항�
   assert.throws(()=>build("not array",catalog,""),TypeError);
   assert.deepEqual(build([{kind:"unknown",status:"충족",text:"A"},{kind:"required",status:"false",text:"B"}],catalog,""),[]);
 });
+
+test("직무 요구역량은 DB의 실제 역량 태그가 일치할 때만 참고 후보로 연결한다",()=>{
+  const related=require("../assets/roadmap-builder.js").relatedSkillCandidates;
+  const source=[
+    {id:5,name:"SQLD",aliases:"SQLD",skills:"SQL; 데이터베이스",field:"데이터",verification_status:"needs_official_review"},
+    {id:7,name:"CPPG",aliases:"CPPG",skills:"개인정보보호; 개인정보보호법",field:"개인정보보호",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",skills:"소프트웨어설계; 데이터베이스",field:"IT",verification_status:"needs_official_review"},
+    {id:15,name:"컴퓨터활용능력 1급",aliases:"컴활1급",skills:"데이터베이스; 스프레드시트",field:"사무정보",verification_status:"needs_official_review"}
+  ];
+  assert.deepEqual(related("개인정보보호 업무",source,"",[]).map(c=>c.name),["CPPG"]);
+  const sql=related("SQL과 데이터베이스 설계 지식",source,"",[]);
+  assert.deepEqual(sql.map(c=>c.name),["SQLD","정보처리기사"]);
+  assert.equal(sql[0].matchedPhrase.toLowerCase(),"sql");
+  assert.equal(sql[0].skillEvidence,"SQL");
+  assert.equal(sql.some(x=>x.name==="컴퓨터활용능력 1급"),false);
+});
+test("경력이나 심사원·전문인력 자체가 요구되면 다른 자격증으로 대체 추천하지 않는다",()=>{
+  const related=require("../assets/roadmap-builder.js").relatedSkillCandidates;
+  const candidates=[{id:7,name:"CPPG",aliases:"CPPG",skills:"개인정보보호",field:"개인정보보호",verification_status:"needs_official_review"}];
+  for(const requirement of ["개인정보보호 분야 실무 경력 3년 이상","개인정보영향평가 전문인력","개인정보보호 인증심사원","개인정보보호 보안약점 진단원"]){
+    assert.deepEqual(related(requirement,candidates,"",[]),[],requirement);
+  }
+});
+test("영어 약어는 단어 경계를 지켜 다른 단어에 들어 있는 SIS를 오인하지 않는다",()=>{
+  const list=[{id:1,name:"정보보안기사",aliases:"SIS; 정보보안기사",verification_status:"needs_official_review"}];
+  assert.deepEqual(explicitCertMatches("analysis 및 위험평가",list,""),[]);
+  assert.deepEqual(explicitCertMatches("SIS 우대",list,"").map(x=>x.name),["정보보안기사"]);
+});
+test("공고에 이름이 없으면 추천은 자격요건 충족으로 간주되지 않는다",()=>{
+  const full=[{id:7,name:"CPPG",aliases:"CPPG",skills:"개인정보보호",field:"개인정보보호",verification_status:"needs_official_review"}];
+  const result=build([{kind:"preferred",status:"미충족",text:"개인정보보호 업무 이해"}],full,"CPPG");
+  assert.equal(result[0].status,"미충족");
+  assert.equal(result[0].certificates.length,1);
+  assert.equal(result[0].certificates[0].relation,"related_skill");
+  assert.equal(result[0].certificates[0].heldClaim,true);
+  assert.equal(result[0].requiresValidation,true);
+});
