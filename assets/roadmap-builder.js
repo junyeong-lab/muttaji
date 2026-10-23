@@ -65,7 +65,7 @@
     if(!Array.isArray(certifications))return [];
     const text=String(requirement||"");
     // A qualification cannot substitute for required years or hands-on work.
-    if(/(?:실무\s*경력|동종\s*경력|경력\s*[0-9]|[0-9]+\s*년\s*이상|구축\s*및\s*유지관리\s*경험|[가-힣]+\s*경험\s*보유)/i.test(text))return [];
+    if(/(?:실무\s*경력|동종\s*경력|경력\s*[0-9]|[0-9]+\s*년\s*이상|구축\s*및\s*유지관리\s*경험|[가-힣]+\s*경험\s*보유|인증\s*심사원|전문인력|보안약점\s*진단원)/i.test(text))return [];
     const results=[],seen=new Set(alreadyNamed||[]);
     for(const rule of skillRules){
       const match=text.match(rule.pattern);
