@@ -9,6 +9,57 @@
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
   const verdicts=["확인 필요","충족","부분 충족","미충족"];
+
+  function normCert(value){return String(value||"").normalize("NFKC").toLocaleLowerCase("ko-KR").replace(/\s+/g," ").trim();}
+  // Deterministic matching only for a simple certificate-only requirement.
+  // Other constraints (degree, experience, role, etc.) remain 확인 필요.
+  function cleanCertRequirement(text,catalog){
+    const input=normCert(text);
+    if(!input||!Array.isArray(catalog))return null;
+    const candidates=catalog.filter(c=>c&&typeof c.name==="string"&&
+      c.verification_status==="needs_official_review"&&c.name!=="ISMS-P 인증심사원")
+      .map(c=>({name:c.name,normalizedName:normCert(c.name)}))
+      .sort((a,b)=>b.normalizedName.length-a.normalizedName.length);
+    let remaining=input;
+    const mentioned=[];
+    for(const cert of candidates){
+      const start=remaining.indexOf(cert.normalizedName);
+      if(start<0)continue;
+      const before=remaining[start-1]||"",tail=remaining.slice(start+cert.normalizedName.length);
+      const after=tail[0]||"";
+      if(/[가-힣a-z0-9]/i.test(before))continue;
+      if(/[가-힣a-z0-9]/i.test(after)&& !/^(?:자격|보유|소지|취득|우대|필수|필요)/.test(tail))continue;
+      remaining=remaining.slice(0,start)+" # "+tail;
+      mentioned.push(cert.name);
+    }
+    if(!mentioned.length)return null;
+    const cleaned=remaining.replace(/#/g," ").replace(/[()]/g," ").trim();
+    const leftover=cleaned.replace(/(?:자격증|자격|보유자|보유|소지자|소지|취득자|취득|우대사항|우대|필수조건|필수|요건|조건|필요|必|or|또는|혹은|및|and)/gi,"")
+      .replace(/[\s,.·:;/+\-]/g,"").trim();
+    if(leftover)return null;
+    const any=/\b(or)\b|또는|혹은/i.test(cleaned);
+    const all=/\b(and)\b|및/i.test(cleaned);
+    if(mentioned.length>1&&!any&&!all)return null;
+    if(any&&all)return null;
+    return {names:mentioned,mode:all?"all":any?"any":"single"};
+  }
+  function enteredCertificateNames(entered,catalog){
+    const claims=String(entered||"").split(/[,;\n|]+/).map(normCert).filter(Boolean);
+    return (Array.isArray(catalog)?catalog:[]).filter(c=>c&&typeof c.name==="string"&&
+      claims.some(x=>[c.name,...String(c.aliases||"").split(";")].map(normCert).includes(x)));
+  }
+  function suggestCertificateAssessment(item,entered,catalog){
+    if(!item||typeof item.text!=="string")return null;
+    const requirement=cleanCertRequirement(item.text,catalog);
+    if(!requirement)return null;
+    const owned=enteredCertificateNames(entered,catalog);
+    const matched=requirement.names.filter(name=>owned.some(c=>c.name===name));
+    const meets=requirement.mode==="all"?matched.length===requirement.names.length:matched.length>=1;
+    if(!meets)return null;
+    return {status:"충족",
+      explanation:"자동 일치(입력 기준): 공고의 자격증 조건과 내 역량의 보유 자격증란에 입력한 '"+matched.join(", ")+"' 이름이 일치합니다. 실제 취득·유효성 및 다른 지원 요건은 별도 확인이 필요합니다.",
+      matched,basis:"profile-cert-name"};
+  }
   function requirements(posting,parser,reviewed){
     if(typeof posting!=="string"||!parser||typeof parser.analyze!=="function")throw new TypeError("공고 분석기를 불러올 수 없습니다.");
     // Only trust manually corrected categories for the exact current posting.
@@ -123,14 +174,17 @@
         const select=el("select","req-verdict");
         const selectId="req-verdict-"+i;select.id=selectId;selectLabel.htmlFor=selectId;
         verdicts.forEach(v=>{const opt=el("option","",v);opt.value=v;select.appendChild(opt);});
-        select.value="확인 필요";
+        const proposal=suggestCertificateAssessment(item,document.getElementById("certs")?.value,window.MuttajiCertCatalog);
+        select.value=proposal?proposal.status:"확인 필요";
         selectLabel.appendChild(select);
         card.appendChild(selectLabel);
         const reasonLabel=el("label","label","판단 근거 또는 부족한 점");
         const reason=el("textarea","req-reason");reason.rows=3;
         reason.placeholder="예: 실제로 수행한 프로젝트, 취득 자격증, 확인할 경력 조건 또는 아직 경험이 없는 이유. 자격증과 실무경력은 구분해 주세요.";
+        if(proposal)reason.value=proposal.explanation;
         const reasonId="req-reason-"+i;reason.id=reasonId;reasonLabel.htmlFor=reasonId;reasonLabel.appendChild(reason);
         card.appendChild(reasonLabel);
+        if(proposal)card.appendChild(el("p","review-note","자동 충족(입력 기준) · 보유 자격증 이름 일치. 실제 취득·유효성과 전체 지원 자격을 검증한 결과는 아닙니다. 상태와 근거를 수정할 수 있습니다."));
         const note=el("small","subtext");note.dataset.assessmentNote="1";card.appendChild(note);
         select.addEventListener("change",update);
         reason.addEventListener("input",update);
@@ -157,5 +211,5 @@
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {requirements,assessment,tally};
+  return {requirements,assessment,tally,suggestCertificateAssessment,cleanCertRequirement,enteredCertificateNames};
 });
