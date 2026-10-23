@@ -18,8 +18,10 @@ test("사용하지 않는 내장 OCR 라이브러리는 로딩하지 않는다",
   }
 });
 test("Windows PowerToys 별도 설치 및 기본 단축키와 캡처 도구의 차이를 명시한다",()=>{
-  assert.match(html,/PowerToys Text Extractor/);
-  assert.match(html,/별도 설치/);
+  assert.match(html,/PowerToys란\?/);
+  assert.match(html,/Text Extractor\(텍스트 추출기\)/);
+  assert.match(html,/한 번 설치/);
+  assert.match(html,/기본 설치된 기능은 아닙니다/);
   assert.match(html,/Win<\/kbd> \+ <kbd>Shift<\/kbd> \+ <kbd>T/);
   assert.match(html,/텍스트 작업/);
 });
