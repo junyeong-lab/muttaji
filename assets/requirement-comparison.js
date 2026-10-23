@@ -132,6 +132,10 @@
         return assessment(current[i],status,reason);
       });
     }
+    function emitComparison(items){
+      // Only this browser tab receives the in-memory assessment; no server request.
+      window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items}}));
+    }
     function update(){
       const outcomes=collect();
       const total=tally(outcomes);
@@ -150,18 +154,20 @@
           :(outcome.status==="확인 필요"?"확인 필요: 입력하신 이력만으로 해당 요건 충족을 단정하지 않습니다."
           :"선택한 상태: "+outcome.status+" · 본인이 입력한 근거 기준"));
       });
+      emitComparison(outcomes);
     }
     function checkStale(){
       if(panel.hidden)return;
       if(job.value!==sourceText||snapshot()!==sourceProfile){
         panel.hidden=true;
+        emitComparison(null);
         help.textContent="채용공고 또는 프로필이 변경되었습니다. 아래 '요건 비교하기'를 다시 눌러 최신 내용으로 검토하세요.";
         help.hidden=false;
       }
     }
     const button=document.getElementById("requirements-run");
     button.addEventListener("click",()=>{
-      list.replaceChildren();panel.hidden=true;
+      list.replaceChildren();panel.hidden=true;emitComparison(null);
       const parser=window.JobTextAnalyzer;
       if(!parser){help.textContent="공고 분류기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.";help.hidden=false;return;}
       const text=job.value.trim();
