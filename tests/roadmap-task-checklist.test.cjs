@@ -115,3 +115,53 @@ test("또는으로 연결된 대체 자격과 별도 요건의 자격은 구분�
   assert.match(tasks[0].title,/택1/);
   assert.equal(tasks[1].title,"공고 명시 자격 확인: 정보보안기사");
 });
+
+
+test("보유 자격증 입력 이름은 체크리스트 복사에도 보유 입력됨으로 반영",()=>{
+  const catalog=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  const items=[{kind:"required",status:"확인 필요",
+    text:"학력 : 초대졸 이상 (정보통신 비전공자 및 초대졸의 경우, 정보처리기사 or 정보보안기사 자격증 보유 必)",line:7},
+    {kind:"preferred",status:"확인 필요",text:"정보보안기사 자격 보유자",line:15}];
+  const tasks=planTasks(build(items,catalog,"정보보안기사"));
+  const certs=tasks.filter(x=>x.category==="자격증");
+  assert.equal(certs.length,2);
+  assert.match(certs[0].detail,/입력됨: 정보보안기사/);
+  assert.match(certs[0].detail,/실제 취득·유효성 미확인/);
+  assert.match(certs[1].detail,/정보보안기사' 입력됨/);
+  const output=formatChecklist(tasks,new Set());
+  assert.match(output,/입력됨: 정보보안기사/);
+  assert.equal((output.match(/- \[x\]/g)||[]).length,0);
+  assert.equal((output.match(/- \[ \]/g)||[]).length,tasks.length);
+});
+test("택1 조건은 입력한 자격만 보유 입력 표시하고 누락 자격을 보유 처리하지 않음",()=>{
+  const catalog=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  const items=[{kind:"required",status:"확인 필요",text:"정보처리기사 또는 정보보안기사 자격증 보유"}];
+  const [onlyIT]=planTasks(build(items,catalog,"정보처리기사")).filter(x=>x.category==="자격증");
+  assert.match(onlyIT.detail,/입력됨: 정보처리기사/);
+  assert.doesNotMatch(onlyIT.detail,/입력됨: 정보보안기사/);
+  const [neither]=planTasks(build(items,catalog,"")).filter(x=>x.category==="자격증");
+  assert.match(neither.detail,/일치하는 자격 이름을 찾지 못했습니다/);
+  assert.equal(neither.status,"확인 필요");
+});
+test("보유 자격명이 달라지면 복사 내용도 달라지며 판단 상태는 변경되지 않음",()=>{
+  const cat=[
+    {id:1,name:"정보보안기사",aliases:"정보보안기사",verification_status:"needs_official_review"},
+    {id:2,name:"정보처리기사",aliases:"정보처리기사",verification_status:"needs_official_review"}
+  ];
+  const item={kind:"required",status:"확인 필요",text:"정보처리기사 or 정보보안기사 자격증 보유"};
+  const withClaim=build([item],cat,"정보보안기사");
+  const withoutClaim=build([item],cat,"");
+  const checked=formatChecklist(planTasks(withClaim),new Set());
+  const unchecked=formatChecklist(planTasks(withoutClaim),new Set());
+  assert.match(checked,/보유 자격증란에 입력됨: 정보보안기사/);
+  assert.match(unchecked,/일치하는 자격 이름을 찾지 못했습니다/);
+  assert.ok(!unchecked.includes("입력됨: 정보보안기사"));
+  assert.equal(withClaim[0].status,"확인 필요");
+  assert.equal(withoutClaim[0].status,"확인 필요");
+});
