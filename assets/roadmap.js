@@ -68,6 +68,42 @@
       if(text!=null)n.textContent=String(text);
       return n;
     };
+    // The same outlined status icons appear before all four status labels.
+    // They are decorative; the full Korean status name remains readable text.
+    const statusIcons={
+      "확인 필요":{className:"pending",shapes:[
+        ["circle",{cx:12,cy:12,r:10}],
+        ["path",{d:"M9.2 9a3 3 0 0 1 5.6 1.4c0 1.8-2.8 2.2-2.8 3.8"}],
+        ["path",{d:"M12 17h.01"}]
+      ]},
+      "미충족":{className:"missing",shapes:[
+        ["circle",{cx:12,cy:12,r:10}],
+        ["path",{d:"m9 9 6 6m0-6-6 6"}]
+      ]},
+      "부분 충족":{className:"partial",shapes:[
+        ["circle",{cx:12,cy:12,r:10}],
+        ["circle",{cx:12,cy:12,r:3,fill:"currentColor",stroke:"none"}]
+      ]},
+      "충족":{className:"fulfilled",shapes:[
+        ["circle",{cx:12,cy:12,r:10}],
+        ["path",{d:"m8 12 3 3 5-6"}]
+      ]}
+    };
+    function statusIcon(status){
+      const spec=statusIcons[status];
+      const ns="http://www.w3.org/2000/svg";
+      const svg=document.createElementNS(ns,"svg");
+      svg.setAttribute("viewBox","0 0 24 24");
+      svg.setAttribute("aria-hidden","true");
+      svg.setAttribute("focusable","false");
+      svg.setAttribute("class","roadmap-status-icon roadmap-status-icon--"+spec.className);
+      spec.shapes.forEach(([tag,attrs])=>{
+        const shape=document.createElementNS(ns,tag);
+        Object.entries(attrs).forEach(([key,value])=>shape.setAttribute(key,String(value)));
+        svg.appendChild(shape);
+      });
+      return svg;
+    }
     function render(items){
       if(!Array.isArray(items)||!items.length){
         results.hidden=true;empty.hidden=false;list.replaceChildren();
@@ -81,7 +117,10 @@
         "개 · 부분 충족 "+plan.totals["부분 충족"]+"개. 이 순서는 필수조건을 먼저 살피기 위한 참고용입니다.";
       plan.groups.forEach(group=>{
         const section=node("section","roadmap-group");
-        section.appendChild(node("h3","roadmap-group-title",group.status+" · "+group.items.length+"개"));
+        const groupTitle=node("h3","roadmap-group-title");
+        groupTitle.appendChild(statusIcon(group.status));
+        groupTitle.appendChild(node("span","",group.status+" · "+group.items.length+"개"));
+        section.appendChild(groupTitle);
         const cards=node("div","roadmap-group-items");
         if(!group.items.length){
           cards.appendChild(node("p","roadmap-none","해당 조건 없음"));
@@ -89,8 +128,12 @@
           group.items.forEach(item=>{
             const fulfilled=item.status==="충족";
             const card=node("article",fulfilled?"roadmap-task roadmap-task--fulfilled":"roadmap-task");
-            card.appendChild(node("p",fulfilled?"roadmap-rank roadmap-rank--fulfilled":"roadmap-rank",
-              fulfilled?"✓ 충족 · "+item.category+" · 본인 입력 기준":"우선 확인 "+item.priority+" · "+item.category+" · "+item.status));
+            const rank=node("p",fulfilled?"roadmap-rank roadmap-rank--fulfilled":"roadmap-rank");
+            rank.appendChild(statusIcon(item.status));
+            rank.appendChild(node("span","",fulfilled
+              ?"충족 · "+item.category+" · 본인 입력 기준"
+              :item.status+" · "+item.category+" · 우선 확인 "+item.priority));
+            card.appendChild(rank);
             card.appendChild(node("h4","roadmap-item-title",item.text));
             if(item.line)card.appendChild(node("small","subtext","채용공고 원문 "+item.line+"행"));
             card.appendChild(node("p","roadmap-action",fulfilled

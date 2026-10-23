@@ -59,12 +59,13 @@ test("브라우저 이벤트로 로드맵 갱신·비교 취소 시 초기화",(
     constructor(){this.children=[];this.hidden=false;this.textContent="";this.className="";}
     appendChild(node){this.children.push(node);return node;}
     replaceChildren(...nodes){this.children=[...nodes];}
+    setAttribute(key,value){this.attributes||(this.attributes={});this.attributes[key]=value;}
   }
   const ids=["roadmap-empty","roadmap-results","roadmap-summary","roadmap-list","roadmap-notice"];
   const elements=Object.fromEntries(ids.map(id=>[id,new Element()]));
   const handlers={};
   const win={addEventListener:(type,listener)=>{handlers[type]=listener;}};
-  const doc={getElementById:id=>elements[id]||null,createElement:()=>new Element()};
+  const doc={getElementById:id=>elements[id]||null,createElement:()=>new Element(),createElementNS:(_ns,tag)=>new Element(tag)};
   const script=fs.readFileSync(path.join(__dirname,"../assets/roadmap.js"),"utf8");
   vm.runInNewContext(script,{window:win,document:doc,globalThis:win,console});
   assert.equal(typeof handlers["muttaji:comparison-changed"],"function");
@@ -73,11 +74,20 @@ test("브라우저 이벤트로 로드맵 갱신·비교 취소 시 초기화",(
   assert.equal(elements["roadmap-empty"].hidden,true);
   assert.equal(elements["roadmap-list"].children.length,4);
   assert.match(elements["roadmap-summary"].textContent,/확인 필요 2개/);
-  assert.deepEqual(elements["roadmap-list"].children.map(x=>x.children[0].textContent),[
+  assert.deepEqual(elements["roadmap-list"].children.map(x=>x.children[0].children[1].textContent),[
     "확인 필요 · 2개","미충족 · 1개","부분 충족 · 1개","충족 · 2개"
   ]);
+  assert.deepEqual(elements["roadmap-list"].children.map(x=>x.children[0].children[0].attributes.class),[
+    "roadmap-status-icon roadmap-status-icon--pending",
+    "roadmap-status-icon roadmap-status-icon--missing",
+    "roadmap-status-icon roadmap-status-icon--partial",
+    "roadmap-status-icon roadmap-status-icon--fulfilled"
+  ]);
   assert.match(elements["roadmap-list"].children[0].children[1].children[0].children[1].textContent,/서버 관리 역량/);
-  assert.match(elements["roadmap-list"].children[3].children[1].children[0].children[0].textContent,/충족/);
+  const fulfilledBadge=elements["roadmap-list"].children[3].children[1].children[0].children[0];
+  assert.equal(fulfilledBadge.children[0].attributes.class,"roadmap-status-icon roadmap-status-icon--fulfilled");
+  assert.match(fulfilledBadge.children[1].textContent,/^충족 ·/);
+  assert.doesNotMatch(fulfilledBadge.children[1].textContent,/!/);
   handlers["muttaji:comparison-changed"]({detail:{items:null}});
   assert.equal(elements["roadmap-results"].hidden,true);
   assert.equal(elements["roadmap-empty"].hidden,false);
