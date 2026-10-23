@@ -153,6 +153,7 @@
     // Switching tabs can reveal a saved view after autofill or changes that
     // did not dispatch an input event. Verify freshness on every navigation.
     window.addEventListener?.("hashchange",checkStale);
+    window.MuttajiCheckRequirementFreshness=checkStale;
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
