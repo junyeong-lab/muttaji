@@ -47,6 +47,9 @@ function environment(){
     createElement:tag=>new Node(tag)
   };
   const window={
+    events:{},
+    addEventListener(name,fn){(this.events[name]??=[]).push(fn);},
+    dispatch(name){for(const fn of(this.events[name]||[]))fn();},
     JobTextAnalyzer:{analyze:()=>({
       required:[{text:"정보보안기사 자격증 필요",source:"",line:2,endLine:2}],
       preferred:[]
@@ -92,5 +95,24 @@ test("변경 없는 기존 평가를 확인 버튼만 눌렀을 때 잘못 지�
   const env=environment();compare(env);
   env.nodes["profile-form"].dispatch("submit");
   assert.equal(env.nodes["requirements-check"].hidden,false);
+  assert.ok(env.window.MuttajiComparisonSnapshot);
+});
+
+test("프로필 변경 이벤트 없이 탭 이동만 해도 과거 비교·로드맵 숨김",()=>{
+  const env=environment();compare(env);
+  new Function("window","document","module",roadmapSrc)(env.window,env.document,{exports:{}});
+  env.nodes["roadmap-result"].hidden=false;
+  env.nodes["goal-job"].value+=" (테스트)";
+  env.window.dispatch("hashchange");
+  assertCleared(env);
+  assert.match(env.nodes["roadmap-message"].textContent,/변경/);
+});
+test("입력이 그대로인 단순 탭 이동에서는 기존 비교·로드맵 보존",()=>{
+  const env=environment();compare(env);
+  new Function("window","document","module",roadmapSrc)(env.window,env.document,{exports:{}});
+  env.nodes["roadmap-result"].hidden=false;
+  env.window.dispatch("hashchange");
+  assert.equal(env.nodes["requirements-check"].hidden,false);
+  assert.equal(env.nodes["roadmap-result"].hidden,false);
   assert.ok(env.window.MuttajiComparisonSnapshot);
 });
