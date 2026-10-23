@@ -268,6 +268,7 @@
     if(!generate||!warning||!output||!count||!list||!job||
        !board||!progress||!copyButton||!copyMessage)return null;
     let activeTasks=[],checkedTasks=new Set();
+    let renderedPosting=null,renderedProfile=null;
     function el(tag,cls,text){
       const node=document.createElement(tag);
       if(cls)node.className=cls;
@@ -276,7 +277,8 @@
     }
     function reset(message){
       output.hidden=true;list.replaceChildren();board.replaceChildren();
-      activeTasks=[];checkedTasks=new Set();copyMessage.textContent="";progress.textContent="";
+      activeTasks=[];checkedTasks=new Set();renderedPosting=null;renderedProfile=null;
+      copyMessage.textContent="";progress.textContent="";
       warning.hidden=false;warning.textContent=message;
     }
     function updateProgress(){
@@ -401,6 +403,10 @@
           list.appendChild(card);
         });
         count.textContent="검토한 요건 "+steps.length+"개 · 필수조건 우선 정렬 · 사용자가 선택한 상태를 기반으로 정리한 실행 후보입니다. 자동 채용 적합도 평가가 아닙니다.";
+        // Remember exactly which inputs were used to render the visible plan.
+        // Do not rely solely on a mutable shared comparison snapshot.
+        renderedPosting=snapshot.posting;
+        renderedProfile=snapshot.profile;
         output.hidden=false;
         if(certifications.length)warning.hidden=true;
         output.scrollIntoView({behavior:"smooth",block:"start"});
@@ -412,8 +418,9 @@
     function resetIfChanged(){
       if(output.hidden)return;
       const snapshot=window.MuttajiComparisonSnapshot;
-      if(!snapshot||snapshot.posting!==job.value||
-         snapshot.profile!==currentProfile()){
+      if(renderedPosting!==job.value || renderedProfile!==currentProfile() ||
+         !snapshot || snapshot.posting!==renderedPosting ||
+         snapshot.profile!==renderedProfile){
         reset("공고 또는 내 역량이 변경되었습니다. 요건을 다시 비교한 뒤 로드맵을 생성해 주세요.");
       }
     }
@@ -426,7 +433,10 @@
     });
     document.getElementById("profile-form")?.addEventListener("submit",resetIfChanged);
     window.addEventListener?.("hashchange",resetIfChanged);
-    return {generatePlan};
+    // Navigation buttons call the router directly; verify synchronously,
+    // including cases where no native hashchange fires.
+    window.MuttajiCheckRoadmapFreshness=resetIfChanged;
+    return {generatePlan,resetIfChanged};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
   return {build,explicitCertMatches,alternativeCertGroups,relatedSkillCandidates,action,planTasks,taskCounts,formatChecklist,taskCategories};
