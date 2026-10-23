@@ -69,6 +69,18 @@
     .roadmap-certs strong{display:block;margin-bottom:10px}
     .roadmap-cert-item{margin:7px 0;line-height:1.6}
     .roadmap-cert-item a{display:block;font-size:.79rem;color:#21435d;text-decoration:underline}
+    .roadmap-task-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+    .roadmap-task-group{border:1px solid #e8dac2;border-radius:17px;padding:17px;background:#fffefa;min-width:0}
+    .roadmap-task-heading{font-size:1rem;display:flex;align-items:center;justify-content:space-between;margin:0 0 14px;gap:8px}
+    .roadmap-task-count{font-size:.75rem;color:#6d6471;border-radius:10px;padding:5px 9px;background:#fff1c7;white-space:nowrap}
+    .roadmap-task{display:flex;align-items:flex-start;gap:10px;padding:13px 0;border-top:1px solid #f2e9da;cursor:pointer}
+    .roadmap-task input{flex:0 0 auto;margin-top:3px;width:17px;height:17px;accent-color:#1f665b}
+    .roadmap-task-body{display:block;min-width:0;flex:1}
+    .roadmap-task-body strong{display:block;font-size:.88rem;line-height:1.6}
+    .roadmap-task-requirement,.roadmap-task-detail{display:block;font-size:.78rem;line-height:1.6;margin-top:5px;color:#57647a;overflow-wrap:anywhere}
+    .roadmap-task-detail{color:#384456}
+    .roadmap-task:has(input:checked) .roadmap-task-body strong{text-decoration:line-through;opacity:.65}
+    @media(max-width:680px){.roadmap-task-board{grid-template-columns:1fr}}
     .step-num{font-size:.72rem;font-weight:850;background:#fff3ce;color:#81651f;border-radius:999px;padding:5px 10px;display:inline-block;margin-top:16px}
     .section-top{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;margin:36px 0 24px}
     .heading-kicker{font-weight:900;color:#bb7100;font-size:.8rem;letter-spacing:.03em}.page-title{font-size:clamp(1.8rem,3.4vw,2.65rem);letter-spacing:-.07em;line-height:1.2;margin:8px 0 0}.page-intro{color:var(--muted);line-height:1.8;margin:11px 0 0}
@@ -279,6 +291,15 @@
         <h2 id="roadmap-result-title" class="feature-title" style="margin:9px 0">나의 준비 순서</h2>
         <p id="roadmap-count" class="result-summary" role="status"></p>
         <div id="roadmap-actions" class="req-grid"></div>
+        <section aria-labelledby="roadmap-tasks-title" style="margin-top:26px">
+          <h3 class="feature-title" id="roadmap-tasks-title">분야별 실행 체크리스트</h3>
+          <p class="req-explain">학습·프로젝트·자격증·지원 준비를 나누어 우선순위를 표시했습니다. 각 체크는 사용자가 실행 여부를 표시하는 용도이며, 요건 충족이나 자격 취득을 자동 인정하지 않습니다.</p>
+          <p id="roadmap-task-progress" class="result-summary" role="status" aria-live="polite"></p>
+          <div id="roadmap-task-board" class="roadmap-task-board"></div>
+          <button type="button" class="secondary" id="roadmap-copy" style="margin-top:16px">현재 체크리스트 텍스트 복사</button>
+          <p id="roadmap-copy-message" class="req-explain" role="status" aria-live="polite"></p>
+          <p class="subtext">체크 상태와 입력 내용은 저장되지 않습니다. 새로고침 또는 다른 공고로 변경하면 초기화되므로 필요한 내용은 복사하여 직접 보관해 주세요.</p>
+        </section>
         <div class="info result-disclaimer">각 항목은 사용자가 입력한 사실과 상태를 정리한 실행 후보입니다.
           자격 취득·경력·프로젝트의 진위 및 채용요건 충족 여부를 자동 확인하지 않습니다.
           입력 데이터는 서버에 저장되지 않으며 새로고침 시 사라집니다.</div>
