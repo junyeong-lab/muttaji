@@ -107,12 +107,35 @@ test("프로필 변경 이벤트 없이 탭 이동만 해도 과거 비교·로�
   assertCleared(env);
   assert.match(env.nodes["roadmap-message"].textContent,/변경/);
 });
-test("입력이 그대로인 단순 탭 이동에서는 기존 비교·로드맵 보존",()=>{
+test("입력이 그대로인 단순 탭 이동에서는 실제 생성한 비교·로드맵 보존",async()=>{
   const env=environment();compare(env);
   new Function("window","document","module",roadmapSrc)(env.window,env.document,{exports:{}});
-  env.nodes["roadmap-result"].hidden=false;
+  await env.nodes["roadmap-generate"].events.click[0]();
+  assert.equal(env.nodes["roadmap-result"].hidden,false);
   env.window.dispatch("hashchange");
   assert.equal(env.nodes["requirements-check"].hidden,false);
   assert.equal(env.nodes["roadmap-result"].hidden,false);
   assert.ok(env.window.MuttajiComparisonSnapshot);
+});
+
+test("기존 로드맵 생성 당시의 프로필과 화면 값이 다르면 새 스냅샷에 속지 않음",async()=>{
+  const env=environment();compare(env);
+  new Function("window","document","module",roadmapSrc)(env.window,env.document,{exports:{}});
+  await env.nodes["roadmap-generate"].events.click[0]();
+  assert.equal(env.nodes["roadmap-result"].hidden,false);
+  env.nodes["goal-job"].value+=" (테스트)";
+  // Simulate a caller replacing the shared snapshot with new user input:
+  // displayed cards remain old and MUST still be invalidated.
+  env.window.MuttajiComparisonSnapshot.profile=env.nodes["goal-job"].value+"\n---\n\n---\n\n---\n\n---\n";
+  env.window.MuttajiCheckRoadmapFreshness();
+  assert.equal(env.nodes["roadmap-result"].hidden,true);
+  assert.equal(env.nodes["roadmap-actions"].children.length,0);
+  assert.equal(env.nodes["roadmap-task-board"].children.length,0);
+  assert.match(env.nodes["roadmap-message"].textContent,/변경/);
+});
+test("라우터에서 직접 호출 가능한 두 종류의 최신 입력 가드 공개",()=>{
+  const env=environment();compare(env);
+  new Function("window","document","module",roadmapSrc)(env.window,env.document,{exports:{}});
+  assert.equal(typeof env.window.MuttajiCheckRequirementFreshness,"function");
+  assert.equal(typeof env.window.MuttajiCheckRoadmapFreshness,"function");
 });
