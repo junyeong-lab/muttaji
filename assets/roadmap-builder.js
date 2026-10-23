@@ -118,7 +118,7 @@
   }
   function action(item){
     const t=norm(item.text),s=item.status;
-    if(s==="충족")return "직접 선택하신 충족 판단의 근거 문서·수행 역할·기간을 정리하고, 공고의 표현과 정확히 일치하는지 재확인하세요.";
+    if(s==="충족")return "충족으로 표시된 조건의 자격증·수행 역할·기간 등의 근거를 정리하고, 공고의 표현과 정확히 일치하는지 재확인하세요.";
     if(s==="확인 필요")return "공고의 요구 범위와 본인의 실제 수행 업무·자격·경력 기간을 대조하세요. 확인할 수 없는 부분은 채용 담당자에게 문의할 질문으로 남기세요.";
     if(/(?:경력|연차|[0-9]+\s*년|구축.*경험|운영.*경험|실무\s*경험)/i.test(t))
       return "공고가 요구하는 실제 실무 경험의 종류·기간을 따로 확인하세요. 관련 실습·프로젝트는 경험 보완 자료로 정리하되, 이를 기업이 요구하는 실무 경력으로 대체했다고 주장하지 마세요.";
@@ -173,7 +173,7 @@
         });
       }
       if(step.status==="충족"){
-        add("지원 준비","evidence","입력한 충족 근거 정리",
+        add("지원 준비","evidence","충족 근거 및 증빙 확인",
           "수행 역할·기간·성과를 확인 가능한 자료로 정리하고, 공고 요건과 다시 대조하세요.");
       }else if(step.status==="확인 필요"){
         add("지원 준비","verify","충족 여부와 요구 범위 확인",
@@ -402,7 +402,7 @@
           }
           list.appendChild(card);
         });
-        count.textContent="검토한 요건 "+steps.length+"개 · 필수조건 우선 정렬 · 사용자가 선택한 상태를 기반으로 정리한 실행 후보입니다. 자동 채용 적합도 평가가 아닙니다.";
+        count.textContent="검토한 요건 "+steps.length+"개 · 필수조건 우선 정렬 · 사용자의 입력과 직접 선택한 상태를 기반으로 정리한 실행 후보입니다. 단순 자격증 일치로 자동 충족된 항목도 최종 증빙을 확인해야 합니다. 자동 채용 적합도 평가가 아닙니다.";
         // Remember exactly which inputs were used to render the visible plan.
         // Do not rely solely on a mutable shared comparison snapshot.
         renderedPosting=snapshot.posting;
