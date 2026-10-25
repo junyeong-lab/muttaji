@@ -84,6 +84,11 @@
     .roadmap-task h3{font-size:1rem;line-height:1.55;overflow-wrap:anywhere;margin:0 0 10px}
     .roadmap-action{margin:11px 0 0;font-size:.89rem;line-height:1.7;color:#34475e}
     .roadmap-evidence{margin:10px 0 0;font-size:.83rem;line-height:1.6;color:#63728a;white-space:pre-wrap;overflow-wrap:anywhere}
+    .roadmap-steps{margin:13px 0 0;padding:11px 13px;border:1px solid #e8dfd2;background:#fffaf1;border-radius:11px}
+    .roadmap-steps-toggle{cursor:pointer;color:#283e58;font-size:.86rem;font-weight:800}
+    .roadmap-steps-toggle:focus-visible{outline:2px solid #1b648e;outline-offset:3px;border-radius:3px}
+    .roadmap-steps-list{margin:11px 0 0;padding-left:21px;display:grid;gap:8px;font-size:.84rem;line-height:1.65;color:#40516a}
+    .roadmap-steps-list li{overflow-wrap:anywhere}
     .step-num{font-size:.72rem;font-weight:850;background:#fff3ce;color:#81651f;border-radius:999px;padding:5px 10px;display:inline-block;margin-top:16px}
     .section-top{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;margin:36px 0 24px}
     .heading-kicker{font-weight:900;color:#bb7100;font-size:.8rem;letter-spacing:.03em}.page-title{font-size:clamp(1.8rem,3.4vw,2.65rem);letter-spacing:-.07em;line-height:1.2;margin:8px 0 0}.page-intro{color:var(--muted);line-height:1.8;margin:11px 0 0}
@@ -278,6 +283,7 @@
       </section>
       <section class="sheet" id="roadmap-results" hidden aria-labelledby="roadmap-results-title">
         <h2 id="roadmap-results-title" class="feature-title">나의 요건별 준비 현황</h2>
+        <p class="subtext">각 조건의 ‘준비 단계 3개 보기’를 펼치면 규칙 기반 실행 안내를 확인할 수 있습니다. 실제 충족 여부를 자동 판정하거나 준비 기간을 계산하지 않습니다.</p>
         <p class="req-explain">확인 필요 → 미충족 → 부분 충족 → 충족 순서입니다. 같은 상태에서는 필수조건을 먼저 표시합니다.</p>
         <p id="roadmap-summary" class="result-summary" role="status" aria-live="polite"></p>
         <div id="roadmap-list" class="roadmap-list" aria-label="우선순위별 준비 항목"></div>

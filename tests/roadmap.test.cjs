@@ -93,3 +93,47 @@ test("브라우저 이벤트로 로드맵 갱신·비교 취소 시 초기화",(
   assert.equal(elements["roadmap-empty"].hidden,false);
   assert.equal(elements["roadmap-list"].children.length,0);
 });
+
+test("상태별 준비 단계는 실행 가능한 확인·학습 지침이며 충족 조건에는 추가하지 않음",()=>{
+  const cases=[
+    {kind:"required",text:"정보보호 컨설팅 경력 3년 이상",status:"미충족"},
+    {kind:"preferred",text:"Wazuh SIEM 운영 경험",status:"부분 충족"},
+    {kind:"required",text:"학력: 대졸",status:"확인 필요"},
+    {kind:"preferred",text:"SQLD",status:"미충족"},
+    {kind:"required",text:"정보처리기사",status:"충족"}
+  ];
+  const plan=buildRoadmap(cases);
+  assert.equal(plan.tasks.length,4);
+  for(const task of plan.tasks){
+    assert.equal(task.steps.length,3);
+    assert.ok(task.steps.every(s=>typeof s==="string"&&s.length>12));
+  }
+  assert.match(plan.tasks.find(t=>t.text.includes("컨설팅")).steps.join(" "),/대체한다고 가정하지 마세요/);
+  assert.match(plan.tasks.find(t=>t.text.includes("Wazuh")).steps.join(" "),/실무 경력이라고 표시하지 마세요/);
+  assert.match(plan.tasks.find(t=>t.text==="SQLD").steps.join(" "),/공식 검증 전/);
+  assert.equal(plan.completed[0].steps,undefined);
+});
+
+test("브라우저에는 펼쳐보는 준비 단계 3개가 렌더링되고 초기화되면 사라짐",()=>{
+  class Element{
+    constructor(tag){this.tag=tag;this.children=[];this.hidden=false;this.textContent="";this.attributes={};}
+    appendChild(n){this.children.push(n);return n;}
+    replaceChildren(...nodes){this.children=[...nodes];}
+    setAttribute(k,v){this.attributes[k]=v;}
+  }
+  const ids=["roadmap-empty","roadmap-results","roadmap-summary","roadmap-list","roadmap-notice"];
+  const elements=Object.fromEntries(ids.map(id=>[id,new Element(id)]));
+  const events={};
+  const win={addEventListener:(name,fn)=>{events[name]=fn}};
+  const doc={getElementById:id=>elements[id],createElement:tag=>new Element(tag),createElementNS:(_ns,tag)=>new Element(tag)};
+  const src=fs.readFileSync(path.join(__dirname,"../assets/roadmap.js"),"utf8");
+  vm.runInNewContext(src,{window:win,document:doc,globalThis:win});
+  events["muttaji:comparison-changed"]({detail:{items:[{kind:"required",text:"AWS 클라우드 보안 운영 경험",status:"미충족"}]}});
+  const card=elements["roadmap-list"].children[1].children[1].children[0];
+  const details=card.children.find(c=>c.tag==="details");
+  assert.ok(details);
+  assert.match(details.children[0].textContent,/준비 단계 3개/);
+  assert.equal(details.children[1].children.length,3);
+  events["muttaji:comparison-changed"]({detail:{items:null}});
+  assert.equal(elements["roadmap-list"].children.length,0);
+});

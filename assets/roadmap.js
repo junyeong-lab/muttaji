@@ -25,6 +25,50 @@
       return "공고에 명시된 자격증명을 확인하세요. 필요하면 공식 시행기관에서 취득 요건·일정을 확인해 준비 계획을 세우세요.";
     return "공고에서 요구한 역량의 구체적인 범위를 확인하고, 학습·실습·실무 경험 중 무엇을 보완해야 하는지 정리하세요.";
   }
+  // Rule-based preparation prompts. These are not proof of eligibility or AI advice.
+  function preparationSteps(item){
+    if(!item||item.status==="충족")return [];
+    const text=String(item.text||"");
+    let guide;
+    if(/경력|\d+\s*년\s*이상/.test(text)){
+      guide={
+        scope:"공고에서 요구하는 경력의 업무 분야와 기간을 확인하세요.",
+        evidence:"실제로 수행한 관련 업무·기간과 확인 가능한 자료를 정리하세요.",
+        prepare:"부족한 경험을 보완할 방법을 검토하되 실습·자격증이 실무 경력을 대체한다고 가정하지 마세요."
+      };
+    }else if(/학력|전공|졸업|학사|석사/.test(text)){
+      guide={
+        scope:"공고에 적힌 학력·전공 기준을 원문으로 확인하세요.",
+        evidence:"본인의 학력·전공과 증빙 가능한 내용을 대조하세요.",
+        prepare:"기준에 맞지 않거나 해석이 불명확하면 채용 담당자의 공식 안내를 확인하세요."
+      };
+    }else if(/자격증|자격|기사|기능사|관리사|마스터|certified|certification|SQLD|ADsP|CPPG|CISSP|CCNA/i.test(text)){
+      guide={
+        scope:"공고가 요구하는 정확한 자격증명과 필수·우대 구분을 확인하세요.",
+        evidence:"본인이 실제로 취득한 자격증명과 증빙 가능 여부를 대조하세요.",
+        prepare:"미보유 자격은 공식 시행기관에서 응시 요건과 준비 내용을 확인하세요. 앱의 자격증 DB는 공식 검증 전입니다."
+      };
+    }else if(/AWS|클라우드|SIEM|Wazuh|EDR|보안|네트워크|Linux|리눅스|개인정보|데이터|SQL|개발|Python|운영|구축|취약점|침해|방화벽/i.test(text)){
+      guide={
+        scope:"공고가 요구하는 기술·도구 및 실제 업무 범위를 확인하세요.",
+        evidence:"직접 수행한 실습·프로젝트·업무와 그 결과물을 구분해 정리하세요.",
+        prepare:"부족한 기술은 작은 실습 과제로 연습하고 결과를 기록하세요. 실습을 실무 경력이라고 표시하지 마세요."
+      };
+    }else{
+      guide={
+        scope:"공고에서 해당 조건이 요구하는 구체적인 범위를 확인하세요.",
+        evidence:"본인의 실제 경험·지식과 확인 가능한 근거를 정리하세요.",
+        prepare:"부족한 부분에 필요한 학습·실습·추가 확인 항목을 정리하세요."
+      };
+    }
+    if(item.status==="확인 필요")return [
+      guide.scope,guide.evidence,"근거를 확인한 뒤 '내 역량' 화면에서 상태와 사유를 직접 수정하세요."
+    ];
+    if(item.status==="부분 충족")return [
+      "이미 갖춘 부분과 부족한 부분을 나누어 적으세요.",guide.evidence,guide.prepare
+    ];
+    return [guide.scope,guide.prepare,"준비 후에도 공고의 실제 충족 여부는 근거를 토대로 다시 확인하세요."];
+  }
   function buildRoadmap(items){
     if(!Array.isArray(items))throw new TypeError("비교 결과 배열이 필요합니다.");
     const totals={"충족":0,"부분 충족":0,"미충족":0,"확인 필요":0};
@@ -43,7 +87,7 @@
     // Distinguish actual work to do from conditions the user marked fulfilled.
     let priority=0;
     const tasks=sorted.filter(item=>item.status!=="충족")
-      .map(item=>({...item,priority:++priority,action:nextAction(item)}));
+      .map(item=>({...item,priority:++priority,action:nextAction(item),steps:preparationSteps(item)}));
     const completed=sorted.filter(item=>item.status==="충족");
     const groups=states.map(status=>({
       status,
@@ -139,6 +183,14 @@
             card.appendChild(node("p","roadmap-action",fulfilled
               ?"본인 입력으로 충족 표시한 조건입니다. 실제 증빙과 기업의 자격 인정 여부는 별도로 확인해 주세요."
               :item.action));
+            if(item.steps&&item.steps.length){
+              const details=node("details","roadmap-steps");
+              details.appendChild(node("summary","roadmap-steps-toggle","준비 단계 "+item.steps.length+"개 보기"));
+              const steps=node("ol","roadmap-steps-list");
+              item.steps.forEach(step=>steps.appendChild(node("li","",step)));
+              details.appendChild(steps);
+              card.appendChild(details);
+            }
             if(item.reason)card.appendChild(node("p","roadmap-evidence","내가 입력한 근거: "+item.reason));
             cards.appendChild(card);
           });
@@ -156,5 +208,5 @@
     });
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")mount();
-  return {buildRoadmap,nextAction};
+  return {buildRoadmap,nextAction,preparationSteps};
 });
