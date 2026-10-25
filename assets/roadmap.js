@@ -25,49 +25,113 @@
       return "공고에 명시된 자격증명을 확인하세요. 필요하면 공식 시행기관에서 취득 요건·일정을 확인해 준비 계획을 세우세요.";
     return "공고에서 요구한 역량의 구체적인 범위를 확인하고, 학습·실습·실무 경험 중 무엇을 보완해야 하는지 정리하세요.";
   }
-  // Rule-based preparation prompts. These are not proof of eligibility or AI advice.
+  // Rule-based, evidence-first examples. Never infer skills, dates or job eligibility.
   function preparationSteps(item){
     if(!item||item.status==="충족")return [];
-    const text=String(item.text||"");
+    const text=String(item.text||"").normalize("NFKC");
     let guide;
-    if(/경력|\d+\s*년\s*이상/.test(text)){
+    // Work-experience duration and educational credentials must not be replaced by lab work.
+    if(/경력|실무\s*(?:경험|경력)|\d+\s*년\s*이상/.test(text)){
       guide={
-        scope:"공고에서 요구하는 경력의 업무 분야와 기간을 확인하세요.",
-        evidence:"실제로 수행한 관련 업무·기간과 확인 가능한 자료를 정리하세요.",
-        prepare:"부족한 경험을 보완할 방법을 검토하되 실습·자격증이 실무 경력을 대체한다고 가정하지 마세요."
+        scope:"공고가 요구하는 실무 분야, 담당업무와 경력 기간을 구분해 확인하세요.",
+        evidence:"실제 업무별 수행 기간과 본인 역할을 정리하고 경력증명·업무 기록처럼 확인 가능한 근거가 있는지 점검하세요.",
+        prepare:"관련 실습이나 프로젝트는 별도로 정리하되, 실습·자격증이 실무 경력을 대체한다고 가정하지 마세요. 인정 기준은 채용 담당자에게 확인하세요."
       };
     }else if(/학력|전공|졸업|학사|석사/.test(text)){
       guide={
-        scope:"공고에 적힌 학력·전공 기준을 원문으로 확인하세요.",
-        evidence:"본인의 학력·전공과 증빙 가능한 내용을 대조하세요.",
-        prepare:"기준에 맞지 않거나 해석이 불명확하면 채용 담당자의 공식 안내를 확인하세요."
+        scope:"공고의 학위·전공·졸업 조건이 필수인지 우대인지 정확히 확인하세요.",
+        evidence:"졸업 상태·학위·전공과 제출 가능한 증빙을 실제 이력과 대조하세요.",
+        prepare:"해석이 애매하거나 기준에 차이가 있으면 채용 공고의 공식 안내나 담당자에게 인정 범위를 확인하세요."
       };
-    }else if(/자격증|자격|기사|기능사|관리사|마스터|certified|certification|SQLD|ADsP|CPPG|CISSP|CCNA/i.test(text)){
+    }else if(/자격증|자격\s*(?:보유|취득)|기사|기능사|관리사|마스터|certified|certification|SQLD|ADsP|CPPG|CISSP|CCNA/i.test(text)){
       guide={
-        scope:"공고가 요구하는 정확한 자격증명과 필수·우대 구분을 확인하세요.",
-        evidence:"본인이 실제로 취득한 자격증명과 증빙 가능 여부를 대조하세요.",
-        prepare:"미보유 자격은 공식 시행기관에서 응시 요건과 준비 내용을 확인하세요. 앱의 자격증 DB는 공식 검증 전입니다."
+        scope:"공고에 적힌 자격증의 정확한 명칭과 필수·우대 여부를 먼저 확인하세요.",
+        evidence:"이미 취득했다면 증명서의 종목·취득일을 대조하고, 미보유라면 현재 상태를 구분하세요.",
+        prepare:"미보유 자격은 공식 시행기관에서 시험과 응시 요건을 확인하고 준비 항목을 정리하세요. 앱의 자격증 DB는 공식 검증 전입니다."
       };
-    }else if(/AWS|클라우드|SIEM|Wazuh|EDR|보안|네트워크|Linux|리눅스|개인정보|데이터|SQL|개발|Python|운영|구축|취약점|침해|방화벽/i.test(text)){
+    }else if(/\bAWS\b|아마존\s*웹\s*서비스/i.test(text)){
       guide={
-        scope:"공고가 요구하는 기술·도구 및 실제 업무 범위를 확인하세요.",
-        evidence:"직접 수행한 실습·프로젝트·업무와 그 결과물을 구분해 정리하세요.",
-        prepare:"부족한 기술은 작은 실습 과제로 연습하고 결과를 기록하세요. 실습을 실무 경력이라고 표시하지 마세요."
+        scope:"AWS 보안 운영 중 IAM 권한·CloudTrail 기록·보안 그룹 설정 등 공고가 요구한 범위를 확인하세요.",
+        evidence:"본인이 직접 다룬 IAM 정책, 감사 로그, 네트워크 접근 설정과 점검 결과를 실습/실무로 구분해 정리하세요.",
+        prepare:"공개 예제 정책·샘플 로그 또는 승인된 실습 환경에서 과도한 IAM 권한과 보안 그룹 노출 여부를 점검하고 점검표를 작성하세요. 비용 및 권한 변경에 주의하세요."
+      };
+    }else if(/Wazuh/i.test(text)){
+      guide={
+        scope:"Wazuh에서 에이전트 연결·로그 수집·경보 분석 중 어떤 업무가 필요한지 확인하세요.",
+        evidence:"직접 연결한 로그 소스와 확인한 경보·조치 사례를 정리하고 실습과 실제 업무를 구분하세요.",
+        prepare:"승인된 테스트 환경의 Windows 로그인 실패 또는 Linux 인증 로그로 수집→경보 확인→원인 기록 과정을 재현하고 화면을 남기세요. 실습을 실무 경력이라고 표시하지 마세요."
+      };
+    }else if(/\bSIEM\b|보안\s*관제|로그\s*(?:분석|모니터링)/i.test(text)){
+      guide={
+        scope:"공고가 요구하는 로그 수집·탐지 규칙·경보 분석·사고 보고의 업무 범위를 확인하세요.",
+        evidence:"사용한 로그 소스, 직접 분석한 이벤트, 작성한 탐지/분석 기록을 실습과 업무별로 구분하세요.",
+        prepare:"예제 인증 로그에서 이상 징후를 찾아 탐지 조건과 오탐 가능성, 대응 의견을 한 장의 분석 기록으로 작성하세요."
+      };
+    }else if(/\bEDR\b|엔드포인트\s*(?:탐지|보안|보호)/i.test(text)){
+      guide={
+        scope:"EDR 경보 모니터링·원인 분석·정책 운영 중 요구하는 업무를 구분하세요.",
+        evidence:"다뤄본 솔루션의 알림 분석, 정책 변경, 사용자 지원 경험의 범위와 증빙을 정리하세요.",
+        prepare:"공개된 예제 경보 또는 승인된 테스트 환경에서 프로세스·파일·시간 정보를 검토하고 경보 분류와 조치 의견을 기록하세요."
+      };
+    }else if(/취약점|보안\s*(?:점검|진단|감사)|정보보호\s*컨설팅|ISMS|ISO\s*27001|보안\s*정책/i.test(text)){
+      guide={
+        scope:"공고가 요구하는 보안 점검 대상, 평가 기준 및 산출물 범위를 확인하세요.",
+        evidence:"직접 수행한 자산·설정·취약점 점검과 개선 조치 기록을 실습/실무로 구분해 정리하세요.",
+        prepare:"허가된 실습 자산을 대상으로 점검 항목→발견 사항→원인→개선안→재확인 결과를 표로 만들어 보세요."
+      };
+    }else if(/개인정보|개인\s*정보|PIPA|PIA|프라이버시/i.test(text)){
+      guide={
+        scope:"개인정보 수집·이용·보관·파기, 접근권한 관리 중 공고가 요구하는 범위를 확인하세요.",
+        evidence:"관련 교육·업무·프로젝트에서 본인이 실제 작성하거나 검토한 절차·문서를 구분하세요.",
+        prepare:"가상 서비스의 개인정보 처리 흐름을 그리고 수집 항목·보관 기간·접근권한·파기 기준을 점검표로 작성하세요. 실제 개인정보는 사용하지 마세요."
+      };
+    }else if(/클라우드|Azure|GCP|IAM|Kubernetes|쿠버네티스/i.test(text)){
+      guide={
+        scope:"클라우드 계정 권한·네트워크 설정·감사 로그 중 요구하는 운영 범위를 확인하세요.",
+        evidence:"실제로 설정한 계정·접근 정책·로그 검토 경험을 실습과 실무로 구분해 정리하세요.",
+        prepare:"공개 예제 설정에서 과도한 권한과 외부 공개 여부를 점검하고, 근거 화면과 개선안을 정리하세요. 유료 리소스는 생성하지 마세요."
+      };
+    }else if(/네트워크|방화벽|VLAN|\bACL\b|\bVPN\b|라우팅/i.test(text)){
+      guide={
+        scope:"공고의 네트워크 구성·장애 대응·접근통제 중 필요한 기술을 구분하세요.",
+        evidence:"본인이 구성한 네트워크 토폴로지, 라우팅·ACL 설정 또는 장애 대응 기록을 정리하세요.",
+        prepare:"격리된 가상망에서 VLAN/ACL 등 접근 정책을 구성하고 허용·차단 통신 결과를 표로 기록하세요."
+      };
+    }else if(/Linux|리눅스|Ubuntu|우분투|Rocky|서버\s*운영/i.test(text)){
+      guide={
+        scope:"서버 계정·권한·서비스·로그 관리 중 공고가 요구하는 항목을 확인하세요.",
+        evidence:"직접 관리한 시스템과 설정·문제 해결 기록을 학습/실무로 구분해 정리하세요.",
+        prepare:"로컬 가상머신에서 사용자 권한·서비스 상태·인증 로그를 점검하고 설정 전후 차이를 기록하세요."
+      };
+    }else if(/\bSQL\b|데이터\s*(?:분석|베이스)|DBMS/i.test(text)){
+      guide={
+        scope:"SQL 조회·데이터 가공·DB 권한 관리 중 요구하는 범위를 확인하세요.",
+        evidence:"작성한 쿼리·분석 결과·프로젝트 역할을 실제 수행 내용 위주로 정리하세요.",
+        prepare:"예제 데이터베이스에서 SELECT/JOIN 쿼리를 작성하고 결과 검증 과정과 접근권한 제한 사항을 기록하세요."
+      };
+    }else if(/Python|파이썬|스크립트|자동화|프로그래밍|개발/i.test(text)){
+      guide={
+        scope:"공고에 필요한 언어·자동화 범위·산출물 기준을 확인하세요.",
+        evidence:"직접 작성한 스크립트, 입력·출력 예시, 오류 처리 방법을 정리하세요.",
+        prepare:"샘플 로그 또는 비식별 테스트 데이터로 작은 자동화 스크립트를 만들고 정상·오류 사례를 테스트하세요."
       };
     }else{
       guide={
-        scope:"공고에서 해당 조건이 요구하는 구체적인 범위를 확인하세요.",
-        evidence:"본인의 실제 경험·지식과 확인 가능한 근거를 정리하세요.",
-        prepare:"부족한 부분에 필요한 학습·실습·추가 확인 항목을 정리하세요."
+        scope:"공고에서 해당 조건이 요구하는 구체적인 업무나 결과물을 확인하세요.",
+        evidence:"본인의 관련 경험과 확인 가능한 자료를 실무·프로젝트·학습으로 나누어 정리하세요.",
+        prepare:"부족한 부분을 작은 실습 또는 문서화 과제로 정하고 결과물을 남기세요. 모호한 기준은 채용 담당자에게 확인하세요."
       };
     }
     if(item.status==="확인 필요")return [
-      guide.scope,guide.evidence,"근거를 확인한 뒤 '내 역량' 화면에서 상태와 사유를 직접 수정하세요."
+      guide.scope,guide.evidence,
+      guide.prepare+" 실제 보유 여부를 확인한 후 '내 역량'에서 상태와 사유를 수정하세요."
     ];
     if(item.status==="부분 충족")return [
-      "이미 갖춘 부분과 부족한 부분을 나누어 적으세요.",guide.evidence,guide.prepare
+      "이미 갖춘 부분과 부족한 부분을 먼저 구분하세요. "+guide.scope,
+      guide.evidence,guide.prepare
     ];
-    return [guide.scope,guide.prepare,"준비 후에도 공고의 실제 충족 여부는 근거를 토대로 다시 확인하세요."];
+    return [guide.scope,guide.prepare,
+      "완료한 결과와 증빙을 정리하고 공고 요건 충족 여부를 다시 확인하세요. "+guide.evidence];
   }
   function buildRoadmap(items){
     if(!Array.isArray(items))throw new TypeError("비교 결과 배열이 필요합니다.");

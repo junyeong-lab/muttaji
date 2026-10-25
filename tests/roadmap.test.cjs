@@ -137,3 +137,54 @@ test("브라우저에는 펼쳐보는 준비 단계 3개가 렌더링되고 초�
   events["muttaji:comparison-changed"]({detail:{items:null}});
   assert.equal(elements["roadmap-list"].children.length,0);
 });
+
+test("실제 기술명에 따라 구체적인 실습과 증빙 항목을 제안",()=>{
+  const examples=[
+    ["AWS 클라우드 보안 운영 경험","IAM","CloudTrail"],
+    ["Wazuh SIEM 운영 경험","에이전트","로그"],
+    ["SIEM 로그 분석 경험","탐지 조건","인증 로그"],
+    ["EDR 운영 경험","프로세스","경보"],
+    ["정보보안 점검 실무","점검 항목","개선안"],
+    ["개인정보보호 업무","수집","보관"],
+    ["네트워크 VLAN 구성","VLAN","ACL"],
+    ["Linux 서버 운영","가상머신","인증 로그"],
+    ["SQL 데이터 분석","SELECT/JOIN","쿼리"],
+    ["Python 자동화","스크립트","테스트"]
+  ];
+  examples.forEach(([text,first,second])=>{
+    const [task]=buildRoadmap([{kind:"required",text,status:"확인 필요"}]).tasks;
+    assert.equal(task.steps.length,3,text);
+    assert.match(task.steps.join(" "),new RegExp(first),text);
+    assert.match(task.steps.join(" "),new RegExp(second),text);
+    assert.match(task.steps[2],/내 역량/,text);
+  });
+});
+
+test("사용자 확인 상태가 달라도 사실을 과장하지 않고 동일 도메인 가이드를 사용",()=>{
+  const items=["확인 필요","미충족","부분 충족","충족"].map(status=>({
+    kind:"preferred",text:"AWS 클라우드 보안 운영 경험",status
+  }));
+  const plan=buildRoadmap(items);
+  assert.deepEqual(plan.groups.map(g=>g.items.length),[1,1,1,1]);
+  assert.equal(plan.completed.length,1);
+  for(const task of plan.tasks){
+    assert.match(task.steps.join(" "),/IAM/);
+    assert.equal(task.steps.length,3);
+    assert.doesNotMatch(task.steps.join(" "),/실무 경력을 충족/);
+  }
+});
+
+test("연차·학력 요건은 실습과 자격증으로 충족했다고 안내하지 않음",()=>{
+  const examples=[
+    {kind:"required",text:"정보보안 컨설팅 실무 경력 3년 이상",status:"확인 필요"},
+    {kind:"required",text:"학력 대졸 이상",status:"미충족"},
+    {kind:"preferred",text:"정보처리기사 자격증",status:"미충족"}
+  ];
+  const plan=buildRoadmap(examples);
+  const career=plan.tasks.find(t=>t.text.includes("3년 이상"));
+  assert.match(career.steps.join(" "),/실무 경력.*대체한다고 가정하지 마세요/);
+  const education=plan.tasks.find(t=>t.text.includes("대졸"));
+  assert.match(education.steps.join(" "),/학위/);
+  const cert=plan.tasks.find(t=>t.text.includes("자격증"));
+  assert.match(cert.steps.join(" "),/공식 검증 전/);
+});
