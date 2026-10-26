@@ -211,3 +211,31 @@ test("Python 로그 분석 자동화는 SIEM보다 Python 스크립트 실습을
   assert.doesNotMatch(task.steps[0],/SIEM/);
   assert.match(task.steps[2],/내 역량/);
 });
+
+test("Windows 서버, PC 정비사, 복수 클라우드, 포트폴리오, 교육 이수 조건에 맞는 준비 단계",()=>{
+  const cases=[
+    ["Windows 서버 보안 운영",["Windows 서버","이벤트 뷰어","로그온"]],
+    ["PC 정비사 2급 보유",["자격증","증명서","공식 검증 전"]],
+    ["AWS와 Azure 클라우드 접근권한 관리",["AWS와 Azure","IAM/RBAC","비용이 드는 리소스는 생성하지 마세요"]],
+    ["포트폴리오 또는 GitHub 제출",["포트폴리오","README","비밀키"]],
+    ["보안 교육 이수",["교육 과정명","수료증","공식 교육"]]
+  ];
+  for(const [phrase,expected] of cases){
+    const plan=buildRoadmap([{kind:"required",text:phrase,status:"확인 필요"}]);
+    const task=plan.tasks[0];
+    assert.equal(task.steps.length,3,phrase);
+    expected.forEach(term=>assert.ok(task.steps.join(" ").includes(term),phrase+" / "+term));
+    assert.match(task.steps[2],/내 역량/);
+  }
+});
+test("추가 조건의 상태별 세 단계 유지 및 충족 처리 보존",()=>{
+  const phrase="포트폴리오 또는 GitHub 제출";
+  ["확인 필요","미충족","부분 충족"].forEach(status=>{
+    const task=buildRoadmap([{kind:"preferred",text:phrase,status}]).tasks[0];
+    assert.equal(task.steps.length,3);
+    assert.match(task.steps.join(" "),/README/);
+  });
+  const completed=buildRoadmap([{kind:"preferred",text:phrase,status:"충족"}]);
+  assert.equal(completed.tasks.length,0);
+  assert.equal(completed.completed.length,1);
+});
