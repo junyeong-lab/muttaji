@@ -33,6 +33,33 @@
     [["머신러닝","인공지능","AI 모델"],["AICE associate","빅데이터분석기사"]],
     [["소프트웨어 개발","정보시스템","IT 서비스 기획"],["정보처리기사","정보처리산업기사"]]
   ];
+  // Related tiers of the same credential family: keep one inferred candidate
+  // when space is limited. Directly named requirements are always retained.
+  const credentialFamilies=[
+    ["정보보안기사","정보보안산업기사"],
+    ["정보처리기사","정보처리산업기사"],
+    ["네트워크관리사 1급","네트워크관리사 2급"],
+    ["리눅스마스터 1급","리눅스마스터 2급"],
+    ["PC정비사 1급","PC정비사 2급"],
+    ["SQLD","SQLP"],["ADsP","ADP"],["DAsP","DAP"],
+    ["AWS Certified Cloud Practitioner","AWS Certified Solutions Architect - Associate"]
+  ];
+  function family(name){
+    const group=credentialFamilies.find(names=>names.includes(name));
+    return group?group[0]:name;
+  }
+  function reasonFor(record){
+    if(record.explicit){
+      return "공고에서 '"+record.keyword+"' 자격증명을 직접 찾았습니다 ("+record.basis+
+        "). 실제 인정 여부는 공고의 정확한 조건과 시행기관 안내를 확인하세요.";
+    }
+    const skills=String(record.item.skills||"").split(";").map(s=>s.trim()).filter(Boolean).slice(0,2);
+    const source=record.basis.startsWith("공고")?"채용공고":"목표 직무";
+    return source+"에 '"+record.keyword+"' 관련 표현이 있어, 34개 DB의 '"+
+      (record.item.field||"분야 미입력")+"' 분야로 연결했습니다."+
+      (skills.length?" DB 수록 학습 내용: "+skills.join(", ")+".":"")+
+      " 공고에 이 자격증 취득을 요구했다는 뜻은 아닙니다.";
+  }
   function recommend(catalog,context){
     if(!Array.isArray(catalog))throw new TypeError("자격증 목록이 없습니다.");
     const c=context||{},posting=String(c.posting||""),goal=String(c.goal||"");
@@ -73,12 +100,23 @@
         if(index>=0)add(catalog[index],20-2*k+(origin==="공고"?8:0),origin+" 관련 기술·분야",keyword,false,index);
       });
     }
-    return [...scores.values()].sort((a,b)=>{
+    const ranked=[...scores.values()].sort((a,b)=>{
       if(a.explicit!==b.explicit)return a.explicit?-1:1;
       if(!a.explicit&&a.owned!==b.owned)return a.owned?1:-1;
       return b.points-a.points||a.index-b.index;
-    }).slice(0,3).map(x=>({name:x.item.name,field:x.item.field,
-      basis:x.basis,keyword:x.keyword,explicit:x.explicit,owned:x.owned}));
+    });
+    const selected=[],selectedFamilies=new Set();
+    for(const record of ranked){
+      const group=family(record.item.name);
+      if(!record.explicit&&selectedFamilies.has(group))continue;
+      selected.push(record);
+      selectedFamilies.add(group);
+      if(selected.length===3)break;
+    }
+    return selected.map(x=>({name:x.item.name,field:x.item.field,
+      basis:x.basis,keyword:x.keyword,explicit:x.explicit,owned:x.owned,
+      reason:reasonFor(x),
+      possessionLabel:x.owned?"보유 입력됨 · 증빙 별도":"보유 입력에서 미확인 · 추가 검토"}));
   }
   function mount(){
     const btn=document.getElementById("cert-rec-run"),list=document.getElementById("cert-rec-results"),
@@ -104,17 +142,18 @@
         }catch(_error){parsed=null;}
       }
       const results=recommend(catalog,{posting,goal,owned,required:parsed?.required,preferred:parsed?.preferred});
-      note.textContent=results.length?"관련 자격증 참고 후보 "+results.length+"개 · 규칙 기반, AI 판정 아님":
+      note.textContent=results.length?"관련 자격증 참고 후보 "+results.length+"개 · 동일 계열 중복 최소화 · 규칙 기반, AI 판정 아님":
         "일치 후보가 없습니다. 구체적인 공고 기술명이나 목표 직무를 입력해 주세요.";
       results.forEach(r=>{
         const card=el("article","cert-card");card.appendChild(el("h3","",r.name));
         const badges=el("div","cert-meta");
         badges.appendChild(el("span","",r.explicit?"공고에 명칭 언급":"기술·분야 연관"));
-        badges.appendChild(el("span","",r.owned?"보유 입력":"보유 입력 없음"));
+        badges.appendChild(el("span","",r.possessionLabel));
         card.appendChild(badges);
-        card.appendChild(el("p","","연결 근거: "+r.basis+" · "+r.keyword));
-        card.appendChild(el("p","",r.explicit?"공고 원문의 필수·우대 및 인정 기준을 확인하세요.":
-          "공고에서 취득을 요구한다는 뜻이 아닌 참고 후보입니다."));
+        card.appendChild(el("p","",r.reason));
+        card.appendChild(el("p","",r.owned?
+          "보유 자격증으로 직접 입력하셨습니다. 실제 취득 증빙·공고 인정 여부는 별도 확인이 필요합니다.":
+          "추가 검토 후보입니다. 보유 입력에 없더라도 실제 미취득으로 단정하지 않으며, 취득 필수·추천 순위로 해석하지 마세요."));
         const action=el("button","outline","DB에서 자세히 보기");action.type="button";
         action.addEventListener("click",()=>{
           const search=document.getElementById("cert-search");
