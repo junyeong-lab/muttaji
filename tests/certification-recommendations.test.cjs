@@ -9,3 +9,5 @@ test("명시된 보유 자격증 우선",()=>{const x=r({posting:"필수 정보�
 test("Azure에 AWS 전용 자격증 후보 없음",()=>{const x=r({posting:"Azure RBAC 운영"});assert.ok(x.some(y=>y.name.includes("Azure Fundamentals")));assert.ok(x.every(y=>!y.name.startsWith("AWS")));});
 test("개인정보보호 직무 CPPG, SQLD 직접 명시",()=>{assert.ok(r({goal:"개인정보보호 담당자"}).some(y=>y.name==="CPPG"));assert.ok(r({posting:"SQLD 보유",preferred:["SQLD"]}).some(y=>y.name==="SQLD"&&y.explicit));});
 test("빈 조건과 잘못된 약어는 대응하지 않음",()=>{assert.deepEqual(r({}),[]);assert.equal(mentions("SQLDP","SQLD"),false);assert.equal(mentions("AWS IAM","AWS"),true);});
+
+test("개인정보보호 문구로 일반 정보보안 자격이 과대 연결되지 않음",()=>{const a=r({goal:"개인정보보호 담당자"});assert.equal(a[0].name,"CPPG");const b=r({posting:"개인정보보호 담당",goal:"정보보안 담당자"});assert.equal(b[0].name,"CPPG");});

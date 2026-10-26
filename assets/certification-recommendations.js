@@ -63,12 +63,14 @@
       else if((term=foundIn(posting)))add(item,75,"공고 원문에 명칭 언급",term,true,i);
     });
     for(const [words,names] of map){
-      let keyword=words.find(w=>mentions(posting,w)),origin="공고";
-      if(!keyword){keyword=words.find(w=>mentions(goal,w));origin="목표 직무";}
+      // '개인정보보호'에 포함된 '정보보호'만으로 일반 보안 영역을 추가하지 않음.
+      const relevant=(text,term)=>mentions(term==="정보보호"?text.replace(/개인정보보호/g,""):text,term);
+      let keyword=words.find(w=>relevant(posting,w)),origin="공고";
+      if(!keyword){keyword=words.find(w=>relevant(goal,w));origin="목표 직무";}
       if(!keyword)continue;
       names.forEach((name,k)=>{
         const index=catalog.findIndex(item=>normalize(item.name)===normalize(name));
-        if(index>=0)add(catalog[index],20-2*k,origin+" 관련 기술·분야",keyword,false,index);
+        if(index>=0)add(catalog[index],20-2*k+(origin==="공고"?8:0),origin+" 관련 기술·분야",keyword,false,index);
       });
     }
     return [...scores.values()].sort((a,b)=>{
