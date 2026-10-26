@@ -108,6 +108,23 @@
       if(mentions(item.text,name))mentioned.push({name,term:name});
     }
     if(!mentioned.length)return null;
+    // A job board may list example certificates on the next line of an
+    // optional credential condition. For example:
+    // 'IT/정보보안 자격증 소지자: 정보보안(산업)기사, 정보처리기사, ... CPPG 등'.
+    // A reported named credential meets only that optional certificate
+    // criterion, not any other education, career or technical condition.
+    const namedExampleList=/(?:예\s*[:：]|예시|예를\s*들어|[,，][^.!?\n]{0,200}등(?:\s|$|[)\].,]))/i.test(item.text);
+    const certificateListContext=/(?:자격증|자격\s*(?:소지|보유)|인증심사원|심사원)/.test(item.text);
+    const otherRequirements=/(?:경력|실무\s*경험|학력|전공|졸업|학위|\d+\s*년\s*이상|업무\s*경험|(?:네트워크|보안|IT)\s*이해|\bTOEIC\b|외국어)/i.test(item.text);
+    const allRequired=/(?:및|모두|전부|각각|동시|둘\s*다|\ball\b)/i.test(item.text);
+    if(namedExampleList&&certificateListContext&&!otherRequirements&&!allRequired){
+      const matches=mentioned.filter(x=>owned.some(name=>normCert(name)===normCert(x.name)));
+      if(matches.length){
+        const names=matches.map(x=>x.name);
+        return {status:"충족",names,
+          reason:"공고에 나열된 자격증 예시 중 '"+names.join(", ")+"'가 보유 자격증 입력과 일치합니다. 이 자격증 보유 우대조건만 본인 입력 기준으로 충족 표시하며, 실제 취득 증빙과 회사 인정 여부는 별도 확인이 필요합니다."};
+      }
+    }
     const alternatives=/(?:또는|혹은|택\s*1|택일|중\s*(?:한|1)|[/|])/i.test(item.text);
     const conjunction=/(?:및|모두|둘\s*다|동시|전부)/i.test(item.text);
     if(mentioned.length>1&&alternatives===conjunction)return null;

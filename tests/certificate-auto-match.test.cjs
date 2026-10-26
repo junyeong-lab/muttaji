@@ -53,3 +53,48 @@ test("자동 제안은 수동 확정 함수를 우회하지 않고 확인 필요
   const auto=suggestion(item.text);
   assert.equal(assessment(item,auto.status,auto.reason).status,"충족");
 });
+
+test("실제 컨설턴트 공고의 다중 우대 자격증 예시에서 보유 정보처리기사 자동 충족",()=>{
+  const posting=[
+    "모집","정보보안 컨설턴트(신입)",
+    "이런 경험이 있으면 더 좋아요!",
+    "• IT/ 정보보안 자격증 소지자",
+    "정보보안(산업)기사, 정보처리기사, ISMS-P/ISO27001 심사원, CPPG 등"
+  ].join("\n");
+  const [item]=requirements(posting,{analyze});
+  assert.equal(item.kind,"preferred");
+  assert.equal(item.line,4);
+  assert.equal(item.endLine,5);
+  const proposed=credentialSuggestion(item,owned);
+  assert.equal(proposed?.status,"충족");
+  assert.deepEqual(proposed.names,["정보처리기사"]);
+  assert.match(proposed.reason,/보유 자격증 입력과 일치/);
+  assert.match(proposed.reason,/우대조건만/);
+  const confirmed=assessment(item,proposed.status,proposed.reason);
+  assert.equal(confirmed.status,"충족");
+  assert.equal(tally([confirmed])["충족"],1);
+});
+test("자격증 예시만 보유한 경우에 한해 자동 일치하고 증빙은 별도",()=>{
+  const item={kind:"preferred",text:"IT/정보보안 자격증 소지자 정보보안(산업)기사, 정보처리기사, CPPG 등"};
+  assert.equal(credentialSuggestion(item,"정보처리기사")?.status,"충족");
+  assert.equal(credentialSuggestion(item,"CPPG")?.status,"충족");
+  assert.equal(credentialSuggestion(item,"SQLD"),null);
+  assert.equal(credentialSuggestion(item,"네트워크관리사 2급"),null);
+});
+test("다른 경력·학력·기술 조건이나 모두 보유 조건까지 자동 충족하지 않음",()=>{
+  const unsafe=[
+    "정보처리기사, CPPG 등 자격증 및 경력 3년 이상",
+    "정보처리기사, CPPG 등 자격증 및 네트워크 이해",
+    "정보처리기사, CPPG 등 자격증과 학사 학위",
+    "정보처리기사, CPPG 등 자격증 모두 소지",
+    "정보처리기사, CPPG 모두 취득",
+    "정보처리기사, CPPG",
+    "정보보안 관련 자격증 우대"
+  ];
+  for(const text of unsafe){
+    assert.equal(suggestion(text),null,text);
+  }
+  assert.equal(suggestion("정보처리기사 및 정보보안기사"),null);
+  assert.equal(suggestion("정보처리기사 또는 정보보안기사")?.status,"충족");
+  assert.equal(suggestion("SQLDP","SQLD"),null);
+});
