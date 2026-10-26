@@ -188,3 +188,26 @@ test("연차·학력 요건은 실습과 자격증으로 충족했다고 안내�
   const cert=plan.tasks.find(t=>t.text.includes("자격증"));
   assert.match(cert.steps.join(" "),/공식 검증 전/);
 });
+
+test("Wazuh 경보 분석 안내는 구체적이고 확인 필요·미충족·부분 충족에서 유지",()=>{
+  for(const status of ["확인 필요","미충족","부분 충족"]){
+    const plan=buildRoadmap([{kind:"preferred",text:"Wazuh SIEM 운영 경험",status}]);
+    const steps=plan.tasks[0].steps;
+    assert.equal(steps.length,3);
+    const text=steps.join(" ");
+    assert.match(text,/Wazuh 에이전트/);
+    assert.match(text,/로그 수집/);
+    assert.match(text,/로그 수집→경보 확인→원인 기록/);
+    assert.match(text,/실무 경력과 구분하세요/);
+  }
+});
+
+test("Python 로그 분석 자동화는 SIEM보다 Python 스크립트 실습을 먼저 제시",()=>{
+  const [task]=buildRoadmap([
+    {kind:"required",text:"Python 로그 분석 자동화",status:"확인 필요"}
+  ]).tasks;
+  assert.match(task.steps.join(" "),/Python 스크립트를 작성/);
+  assert.match(task.steps.join(" "),/비식별 샘플 로그/);
+  assert.doesNotMatch(task.steps[0],/SIEM/);
+  assert.match(task.steps[2],/내 역량/);
+});
