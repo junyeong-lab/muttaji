@@ -264,6 +264,14 @@
         <p class="page-intro">직접 선택하고 공식 자료와 대조하신 자격증 34개를 이름·분야·관련 역량으로 검색합니다.</p></div>
         <span class="pill">34개 · 공식자료 검증 사용자 확인</span>
       </div>
+      <section class="sheet" aria-labelledby="cert-rec-title">
+        <h2 id="cert-rec-title" class="feature-title">공고와 관련된 자격증 찾아보기</h2>
+        <p class="page-intro">채용공고 또는 목표 직무를 바탕으로 선택한 34개 DB에서 연관 자격증 최대 3개를 안내합니다.</p>
+        <button type="button" class="secondary" id="cert-rec-run">공고·내 역량으로 관련 자격증 보기</button>
+        <p id="cert-rec-note" class="result-summary" role="status" aria-live="polite">공고 또는 목표 직무를 입력한 뒤 실행해 주세요.</p>
+        <div class="cert-grid" id="cert-rec-results" aria-label="공고 관련 자격증 참고 후보"></div>
+        <div class="info">※ 공고에 자격증명이 명시된 경우와 관련 기술에서 찾은 참고 후보를 구분합니다. 취득·지원 자격·합격 가능성을 자동 판정하지 않습니다.</div>
+      </section>
       <div class="sheet">
         <div class="info"><b>🔎 검색 기능은 동작하지만, 아직 AI 자격증 추천은 아닙니다.</b><br>목록의 자격 구분·시행기관·응시자격은 <strong>사용자가 공식 자료와 대조를 마쳤다고 확인한 정보</strong>입니다. 최신 응시자격 및 변경 사항은 시행기관 사이트에서 다시 확인하세요. DB 검증과 개인의 자격증 보유 여부 또는 채용 요건 충족 판정은 별개입니다.</div>
         <div class="cert-tools">
@@ -288,7 +296,7 @@
         <p id="roadmap-summary" class="result-summary" role="status" aria-live="polite"></p>
         <div id="roadmap-list" class="roadmap-list" aria-label="우선순위별 준비 항목"></div>
         <div id="roadmap-notice" class="info result-disclaimer"></div>
-        <button type="button" class="outline" data-go="profile" style="margin-top:18px">비교 상태·근거 다시 수정하기 →</button>
+        <div class="actions" style="margin-top:18px"><button type="button" class="outline" data-go="profile">비교 상태·근거 다시 수정하기 →</button><button type="button" class="secondary" data-go="certifications">관련 자격증 찾아보기 →</button></div>
       </section>
     </section>
   </main>
@@ -497,6 +505,7 @@
       var certResults=document.getElementById("cert-results");
       var certCount=document.getElementById("cert-count");
       var certifications=[];
+        window.MuttajiCertificateSource=function(){return certifications.slice();};
       function normal(text){return String(text==null?"":text).normalize("NFKC").toLocaleLowerCase("ko-KR").trim();}
       function el(name,className,value){
         var node=document.createElement(name);if(className)node.className=className;
@@ -554,5 +563,6 @@
   <script src="./assets/ai-analysis-ui.js"></script>
   <script src="./assets/requirement-comparison.js"></script>
   <script src="./assets/roadmap.js"></script>
+  <script src="./assets/certification-recommendations.js"></script>
 </body>
 </html>
