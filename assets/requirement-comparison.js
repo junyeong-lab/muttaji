@@ -31,17 +31,42 @@
       needsReason:status!=="확인 필요"&&effective==="확인 필요"};
   }
   // A certificate match means user-reported name equality, not verified possession.
+  // Canonical certification names and aliases: user-selected 34 entries.
   const catalog=[
-    ["정보처리기사","정처기"],["정보보안기사"],["정보보안산업기사"],
-    ["네트워크관리사 1급","네관사 1급"],["네트워크관리사 2급","네관사 2급"],
-    ["리눅스마스터 1급"],["리눅스마스터 2급"],["SQLD","SQL 개발자"],
-    ["SQLP","SQL 전문가"],["ADsP","데이터분석 준전문가"],["ADP","데이터분석 전문가"],
-    ["CPPG","개인정보관리사"],["정보통신기사"],["빅데이터분석기사"],
-    ["컴퓨터활용능력 1급","컴활1급","컴활 1급"],["컴퓨터활용능력 2급","컴활2급","컴활 2급"],
-    ["AWS Certified Cloud Practitioner","AWS CCP"],
-    ["AWS Certified Solutions Architect - Associate","AWS SAA"],
-    ["Microsoft Azure Fundamentals (AZ-900)","AZ-900"],["ISMS-P 인증심사원"],
-    ["CompTIA Security+","Security+"],["Cisco CCNA","CCNA"],["CISSP"]
+    ["정보보안기사","정보보안 국가기술자격","SIS(구 정보보호전문가)"],
+    ["정보처리기사","정처기"],
+    ["네트워크관리사 2급","네관사 2급"],
+    ["리눅스마스터 2급","Linux Master 2급"],
+    ["SQLD","SQL 개발자","SQL Developer"],
+    ["ADsP","데이터분석 준전문가"],
+    ["CPPG","개인정보관리사"],
+    ["빅데이터분석기사","빅분기"],
+    ["정보통신기사"],
+    ["AWS Certified Cloud Practitioner","AWS Cloud Practitioner","CLF-C02","AWS CCP"],
+    ["AWS Certified Solutions Architect - Associate","AWS SAA","AWS Solutions Architect Associate"],
+    ["Microsoft Azure Fundamentals (AZ-900)","AZ-900","Azure Fundamentals","Azure 기초"],
+    ["정보보안산업기사"],
+    ["SQLP","SQL 전문가","SQL Professional"],
+    ["ADP","데이터분석 전문가"],
+    ["리눅스마스터 1급","Linux Master 1급"],
+    ["네트워크관리사 1급","네관사 1급"],
+    ["ISMS-P 인증심사원","ISMS-P 심사원"],
+    ["CompTIA Security+","Security+","CompTIA Security Plus"],
+    ["Cisco CCNA","CCNA","Cisco Certified Network Associate"],
+    ["CISSP","Certified Information Systems Security Professional"],
+    ["정보관리기술사"],
+    ["정보기기운용기능사","정보기기 운용"],
+    ["정보처리산업기사"],
+    ["컴퓨터시스템기사"],
+    ["컴퓨터시스템응용기술사"],
+    ["정보보호위험관리사","ISRM"],
+    ["정보보호능력검정","TOLIS"],
+    ["PC정비사 1급"],
+    ["PC정비사 2급"],
+    ["DAP","DA 전문가","Data Architecture Professional"],
+    ["DAsP","DA 준전문가","Data Architecture Semi-Professional"],
+    ["산업보안관리사"],
+    ["AICE associate","AICE"]
   ];
   const normCert=value=>String(value||"").normalize("NFKC").toLowerCase().replace(/\s+/g,"");
   function mentions(text,term){
