@@ -158,3 +158,52 @@ test("회사 소개·공고 상세처럼 내용 없는 제목은 요건으로 �
   assert.equal(result.required.length,1);
   assert.equal(result.unresolved.length,0);
 });
+
+test("실제 정보보안 컨설턴트 공고: 구어체 제목·모집 직무·기술/관리·우대 자격증 줄바꿈",()=>{
+  const lines=[
+    "모집","정보보안 컨설턴트(신입)","이런 업무를 하시게 될 거예요!",
+    "■정보보안 컨설턴트(기술)","• 인프라 취약점 진단",
+    "○ 서버, 네트워크, 보안장비 등 정보시스템 취약점 진단 및 스트립트 작성",
+    "• 웹/모바일 취약점 진단","○ 웹/모바일(앱) 모의해킹 및 침투 테스트",
+    "• 소스코드 진단 / 오픈소스 공급망보안","○ 시큐어코딩 기반 소스코드 점검",
+    "○ 오픈소스 라이브러리 취약점 분석 및 SBOM 작성",
+    "정보보안 컨설턴트(관리)","• 정보보호 관리체계",
+    "o CSAP, ISMS, ISMS-P, ISO27001 등 보안인증심사 지원",
+    "○ 국내외 컴플라이언스 분석 및 가이드","• 개인정보 컨설팅",
+    "○ 개인정보 영향평가 수행 및 개인정보 업무 분석 안정성 확보 조치 점검",
+    "○ ISMS-P 인증 개인정보 영역 점검",
+    "○ 개인정보 수준평가 및 수탁사 점검 지원",
+    "※기술 / 관리 중 적합한 포지션으로 채용을 진행합니다.",
+    "이런 분을 원해요!","• 보안 컨설팅 분야에 대한 기초 이해가 있으신 분",
+    "• 정보보안 분야에서 커리어를 시작하고 성장하고 싶으신 분",
+    "• 상주/비상주/출장 업무 수행 가능하신 분",
+    "• 협업 및 고객 대응을 위한 원활한 커뮤니케이션 능력을 갖추신 분",
+    "이런 경험이 있으면 더 좋아요!","• 관련 학과 또는 공학 계열 전공자",
+    "• IT/ 정보보안 자격증 소지자",
+    "정보보안(산업)기사, 정보처리기사, ISMS-P/ISO27001 심사원, CPPG 등",
+    "• 정보보안 관련 프로젝트·인턴·스터디·동아리·대외활동 경험자"
+  ];
+  const actual=analyze(lines.join("\n"));
+  assert.equal(actual.role.length,1);
+  assert.equal(actual.role[0].text,"정보보안 컨설턴트(신입)");
+  assert.equal(actual.responsibilities.length,16); // 업무 14개 + 기술/관리 소제목 2개
+  assert.equal(actual.responsibilities.filter(x=>x.sectionHeading).length,2);
+  assert.equal(actual.responsibilities.find(x=>x.text==="인프라 취약점 진단").kindHint,"기술 분야 업무");
+  assert.equal(actual.responsibilities.find(x=>x.text==="개인정보 컨설팅").kindHint,"관리 분야 업무");
+  assert.equal(actual.required.length,4);
+  assert.equal(actual.preferred.length,3);
+  assert.match(actual.preferred[1].text,/정보보안\(산업\)기사/);
+  assert.equal(actual.unresolved.length,1);
+});
+test("구어체 다른 제목도 인식하고 제목 없는 자격증은 미분류 유지",()=>{
+  const input="모집\n보안 엔지니어\n함께 하실 업무\n• 보안 설정 점검\n이런 분이 필요해요!\n• 시스템 관리 경험\n이런 분이면 더 좋아요!\n• 자격증 보유";
+  const actual=analyze(input);
+  assert.equal(actual.role.length,1);
+  assert.equal(actual.responsibilities.length,1);
+  assert.equal(actual.required.length,1);
+  assert.equal(actual.preferred.length,1);
+  const unheaded=analyze("정보보안기사\n네트워크관리사 2급");
+  assert.equal(unheaded.required.length,0);
+  assert.equal(unheaded.preferred.length,0);
+  assert.equal(unheaded.unresolved.length,2);
+});

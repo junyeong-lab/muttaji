@@ -8,19 +8,20 @@
   "use strict";
   var CATEGORY = [
     { group: "company", label: /^(?:기업명|회사명|회사|기업)$/i },
-    { group: "role", label: /^(?:모집\s*(?:직무|분야|포지션|부서)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
-    { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일)$/i },
-    { group: "required", label: /^(?:필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications)$/i },
-    { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus)$/i },
+    { group: "role", label: /^(?:모집|모집\s*(?:직무|분야|포지션|부서|공고)|채용\s*(?:분야|포지션)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
+    { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
+    { group: "required", label: /^(?:필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
+    { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus|이런\s*(?:경험|역량)(?:이|을)?\s*있으면\s*(?:더\s*)?(?:좋아요|좋습니다|좋겠어요)|이런\s*분(?:이라면|이면)\s*더\s*좋아요|이런\s*점이\s*있으면\s*(?:더\s*)?좋아요|있으면\s*더\s*좋은\s*경험)$/i },
     { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*방법|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
   ];
   // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
-  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■▶]|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
+  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■□◇▶▷▸▹●○◯]|[oO](?=\s)|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
   function withoutBullet(s) {
     return s.replace(BULLET, "").trim();
   }
   function normalizeHeader(s) {
-    return s.replace(/^\s*#{1,5}\s*/, "").replace(/^[\s[【(]+|[\s\]】)]+$/g, "").replace(/\s+/g, " ").trim();
+    return s.replace(/^\s*#{1,5}\s*/, "").replace(/^[\s[【(]+|[\s\]】)]+$/g, "")
+      .replace(/[!！?？。]+\s*$/g, "").replace(/\s+/g, " ").trim();
   }
   function groupForLabel(s) {
     var label = normalizeHeader(s);
@@ -80,6 +81,7 @@
     var section="unresolved";
     var roleHeaderLabel=null;
     var sectionLine=0;
+    var workArea="";
     var lines=text.split("\n");
     if (lines.length > 400) throw new RangeError("최대 400줄까지 분석할 수 있습니다.");
     var prior=null;
@@ -93,6 +95,7 @@
         section=head.group;
         sectionLine=ix+1;
         roleHeaderLabel=section==="role"?head.label:null;
+        if(section!=="responsibilities")workArea="";
         prior=null;
         if(head.roleCandidate){
           out.role.push({text:head.roleCandidate,line:ix+1,endLine:ix+1,
@@ -101,6 +104,18 @@
         }
         if (!head.value) return;
         raw=head.value;
+      }
+      // Technology/management subsection markers are not separate duties.
+      if(!head&&section==="responsibilities"){
+        var subsection=withoutBullet(raw).match(/^(.{2,45}?\s*\(\s*(기술|관리)\s*\))\s*[:：]?$/);
+        if(subsection&&/(?:컨설턴트|엔지니어|담당자|직무)/.test(subsection[1])){
+          workArea=subsection[2];
+          out.responsibilities.push({text:subsection[1],line:ix+1,endLine:ix+1,
+            source:original.trim(),sectionLine:sectionLine,sectionHeading:true,
+            kindHint:workArea+" 분야 업무 구간 제목"});
+          prior=null;
+          return;
+        }
       }
       // Some job-board exports include a role prefix before "가. 업무".
       if(section==="responsibilities"){
@@ -133,6 +148,7 @@
       }
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
+      else if(!head&&/^※\s*(?:기술|관리).{0,60}포지션.{0,40}채용/.test(raw))kind="unresolved";
       else if (!head && kind==="unresolved") kind=directGroup(cleaned)||"unresolved";
       // A short typo/variant that starts like a section title should remain
       // independently reviewable, not be merged into the preceding bullet.
@@ -143,8 +159,13 @@
       // OCR often wraps a long bullet over two or more physical lines.
       // Join ONLY immediately adjacent, unbulleted continuation lines of an
       // existing bullet; never join distinct bullets, section headers or blanks.
+      var certExample=!head&&!hasBullet&&prior&&
+        /(?:자격증|자격)\s*(?:소지자?|보유자?)$/.test(prior.item.text)&&
+        /(?:기사|관리사|심사원|CPPG|CISSP|ISO\s*27001|SQLD)/i.test(cleaned)&&
+        /[,，]/.test(cleaned);
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
-          (cleaned.length<=16 || /(?:및|또는|관련|보안|\u002F|／|[,] )$/.test(prior.item.text))) {
+          (cleaned.length<=16 || certExample ||
+           /(?:및|또는|관련|보안|\u002F|／|[,] )$/.test(prior.item.text))) {
         prior.item.text += /[\/／]$/.test(prior.item.text) ? cleaned : " "+cleaned;
         prior.item.source += "\n"+original.trim();
         prior.item.endLine=ix+1;
@@ -154,6 +175,7 @@
       if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
       if(suspectedHeading)item.kindHint="제목으로 보이는 문구 · 분류 및 아래 구간을 확인해 주세요";
       if(kind==="role"&&roleHeaderLabel&&/부서/.test(roleHeaderLabel))item.kindHint="모집 부서";
+      if(kind==="responsibilities"&&workArea)item.kindHint=workArea+" 분야 업무";
       out[kind].push(item);
       out.totalItems++;
       prior={item:item,kind:kind,bullet:hasBullet && !/^\s*[가-하][.)]/.test(raw)};
