@@ -66,3 +66,11 @@ test("PC정비사 1급/2급 설명은 입력받은 각각의 내용으로 유지
  }
  assert.equal(db.certifications.length,34);
 });
+
+test("AICE associate 설명은 사용자 수정 내용대로 유지",()=>{
+ const aice=db.certifications.find(x=>x.name==="AICE associate");
+ assert.ok(aice);
+ assert.equal(aice.description,"KT가 개발하고 한국경제신문이 공동 주관하는 국가공인 인공지능(AI) 실무 활용 능력 평가 자격");
+ assert.equal(aice.type,"국가공인 민간자격");
+ assert.equal(db.count,34);
+});
