@@ -18,7 +18,7 @@ test("image upload and OCR UI stay removed while link and agent integrations rem
  assert.match(html,/AI 분석에 동의하고 실행하면 공고와 내 역량이 서버 및 OpenAI로 전송됩니다/);
  assert.doesNotMatch(html,/서버로 전송되지 않습니다/);
  assert.match(html,/target="_blank" rel="noopener noreferrer"/);
- for(const marker of ['id="job-text"','assets/job-url-ui.js','assets/agent-analysis-ui.js','assets/model-analysis-ui.js'])assert.ok(html.includes(marker),marker);
+ for(const marker of ['id="job-text"','assets/job-url-ui.js','assets/agent-input.js','assets/model-analysis-ui.js'])assert.ok(html.includes(marker),marker);
 });
 test("image-only link failures recommend screen text extraction instead of removed upload",async()=>{
  const {messages}=await import("../lib/job-url/errors.js");
