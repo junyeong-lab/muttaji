@@ -105,3 +105,47 @@ test("graduation-specific degree explanations follow the actual education input 
   const unrelated=build("고등학교 졸업");
   assert.doesNotMatch(unrelated.explanation,/졸업 또는 학위 취득이 명시/);
 });
+
+test("roadmap: programming does not confuse 프로그래밍 with 보안 로그",()=>{
+ const posting=["우대사항","ㆍ프로그래밍가능자"].join("\n");
+ const requirement={id:"program",kind:"preferred",text:"ㆍ프로그래밍가능자",line:2};
+ const analyzeProgram=profile=>buildAnalysis({posting,requirements:[requirement],profile}).explanations[0];
+ const withOnlyWazuh=analyzeProgram({skills:"- Wazuh SIEM 구축 및 보안 로그 분석 실습"});
+ assert.equal(withOnlyWazuh.topic,"programming");
+ assert.equal(withOnlyWazuh.inputEvidence.length,0);
+ assert.doesNotMatch(withOnlyWazuh.explanation,/로그·탐지/);
+ const withApp=analyzeProgram({experience:"- 뭐따지? 채용공고 분석 및 취업 준비 웹 서비스 개발",skills:"- Wazuh SIEM 구축 및 보안 로그 분석 실습"});
+ assert.equal(withApp.topic,"programming");
+ assert.match(withApp.inputEvidence[0].quote,/웹 서비스 개발/);
+ assert.equal(withApp.inputEvidence.some(x=>/Wazuh/.test(x.quote)),false);
+ assert.equal(Object.hasOwn(withApp,"status"),false);
+ const loggingPosting="우대사항\nㆍ보안 로그 분석";
+ const logging=buildAnalysis({posting:loggingPosting,requirements:[{id:"log",kind:"preferred",text:"ㆍ보안 로그 분석",line:2}],profile:{skills:"Wazuh SIEM 로그 분석"}}).explanations[0];
+ assert.equal(logging.topic,"logs");
+ assert.equal(logging.inputEvidence.length,1);
+});
+test("roadmap: AI 활용 links ALEPH evidence but never auto-confirms skill",()=>{
+ const posting="필수조건\nㆍAI 활용 가능자";
+ const requirement={id:"ai",kind:"required",text:"ㆍAI 활용 가능자",line:2};
+ const connected=buildAnalysis({posting,requirements:[requirement],profile:{skills:"- SKT ALEPH AI 인프라 운영·AI Agent 실무 교육과정"}}).explanations[0];
+ assert.equal(connected.topic,"ai-usage");
+ assert.match(connected.inputEvidence[0].quote,/ALEPH/);
+ assert.match(connected.explanation,/교육 이력만으로 실제 활용 능력/);
+ assert.equal(Object.hasOwn(connected,"status"),false);
+ const missing=buildAnalysis({posting,requirements:[requirement],profile:{skills:"Wazuh 로그 분석"}}).explanations[0];
+ assert.equal(missing.inputEvidence.length,0);
+});
+test("roadmap: generic certificate condition links owned credential without misreading specific names",()=>{
+ const posting=["우대사항","ㆍ관련 자격증 보유자","ㆍ자격증 : 정보처리산업기사, 정보보안산업기사"].join("\n");
+ const requirements=[{id:"generic",kind:"preferred",text:"ㆍ관련 자격증 보유자",line:2},
+                     {id:"specific",kind:"preferred",text:"ㆍ자격증 : 정보처리산업기사, 정보보안산업기사",line:3}];
+ const {certificateMatches}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+ const result=buildAnalysis({posting,requirements,profile:{certs:"정보처리기사\nSQLD"},certificateMatcher:certificateMatches}).explanations;
+ assert.equal(result[0].topic,"certificate");
+ assert.match(result[0].inputEvidence.map(x=>x.quote).join(","),/정보처리기사/);
+ assert.match(result[0].explanation,/채용사의 인정 기준/);
+ assert.equal(result[1].inputEvidence.length,0);
+ assert.equal(result.some(x=>Object.hasOwn(x,"status")),false);
+ const notOwned=buildAnalysis({posting,requirements:[requirements[0]],profile:{certs:"정보처리기사 취득 예정"},certificateMatcher:certificateMatches}).explanations[0];
+ assert.equal(notOwned.inputEvidence.length,0);
+});

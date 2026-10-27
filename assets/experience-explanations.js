@@ -41,7 +41,13 @@
     {id:"linux",requirement:/linux|리눅스/i,profile:/linux|리눅스/i,fields:["experience","skills"],
       meaning:"Linux 환경을 다루는 지식이나 경험에 관한 조건입니다.",connection:"Linux 관련 입력을 공고에서 요구한 환경과 연결했습니다.",
       action:"Linux 환경에서 다룬 계정·권한·서비스·로그 작업을 정리하거나 실습 기록으로 남길 수 있습니다."},
-    {id:"logs",requirement:/로그|위협\s*탐지|threat\s*hunting|SIEM|관제/i,profile:/로그|위협\s*탐지|threat\s*hunting|SIEM|관제/i,fields:["experience","skills"],
+    {id:"ai-usage",requirement:/\bAI\b|인공지능|생성형\s*AI|LLM|머신러닝/i,profile:/\bAI\b|인공지능|ALEPH|LLM|OpenAI|GPT|AI\s*Agent|에이전트|프롬프트/i,fields:["experience","skills"],
+      meaning:"업무나 프로젝트에서 AI를 활용할 수 있는 역량에 관한 조건입니다.",connection:"입력한 AI 교육·프로젝트 관련 문구를 연결했습니다. 교육 이력만으로 실제 활용 능력과 결과를 확정하지 않습니다.",
+      action:"사용한 AI 도구, 직접 수행한 분석·자동화 작업, 결과와 본인 기여를 구체적으로 정리하세요."},
+    {id:"programming",requirement:/프로그래밍|코딩|코드\s*작성|프로그래밍\s*언어/i,profile:/프로그래밍|코딩|코드|JavaScript|TypeScript|Python|\bJava\b|C\+\+|C#|웹\s*(?:앱|서비스)\s*(?:개발|구현)|(?:앱|웹앱|서비스)\s*(?:개발|구현)|개발\s*(?:프로젝트|경험)|GitHub/i,fields:["experience","skills"],
+      meaning:"프로그램을 직접 작성·수정·구현하는 역량에 관한 우대조건입니다.",connection:"입력한 개발·코딩 관련 경험을 연결했습니다. 작성 언어와 실제 구현 범위는 추가 확인이 필요합니다.",
+      action:"사용한 언어·도구와 직접 구현한 기능, 코드 작성·수정 범위를 포트폴리오에 정리하세요."},
+    {id:"logs",requirement:/(?<![프블])로그|위협\s*탐지|threat\s*hunting|SIEM|관제/i,profile:/(?<![프블])로그|위협\s*탐지|threat\s*hunting|SIEM|관제/i,fields:["experience","skills"],
       meaning:"기록과 이벤트를 살펴 이상 징후를 분석하는 업무와 관련된 조건입니다.",connection:"입력한 로그·탐지 관련 내용을 공고의 분석 업무와 연결했습니다.",
       action:"분석한 자료, 사용 도구, 본인의 역할과 결과를 프로젝트 소개에 활용할 수 있습니다."},
     {id:"project",requirement:/프로젝트|인턴|스터디|동아리|대외활동/,profile:/프로젝트|인턴|스터디|동아리|대외활동|학습|공부|구축|개발|실습/,fields:["experience"],
@@ -88,13 +94,21 @@
       const normalized=value=>value.normalize("NFKC").replace(/\s+/g," ").trim();
       if(!normalized(source).includes(normalized(fromItem)) && !normalized(source).includes(normalized(item.text)))throw new TypeError("공고 원문과 요건이 일치하지 않습니다.");
       const topic=topics.find(entry=>entry.requirement.test(item.text))||fallback;
+      // A broad "related certificate holder" condition can show self-reported
+      // credentials as context, but does not imply the employer accepts them.
+      // Named credentials must still be exact-matched against the posting.
+      const genericCertificate=topic.id==="certificate"&&
+        /^(?:(?:IT|보안|정보보안)\s*)?(?:관련\s*)?자격증\s*(?:보유자|소지자|보유|소지|우대)$/i
+          .test(item.text.replace(/^[·ㆍ•*\-\s]+/,"").trim());
       const assessment=byId.get(item.id);
       const manual=readString(assessment?.explanation,12000);
       const evidence=manual.trim()?[{source:"assessment",field:item.id,label:"이 조건에 직접 입력한 근거",start:0,end:manual.length,quote:manual}]:[];
       if(topic.fields)for(const field of topic.fields){
         for(const ref of fragments[field]){
           const matches=topic.id==="certificate"
-            ? (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote):ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());}))
+            ? (genericCertificate
+              ? topic.profile.test(ref.quote)&&!/미보유|미취득|준비\s*중|취득\s*예정|보유하지\s*않|취득하지\s*않|없습니다/.test(ref.quote)
+              : (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote):ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());})))
             : topic.profile.test(ref.quote);
           if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote)))evidence.push({...ref});
           if(evidence.length>=3)break;
@@ -104,10 +118,14 @@
       const hasPlan=evidence.some(ref=>planned.test(ref.quote));
       const hasAbsence=evidence.some(ref=>absent.test(ref.quote));
       let explanation=evidence.length?topic.connection:"현재 입력에서 이 조건에 연결할 문구를 찾지 못했습니다. 선택한 상태는 그대로 유지합니다.";
+      if(genericCertificate&&evidence.length)
+        explanation="자격증 입력란의 보유 자격증을 참고 근거로 연결했습니다. 해당 자격이 공고에서 말하는 '관련 자격증'에 해당하는지는 채용사의 인정 기준을 확인해야 합니다.";
       if(topic.id==="related-work"&&/인턴|알바/.test(item.text)&&evidence.length)explanation+=" 인턴·알바 표기만으로 다른 고용 형태의 경험을 배제하지 않습니다.";
       if(hasAbsence)explanation+=" 경험이 없다고 적은 내용도 입력 그대로 함께 보여드립니다.";
       if(hasPlan)explanation+=" 예정·계획은 앞으로 준비할 내용으로 소개할 수 있습니다.";
       let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
+      if(genericCertificate&&evidence.length)
+        nextAction="자격증의 정확한 이름과 취득 사실을 확인하고, 지원 직무 관련성과 채용사 인정 여부를 원문 또는 채용 담당자에게 확인하세요.";
       if(assessment?.status==="미충족"||assessment?.status==="부분 충족")nextAction+=" 보완하고 싶은 부분은 작은 학습·실습 과제로 나누어 시작할 수 있습니다.";
       // A degree is explicitly reported only when the education field states
       // completion. "졸업예정", attendance, or a school name alone never does.
