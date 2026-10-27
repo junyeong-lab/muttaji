@@ -310,3 +310,8 @@
 - 통합 이후 되살아난 이미지 업로드·미리보기·OCR 버튼·열별 검토 UI를 제거하고 OCR 스크립트 로딩을 중단했습니다. 옛 자산 파일은 과거 기록과 단위 테스트를 위해 남겨 두되 운영 화면에서 사용하지 않습니다.
 - 이미지 공고의 글자는 Windows PowerToys 텍스트 추출기 **Win + Shift + T**로 복사해 텍스트 입력창에 붙여넣도록 안내합니다. 이미지 전용 URL 수집 오류 문구와 AI 분석 비활성화 문구도 일치시켰습니다.
 - URL 가져오기·AI Agent·직접 입력·분류·역량 비교·로드맵·선택 자격증 DB 34개는 유지했습니다.
+
+## PowerToys 설치 안내 링크 복원 · 2026-10-27
+
+- 채용공고 분석 화면의 ‘이미지 공고 입력 방법’에 Microsoft Store에서 Microsoft PowerToys 검색·설치 방법과 [Microsoft 공식 설치 안내](https://learn.microsoft.com/ko-kr/windows/powertoys/install)를 연결했습니다.
+- 단축키 Win + Shift + T를 안내하고 이미지 업로드/OCR UI는 삭제된 상태로 유지했습니다. URL 가져오기 및 Agent, 기존 비교·로드맵·자격증 DB는 변경하지 않았습니다.

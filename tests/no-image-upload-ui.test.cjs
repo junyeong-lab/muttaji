@@ -9,6 +9,9 @@ test("image upload and OCR UI stay removed while link and agent integrations rem
  for(const marker of ['id="job-file"','id="ocr-button"','id="ocr-review"','assets/image-ocr.js','assets/ocr-image-preprocess.js','assets/ocr-column-review.js'])assert.ok(!html.includes(marker),marker);
  assert.match(html,/PowerToys/);
  assert.match(html,/Win\s*\+\s*Shift\s*\+\s*T/);
+ assert.ok(html.includes("https://learn.microsoft.com/ko-kr/windows/powertoys/install"));
+ assert.match(html,/Microsoft Store에서/);
+ assert.match(html,/target="_blank" rel="noopener noreferrer"/);
  for(const marker of ['id="job-text"','assets/job-url-ui.js','assets/agent-analysis-ui.js','assets/model-analysis-ui.js'])assert.ok(html.includes(marker),marker);
 });
 test("image-only link failures recommend screen text extraction instead of removed upload",async()=>{
