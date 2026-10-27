@@ -160,6 +160,9 @@
         kind="role";
         candidate=true;
       }
+      // An explicit location label must not inherit a role or eligibility section.
+      var isLocation=!head&&/^(?:근무\s*(?:지|지역|장소|주소))\s*[:：]\s*\S/.test(cleaned);
+      if(isLocation){kind="unresolved";section="unresolved";sectionLine=ix+1;roleHeaderLabel=null;prior=null;}
       var nonRequirement=nonRequirementKind(cleaned);
       if(nonRequirement){kind=nonRequirement;prior=null;}
       if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
@@ -180,6 +183,13 @@
         /(?:자격증|자격)\s*(?:소지자?|보유자?)$/.test(prior.item.text)&&
         /(?:기사|관리사|심사원|CPPG|CISSP|ISO\s*27001|SQLD)/i.test(cleaned)&&
         /[,，]/.test(cleaned);
+      if(!head&&!hasBullet&&prior?.location&&prior.kind===kind&&
+          /^\d{1,5}\s*(?:호|층|동)$/.test(cleaned)){
+        prior.item.text+=" "+cleaned;
+        prior.item.source+="\n"+original.trim();
+        prior.item.endLine=ix+1;
+        return;
+      }
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
           (cleaned.length<=16 || certExample ||
            /(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text))) {
@@ -195,7 +205,16 @@
       if(kind==="responsibilities"&&workArea)item.kindHint=workArea+" 분야 업무";
       out[kind].push(item);
       out.totalItems++;
-      prior={item:item,kind:kind,bullet:hasBullet && !/^\s*[가-하][.)]/.test(raw)};
+      prior={item:item,kind:kind,location:isLocation,bullet:hasBullet && !/^\s*[가-하][.)]/.test(raw)};
+    });
+    // Repeated titles from a summary and detailed listing appear only once.
+    // Keep the earliest source line and leave the original input unchanged.
+    var seenTitles=new Set();
+    out.role=out.role.filter(function(item){
+      var title=item.text.normalize("NFKC").toLowerCase().replace(/\s+/g,"");
+      if(seenTitles.has(title)){out.totalItems--;return false;}
+      seenTitles.add(title);
+      return true;
     });
     return out;
   }
