@@ -46,3 +46,11 @@ test('only one concurrent model call is allowed',async()=>{
  const handler=createModelHandler({config:()=>({enabled:true,token,model:'test'}),adapter:{analyze:()=>{started();return new Promise(r=>finish=r);}}});
  const first=handler(http());await signal;assert.equal((await handler(http())).status,429);finish(output());assert.equal((await first).status,200);
 });
+
+test('truncated SDK JSON is diagnosed without paid calls or retries',async()=>{
+ const {MockLanguageModelV4}=await import('ai/test');const {createSdkAdapter}=await import('../lib/agent/adapters/ai-sdk.js');
+ const {analyzePrepared}=await import('../lib/agent/provider-interface.js');
+ const model=new MockLanguageModelV4({doGenerate:async()=>({content:[{type:'text',text:'{"items":['}],finishReason:{unified:'length'},usage:{inputTokens:{total:10},outputTokens:{total:4096}},warnings:[]})});
+ await assert.rejects(analyzePrepared({request:request(),requirements,catalog:[],adapter:createSdkAdapter({model}),enabled:true,ownerApproved:true}),e=>e.code==='PROVIDER_OUTPUT_LIMIT');
+ assert.equal(model.doGenerateCalls.length,1);
+});

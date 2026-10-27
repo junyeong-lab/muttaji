@@ -14,3 +14,13 @@ test('provider category survives boundary and is available without another paid 
  assert.equal((await response.json()).error,'PROVIDER_MODEL_UNAVAILABLE');
  const state=await (await handler(new Request('http://localhost/api'))).json();assert.equal(state.remaining,0);assert.equal(state.lastError,'PROVIDER_MODEL_UNAVAILABLE');assert.equal(calls,1);
 });
+
+test('SDK output failures preserve safe categories without exposing generated content',async()=>{
+ const {NoObjectGeneratedError,NoOutputGeneratedError}=await import('ai');
+ const {safeProviderError}=await import('../lib/agent/provider-errors.js');
+ for(const [finishReason,code] of [['length','PROVIDER_OUTPUT_LIMIT'],['stop','PROVIDER_OUTPUT_INVALID']]){
+  const failure=new NoObjectGeneratedError({text:'PRIVATE GENERATED CONTENT',response:{id:'fake',modelId:'fake',timestamp:new Date()},usage:{},finishReason});
+  const safe=safeProviderError(failure);assert.equal(safe.code,code);assert.doesNotMatch(JSON.stringify(safe),/PRIVATE/);
+ }
+ assert.equal(safeProviderError(new NoOutputGeneratedError({message:'PRIVATE'})).code,'PROVIDER_NO_OUTPUT');
+});
