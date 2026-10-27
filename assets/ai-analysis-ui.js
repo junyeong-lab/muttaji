@@ -122,7 +122,7 @@
         availability.textContent="AI 서버가 준비되었습니다. 분석을 실행하면 채용공고 텍스트가 외부 AI 제공자에게 전송될 수 있습니다. 접근 코드를 입력하고 전송 동의 후 요청해 주세요.";
         controls.hidden=false;
       }else{
-        availability.textContent="AI 분석 API 코드는 준비됐지만, 비용·접근 권한 설정이 완료되지 않아 현재 비활성화 상태입니다. 기존 텍스트 1차 분석과 이미지 OCR은 계속 사용할 수 있습니다.";
+        availability.textContent="AI 분석 API 코드는 준비됐지만, 비용·접근 권한 설정이 완료되지 않아 현재 비활성화 상태입니다. 기존 텍스트 1차 분석과 채용공고 직접 붙여넣기는 계속 사용할 수 있습니다.";
         controls.hidden=true;
       }
     }catch{

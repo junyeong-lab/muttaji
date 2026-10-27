@@ -19,6 +19,6 @@ test('image-only detail gives OCR guidance rather than a generic missing posting
  const {extractPosting}=await import('../lib/job-url/extract.js');
  const {messages}=await import('../lib/job-url/errors.js');
  assert.throws(()=>extractPosting('<div id="detail-content"><img src="https://images.example.org/poster.png"></div>','https://www.jobkorea.co.kr/Recruit/GI_Read_Comt_Ifrm?Gno=123'),{code:'IMAGE_POSTING'});
- assert.match(messages.IMAGE_POSTING,/이미지 글자 추출/);
+ assert.match(messages.IMAGE_POSTING,/PowerToys.*Win \+ Shift \+ T/);
  assert.throws(()=>extractPosting('<img src="logo.png">','https://example.org'),{code:'NO_POSTING'});
 });
