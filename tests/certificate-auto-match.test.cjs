@@ -2,8 +2,8 @@
 const test=require("node:test");
 const assert=require("node:assert/strict");
 const {requirements,assessment,tally,credentialSuggestion,ownedCertificates}=
-  require("../assets/requirement-comparison.js");
-const {analyze}=require("../assets/job-text-analyzer.js");
+  require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+const {analyze}=require("./load-browser-module.cjs")("../assets/job-text-analyzer.js");
 
 const owned="정보처리기사\nSQLD\n네트워크관리사 2급";
 function suggestion(text,certs=owned){return credentialSuggestion({text},certs);}

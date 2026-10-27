@@ -16,7 +16,7 @@
     const result=reviewed && reviewed.text===posting.trim() &&
       reviewed.result && Array.isArray(reviewed.result.required) && Array.isArray(reviewed.result.preferred)
         ? reviewed.result : parser.analyze(posting);
-    return ["required","preferred"].flatMap(kind=>result[kind].filter(item=>!item.sectionHeading).map((item,index)=>({
+    return ["required","preferred"].flatMap(kind=>result[kind].filter(item=>!item.sectionHeading&&!(parser.nonRequirementKind&&parser.nonRequirementKind(item.text))).map((item,index)=>({
       id:kind+"-"+index,kind,text:item.text,source:item.source,
       line:item.line,endLine:item.endLine||item.line
     })));
@@ -91,6 +91,13 @@
         const names=catalog.find(group=>group.some(name=>normCert(name)===normCert(entry)));
         return names?names[0]:entry;
       });
+  }
+  function certificateMatches(requirement,entry){
+    const owned=ownedCertificates(entry);
+    return owned.some(name=>{
+      const group=catalog.find(names=>names.some(alias=>normCert(alias)===normCert(name)));
+      return (group||[name]).some(alias=>mentions(requirement,alias));
+    });
   }
   function credentialSuggestion(item,profileCertificates){
     if(!item||typeof item.text!=="string"||!String(profileCertificates||"").trim())return null;
@@ -196,7 +203,36 @@
           :(outcome.status==="확인 필요"?"확인 필요: 입력하신 이력만으로 해당 요건 충족을 단정하지 않습니다."
           :"선택한 상태: "+outcome.status+" · 본인이 입력한 근거 기준"));
       });
-      emitComparison(outcomes);
+      let explained=outcomes;
+      const engine=window.MuttajiExperience;
+      const notice=document.getElementById("experience-explanation-status");
+      const containers=[...list.children].map(card=>card.querySelector("[data-experience-explanation]"));
+      containers.forEach(container=>container?.replaceChildren());
+      if(engine){
+        try{
+          const profile=Object.fromEntries(profileFields.map(id=>[id,String(document.getElementById(id)?.value||"")]));
+          const analysis=engine.buildAnalysis({posting:job.value.trim(),requirements:current,profile,assessments:outcomes,certificateMatcher:certificateMatches});
+          const byId=new Map(analysis.explanations.map(value=>[value.requirementId,value]));
+          explained=outcomes.map(outcome=>({...outcome,experienceExplanation:byId.get(outcome.id)}));
+          explained.forEach((item,i)=>{
+            if(containers[i])engine.renderExplanation(document,containers[i],item.experienceExplanation);
+          });
+          if(notice)notice.textContent="입력 기반 연결 설명 · AI 의미 분석 아님. 직접 입력한 근거와 관련 프로필 문구를 연결하며, 선택한 상태는 바꾸지 않습니다.";
+        }catch{
+          explained=outcomes;
+          containers.forEach(container=>container?.replaceChildren());
+          if(notice)notice.textContent="연결 설명을 만들지 못했습니다. 입력한 상태와 근거는 그대로 비교·로드맵에 반영됩니다.";
+        }
+      }else if(notice)notice.textContent="연결 설명 기능을 불러오지 못했습니다. 기존 비교와 로드맵은 계속 사용할 수 있습니다.";
+      const imported=window.MuttajiImportedPosting;
+      if(imported?.reviewed===true&&imported.text===job.value.trim()){
+        try{
+          const source=new URL(imported.sourceUrl);
+          if(source.protocol==="https:"&&!source.username&&!source.password)
+            explained=explained.map(item=>({...item,postingSource:{url:source.href,method:imported.method,edited:imported.edited===true}}));
+        }catch{}
+      }
+      emitComparison(explained);
     }
     function checkStale(){
       if(panel.hidden)return;
@@ -240,6 +276,8 @@
         const reasonId="req-reason-"+i;reason.id=reasonId;reasonLabel.htmlFor=reasonId;reasonLabel.appendChild(reason);
         card.appendChild(reasonLabel);
         const note=el("small","subtext");note.dataset.assessmentNote="1";card.appendChild(note);
+        const explanation=el("section","experience-explanation");
+        explanation.dataset.experienceExplanation="1";card.appendChild(explanation);
         select.addEventListener("change",()=>{
           if(suggested && reason.value===suggested.reason)reason.value="";
           update();
@@ -256,5 +294,5 @@
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {requirements,assessment,tally,credentialSuggestion,ownedCertificates};
+  return {requirements,assessment,tally,credentialSuggestion,ownedCertificates,certificateMatches};
 });

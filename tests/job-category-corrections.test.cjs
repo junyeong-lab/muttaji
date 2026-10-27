@@ -1,9 +1,9 @@
 "use strict";
 const test=require("node:test");
 const assert=require("node:assert/strict");
-const {analyze}=require("../assets/job-text-analyzer.js");
-const {headingType,reclassify}=require("../assets/job-category-corrections.js");
-const {requirements}=require("../assets/requirement-comparison.js");
+const {analyze}=require("./load-browser-module.cjs")("../assets/job-text-analyzer.js");
+const {headingType,reclassify}=require("./load-browser-module.cjs")("../assets/job-category-corrections.js");
+const {requirements}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
 
 test("숫자·로마숫자·가나다 번호가 붙은 우대사항은 제목으로 인식한다",()=>{
   for(const heading of ["우대사항","Ⅱ. 우대사항","2) 우대 사항","나. 우대사항","◆ 우대사항","[우대사항]"]){

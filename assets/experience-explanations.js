@@ -1,0 +1,136 @@
+/* Actual-input explanations, evaluated only in this browser tab.
+ * Deterministic text templates and topic matching, NOT model inference.
+ * No network, storage, final verdicts or input instructions are executed.
+ */
+(function(root,factory){
+  "use strict";
+  const api=factory();
+  if(typeof module==="object"&&module.exports)module.exports=api;
+  if(root)root.MuttajiExperience=api;
+})(typeof globalThis!=="undefined"?globalThis:this,function(){
+  "use strict";
+  const fields=["goal-job","education","experience","certs","skills"];
+  const labels={"goal-job":"목표 직무",education:"학력·전공",experience:"경력·프로젝트",certs:"보유 자격증",skills:"기술·지식"};
+  const topics=[
+    {id:"mobility",requirement:/출장|상주|비상주|교대\s*근무/,profile:/출장|상주|비상주|교대\s*근무/,fields:["experience","skills"],
+      meaning:"공고에 적힌 근무 방식과 출장 업무에 대응하는 조건입니다.",connection:"입력한 업무 수행 가능 여부를 이 조건에 대한 설명으로 연결했습니다.",
+      action:"입력한 근무·출장 가능 여부를 지원서의 근무 조건 항목에 활용할 수 있습니다."},
+    {id:"communication",requirement:/커뮤니케이션|소통|협업|고객\s*대응|의사소통/,profile:/커뮤니케이션|소통|협업|고객|보고|조율/,fields:["experience","skills"],
+      meaning:"동료나 고객과 정보를 나누고 함께 업무를 진행하는 역량에 관한 조건입니다.",connection:"입력한 소통·협업 내용을 함께 일한 경험을 설명하는 데 연결했습니다.",
+      action:"소통한 대상과 함께 진행한 업무를 중심으로 지원서에 소개할 수 있습니다."},
+    {id:"masters",requirement:/석사/,profile:/석사/,fields:["education"],
+      meaning:"석사 학위에 관한 조건입니다.",connection:"석사를 직접 언급한 학력 입력을 연결했습니다. 학위 취득 여부를 자동 확정하지 않습니다.",action:"석사 학위 관련 입력이 있다면 취득·재학·졸업예정 상태를 구분해 소개할 수 있습니다."},
+    {id:"doctorate",requirement:/박사/,profile:/박사/,fields:["education"],
+      meaning:"박사 학위에 관한 조건입니다.",connection:"박사를 직접 언급한 학력 입력을 연결했습니다. 학위 취득 여부를 자동 확정하지 않습니다.",action:"박사 학위 관련 입력이 있다면 취득·재학·졸업예정 상태를 구분해 소개할 수 있습니다."},
+    {id:"documentation",requirement:/문서\s*작성|보고서|보고\s*역량/,profile:/문서|보고|분석\s*자료|작성|산출물/,fields:["experience","skills"],
+      meaning:"문서·보고서 작성 역량과 관련된 조건입니다.",connection:"입력한 문서·보고자료 작성 경험을 연결했습니다. 작성 역량의 우수성을 자동 판정하지 않습니다.",action:"공개 가능한 범위에서 문서의 목적, 본인이 작성한 부분, 활용 결과를 소개할 수 있습니다."},
+    {id:"related-work",requirement:/유관\s*업무|관련\s*업무/,profile:/업무|수행|담당|운영|점검|기관평가|위협|보안|보고|프로젝트/,fields:["experience"],
+      meaning:"관련 업무를 수행한 경험에 관한 조건입니다.",connection:"입력한 관련 업무 경험을 연결했습니다.",action:"본인이 맡은 업무와 결과를 공고의 업무에 맞춰 소개할 수 있습니다. 회사의 경력 인정 여부는 별개입니다."},
+    {id:"degree",requirement:/학력|학사|대졸|졸업/,profile:/대학교|대학|학사|학위|졸업|재학|졸업예정/,fields:["education"],
+      meaning:"졸업·졸업예정 여부와 학위 수준에 관한 조건입니다.",connection:"입력한 학력 정보를 연결했습니다. 학교·전공명만으로 졸업 여부나 학위를 확정하지 않습니다.",
+      action:"지원서에 실제 졸업·재학·졸업예정 상태와 해당 학위를 구분해 기재할 수 있습니다."},
+    {id:"education",requirement:/전공|학력|관련\s*학과|공학\s*계열|학사|석사|졸업/,profile:/전공|학과|공학|학사|석사|졸업|재학/,fields:["education"],
+      meaning:"전공이나 학력 배경과 관련된 조건입니다.",connection:"입력한 학력·전공 배경을 이 조건 옆에 연결했습니다.",
+      action:"전공에서 배운 내용 중 지원 직무와 이어지는 주제를 지원서에 활용할 수 있습니다."},
+    {id:"certificate",requirement:/자격증|기사|산업기사|심사원|SQLD|SQLP|CPPG|CISSP|CCNA|certif/i,profile:/기사|자격|심사원|관리사|마스터|SQLD|SQLP|CPPG|CISSP|CCNA|certif/i,fields:["certs"],
+      meaning:"공고에서 명시한 자격증 또는 관련 자격 보유에 관한 조건입니다.",connection:"입력한 자격증을 공고의 자격 관련 조건과 연결해 보여드립니다.",
+      action:"보유한 자격증명은 지원서의 자격 사항에 활용할 수 있습니다. 추가 취득을 준비한다면 공식 시행기관 자료를 기준으로 계획하세요."},
+    {id:"motivation",requirement:/커리어|성장|시작하고|관심|열정|의지/,profile:/커리어|성장|시작|관심|배우|공부|싶|지원/,fields:["goal-job","experience","skills"],
+      meaning:"해당 분야에서 일하고 성장하려는 방향과 의지를 묻는 조건입니다.",connection:"입력한 진로 방향이나 학습 의지를 지원 동기를 설명하는 데 연결했습니다.",
+      action:"이 분야에 관심을 갖게 된 계기와 현재 하고 있는 준비를 지원 동기에 활용할 수 있습니다."},
+    {id:"linux",requirement:/linux|리눅스/i,profile:/linux|리눅스/i,fields:["experience","skills"],
+      meaning:"Linux 환경을 다루는 지식이나 경험에 관한 조건입니다.",connection:"Linux 관련 입력을 공고에서 요구한 환경과 연결했습니다.",
+      action:"Linux 환경에서 다룬 계정·권한·서비스·로그 작업을 정리하거나 실습 기록으로 남길 수 있습니다."},
+    {id:"logs",requirement:/로그|위협\s*탐지|threat\s*hunting|SIEM|관제/i,profile:/로그|위협\s*탐지|threat\s*hunting|SIEM|관제/i,fields:["experience","skills"],
+      meaning:"기록과 이벤트를 살펴 이상 징후를 분석하는 업무와 관련된 조건입니다.",connection:"입력한 로그·탐지 관련 내용을 공고의 분석 업무와 연결했습니다.",
+      action:"분석한 자료, 사용 도구, 본인의 역할과 결과를 프로젝트 소개에 활용할 수 있습니다."},
+    {id:"project",requirement:/프로젝트|인턴|스터디|동아리|대외활동/,profile:/프로젝트|인턴|스터디|동아리|대외활동|학습|공부|구축|개발|실습/,fields:["experience"],
+      meaning:"직접 참여한 활동에서 쌓은 경험을 소개할 수 있는 조건입니다.",connection:"입력한 프로젝트·학습 활동을 경험을 소개하는 자료로 연결했습니다.",
+      action:"현재 진행한 작업은 결과물과 본인 역할로 정리하고, 계획은 다음 실행 단계로 이어갈 수 있습니다."},
+    {id:"security",requirement:/보안|컨설팅|취약점|정보보호|ISMS|ISO\s*27001/i,profile:/보안|컨설팅|취약점|정보보호|점검|사이버|기관평가|감사|IPS|IDS|WAF|방화벽/i,fields:["experience","skills"],
+      meaning:"보안 업무에 필요한 이해나 관련 경험을 다루는 조건입니다.",connection:"입력한 보안 점검·학습·구축 관련 내용을 공고의 보안 업무와 연결했습니다.",
+      action:"직접 다룬 대상, 적용한 기준, 본인의 역할을 중심으로 보안 경험을 소개할 수 있습니다."},
+    {id:"experience",requirement:/경력|실무|\d+\s*년/,profile:/경력|실무|근무|수행|담당|운영|개월|\d+\s*년/,fields:["experience"],
+      meaning:"관련 업무의 종류나 수행 기간에 관한 조건입니다.",connection:"입력한 업무 경험을 공고와 함께 살펴볼 수 있도록 연결했습니다. 경력 기간을 새로 계산하거나 추정하지 않습니다.",
+      action:"이미 입력한 업무와 수행 기간을 경력 소개에 활용할 수 있습니다."}
+  ];
+  const fallback={id:"general",meaning:"공고에 적힌 내용을 사용자 입력과 함께 살펴보는 항목입니다.",connection:"이 조건에 직접 입력한 내용을 설명의 근거로 함께 보여드립니다.",action:"입력한 경험 중 이 조건과 연결해 소개하고 싶은 내용을 지원 준비에 활용할 수 있습니다."};
+  const planned=/예정|계획|준비\s*중|목표로|할\s*생각|구축할|개발할/;
+  const absent=/없(?:음|습니다|어요|다)|미경험|미보유|하지\s*않|하지\s*못|아직.*(?:않|못)/;
+  function sentences(text,source,field){
+    const parts=[];const pattern=/[^\r\n.!?。]+[.!?。]?/g;let match;
+    while((match=pattern.exec(text))){
+      const value=match[0],leading=value.length-value.trimStart().length,quote=value.trim();
+      if(quote)parts.push({source,field,label:labels[field]||"이 조건에 직접 입력한 근거",start:match.index+leading,end:match.index+leading+quote.length,quote});
+    }
+    return parts;
+  }
+  function readString(value,max){
+    if(value===undefined||value===null)return "";
+    if(typeof value!=="string"||value.length>max)throw new RangeError("입력 길이를 확인해 주세요.");
+    return value;
+  }
+  function buildAnalysis({posting,requirements,profile={},assessments=[],certificateMatcher}){
+    const text=readString(posting,20000);
+    if(text.split(/\r\n|\r|\n/).length>400||!Array.isArray(requirements)||requirements.length>400||!Array.isArray(assessments))throw new RangeError("공고 요건을 확인해 주세요.");
+    const sourceProfile=Object.fromEntries(fields.map(field=>[field,readString(profile[field],12000)]));
+    const fragments=Object.fromEntries(fields.map(field=>[field,sentences(sourceProfile[field],"profile",field)]));
+    const byId=new Map(assessments.map(item=>[item.id,item]));
+    const explanations=requirements.map(item=>{
+      if(!item||typeof item.id!=="string"||typeof item.text!=="string"||!["required","preferred"].includes(item.kind))throw new TypeError("유효한 공고 요건이 필요합니다.");
+      // A category edit can move a line, but cannot invent a quote or location.
+      const lines=text.split(/\r\n|\r|\n/),line=item.line,endLine=item.endLine||line;
+      if(!Number.isInteger(line)||!Number.isInteger(endLine)||line<1||endLine<line||endLine>lines.length)throw new TypeError("공고 근거 위치가 필요합니다.");
+      const source=lines.slice(line-1,endLine).join("\n");
+      const fromItem=typeof item.source==="string"?item.source:source;
+      // Parser joins wrapped lines; compare normalized whitespace only to bind
+      // the requirement to these lines, then display the unchanged source quote.
+      const normalized=value=>value.normalize("NFKC").replace(/\s+/g," ").trim();
+      if(!normalized(source).includes(normalized(fromItem)) && !normalized(source).includes(normalized(item.text)))throw new TypeError("공고 원문과 요건이 일치하지 않습니다.");
+      const topic=topics.find(entry=>entry.requirement.test(item.text))||fallback;
+      const assessment=byId.get(item.id);
+      const manual=readString(assessment?.explanation,12000);
+      const evidence=manual.trim()?[{source:"assessment",field:item.id,label:"이 조건에 직접 입력한 근거",start:0,end:manual.length,quote:manual}]:[];
+      if(topic.fields)for(const field of topic.fields){
+        for(const ref of fragments[field]){
+          const matches=topic.id==="certificate"
+            ? (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote):ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());}))
+            : topic.profile.test(ref.quote);
+          if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote)))evidence.push({...ref});
+          if(evidence.length>=3)break;
+        }
+        if(evidence.length>=3)break;
+      }
+      const hasPlan=evidence.some(ref=>planned.test(ref.quote));
+      const hasAbsence=evidence.some(ref=>absent.test(ref.quote));
+      let explanation=evidence.length?topic.connection:"현재 입력에서 이 조건에 연결할 문구를 찾지 못했습니다. 선택한 상태는 그대로 유지합니다.";
+      if(topic.id==="related-work"&&/인턴|알바/.test(item.text)&&evidence.length)explanation+=" 인턴·알바 표기만으로 다른 고용 형태의 경험을 배제하지 않습니다.";
+      if(hasAbsence)explanation+=" 경험이 없다고 적은 내용도 입력 그대로 함께 보여드립니다.";
+      if(hasPlan)explanation+=" 예정·계획은 앞으로 준비할 내용으로 소개할 수 있습니다.";
+      let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
+      if(assessment?.status==="미충족"||assessment?.status==="부분 충족")nextAction+=" 보완하고 싶은 부분은 작은 학습·실습 과제로 나누어 시작할 수 있습니다.";
+      return {schemaVersion:1,mode:"local-rules",requirementId:item.id,topic:topic.id,interpretation:topic.meaning,explanation,nextAction,
+        postingEvidence:{source:"posting",line,endLine,quote:source},inputEvidence:evidence,
+        basis:manual.trim()?"direct-input":evidence.length?"topic-match":"not-linked"};
+    });
+    return {schemaVersion:1,mode:"local-rules",label:"입력 기반 연결 설명 · AI 의미 분석 아님",explanations};
+  }
+  function renderExplanation(doc,container,value){
+    container.replaceChildren();
+    if(!value||value.mode!=="local-rules")return;
+    const node=(tag,cls,text)=>{const element=doc.createElement(tag);if(cls)element.className=cls;if(text!==undefined)element.textContent=String(text);return element;};
+    container.appendChild(node("h5","experience-heading","공고와 경험을 연결하면"));
+    container.appendChild(node("p","experience-copy",value.interpretation));
+    container.appendChild(node("p","experience-copy",value.explanation));
+    const details=node("details","experience-evidence");
+    details.appendChild(node("summary","","설명에 사용한 문구 보기"));
+    details.appendChild(node("small","subtext","공고 원문 "+value.postingEvidence.line+"행"));
+    details.appendChild(node("blockquote","experience-quote",value.postingEvidence.quote));
+    for(const ref of value.inputEvidence){details.appendChild(node("small","subtext",ref.label));details.appendChild(node("blockquote","experience-quote",ref.quote));}
+    if(!value.inputEvidence.length)details.appendChild(node("p","experience-copy","연결한 사용자 입력 없음"));
+    container.appendChild(details);
+    container.appendChild(node("h5","experience-heading","지원 준비에 활용하기"));
+    container.appendChild(node("p","experience-copy",value.nextAction));
+  }
+  return {buildAnalysis,renderExplanation};
+});

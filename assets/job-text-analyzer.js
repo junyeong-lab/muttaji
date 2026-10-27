@@ -73,6 +73,12 @@
       && /^[A-Za-z0-9가-힣·&/_+ -]+(?:사업부|기술부|본부|센터|팀|실|부)$/.test(v)
       && !/\s{2,}|[:：]/.test(v);
   }
+  function nonRequirementKind(value){
+    var v=withoutBullet(String(value||"")).trim();
+    if(/^[([（]?\s*(?:(?:모집|채용)\s*인원\s*[:：]?\s*)?(?:[○ㅇOo0-9]+|약간|다수)\s*명\s*[\])）]?$/.test(v))return "unresolved";
+    if(v.length<=140&&/(?:채용|모집)(?:\s*(?:공고|신입|경력|신입[·/ㆍ]경력|\([^)]*\)))*$/.test(v))return "role";
+    return null;
+  }
   function analyze(input) {
     if (typeof input !== "string") throw new TypeError("채용공고는 문자열이어야 합니다.");
     if (input.length > 20000) throw new RangeError("최대 20,000자까지 분석할 수 있습니다.");
@@ -146,6 +152,8 @@
         kind="role";
         candidate=true;
       }
+      var nonRequirement=nonRequirementKind(cleaned);
+      if(nonRequirement){kind=nonRequirement;prior=null;}
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if(!head&&/^※\s*(?:기술|관리).{0,60}포지션.{0,40}채용/.test(raw))kind="unresolved";
@@ -182,5 +190,5 @@
     });
     return out;
   }
-  return { analyze: analyze };
+  return { analyze: analyze, nonRequirementKind: nonRequirementKind };
 });

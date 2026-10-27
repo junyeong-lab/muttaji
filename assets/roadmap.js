@@ -172,7 +172,8 @@
       totals[status]++;
       return {id:String(item.id||item.kind+"-"+index),kind:item.kind,text:item.text.trim(),
         status,reason:typeof item.explanation==="string"?item.explanation.trim():"",
-        index,line:Number.isInteger(item.line)&&item.line>0?item.line:null};
+        index,line:Number.isInteger(item.line)&&item.line>0?item.line:null,
+        experienceExplanation:item.experienceExplanation?.mode==="local-rules"?item.experienceExplanation:null,postingSource:item.postingSource||null};
     });
     const sorted=normalized.sort((a,b)=>{
       const groupA=a.kind==="required"?0:1,groupB=b.kind==="required"?0:1;
@@ -274,6 +275,16 @@
             card.appendChild(rank);
             card.appendChild(node("h4","roadmap-item-title",item.text));
             if(item.line)card.appendChild(node("small","subtext","채용공고 원문 "+item.line+"행"));
+            if(item.postingSource?.url){
+              try{
+                const source=new URL(item.postingSource.url);
+                if(source.protocol==="https:"&&!source.username&&!source.password){
+                  const link=node("a","subtext","가져온 공고 원문 열기 ↗");
+                  link.href=source.href;link.target="_blank";link.rel="noopener noreferrer";card.appendChild(link);
+                  if(item.postingSource.edited)card.appendChild(node("small","subtext","사용자가 수정해 적용한 본문 기준"));
+                }
+              }catch{}
+            }
             card.appendChild(node("p","roadmap-action",fulfilled
               ?"본인 입력으로 충족 표시한 조건입니다. 실제 증빙과 기업의 자격 인정 여부는 별도로 확인해 주세요."
               :item.action));
@@ -285,7 +296,11 @@
               details.appendChild(steps);
               card.appendChild(details);
             }
-            if(item.reason)card.appendChild(node("p","roadmap-evidence","내가 입력한 근거: "+item.reason));
+            if(item.experienceExplanation&&window.MuttajiExperience){
+              const explanation=node("section","experience-explanation");
+              window.MuttajiExperience.renderExplanation(document,explanation,item.experienceExplanation);
+              card.appendChild(explanation);
+            }else if(item.reason)card.appendChild(node("p","roadmap-evidence","내가 입력한 근거: "+item.reason));
             cards.appendChild(card);
           });
         }
@@ -294,7 +309,7 @@
       });
       notice.textContent=(plan.requiredOpen
         ?"현재 아직 확인하거나 보완할 필수조건 "+plan.requiredOpen+"개가 있습니다."
-        :"현재 비교 결과에서 추가 확인·보완으로 표시된 필수조건은 없습니다.")+
+        :"현재 필수조건은 모두 사용자가 충족으로 표시했습니다.")+
         " 확인 필요 → 미충족 → 부분 충족 → 충족 순서로 표시합니다. 모든 상태는 본인 입력 기준이며, 공식 자격 검증·대체 경력 인정·합격 확률을 판단하지 않습니다.";
     }
     window.addEventListener("muttaji:comparison-changed",event=>{

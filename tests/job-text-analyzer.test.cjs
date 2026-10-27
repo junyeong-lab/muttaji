@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { analyze } = require("../assets/job-text-analyzer.js");
+const { analyze } = require("./load-browser-module.cjs")("../assets/job-text-analyzer.js");
 
 test("명시된 공고 제목별로 분류하고 근거 행을 남긴다", () => {
   const result = analyze(

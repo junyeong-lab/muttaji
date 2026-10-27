@@ -2,7 +2,7 @@
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
 const db=require("../data/certifications.json");
 const ui=fs.readFileSync(path.join(__dirname,"../index.html"),"utf8");
-const {credentialSuggestion}=require("../assets/requirement-comparison.js");
+const {credentialSuggestion}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
 test("34개 선택 목록과 아이디·중복 없음",()=>{
 assert.equal(db.count,34);assert.equal(db.certifications.length,34);
 assert.deepEqual(db.certifications.map(x=>x.id),Array.from({length:34},(_,i)=>i+1));

@@ -4,6 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+    "preview:agent": "node scripts/preview-agent.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "4.0.103",
+    "ai": "7.0.154",
+    "ipaddr.js": "2.5.0",
+    "parse5": "8.0.1"
+  },
+  "devDependencies": {
+    "fengari": "0.1.5"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

@@ -3,6 +3,21 @@
   "functions": {
     "api/analyze.js": {
       "maxDuration": 30
+    },
+    "api/agent-analyze.js": {
+      "maxDuration": 5
+    },
+    "api/job-url-import.js": {
+      "maxDuration": 20,
+      "includeFiles": "data/certifications.json"
+    },
+    "api/model-analysis.js": {
+      "maxDuration": 60,
+      "includeFiles": "data/certifications.json"
+    },
+    "api/session.js": {
+      "maxDuration": 10,
+      "includeFiles": "data/certifications.json"
     }
   }
 }

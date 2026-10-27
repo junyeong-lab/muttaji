@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const {compose,suggest} = require("../assets/ocr-column-review.js");
-const {analyze} = require("../assets/job-text-analyzer.js");
+const {compose,suggest} = require("./load-browser-module.cjs")("../assets/ocr-column-review.js");
+const {analyze} = require("./load-browser-module.cjs")("../assets/job-text-analyzer.js");
 
 test("4열 채용공고는 담당업무 후보만 제안하고 회사명은 추정하지 않는다",()=>{
   assert.equal(suggest(0,4),"unresolved");

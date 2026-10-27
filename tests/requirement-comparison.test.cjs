@@ -1,8 +1,8 @@
 "use strict";
 const test=require("node:test");
 const assert=require("node:assert/strict");
-const {requirements,assessment,tally}=require("../assets/requirement-comparison.js");
-const {analyze}=require("../assets/job-text-analyzer.js");
+const {requirements,assessment,tally}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+const {analyze}=require("./load-browser-module.cjs")("../assets/job-text-analyzer.js");
 
 const posting=[
   "ES기술부", "",

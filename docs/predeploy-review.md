@@ -1,0 +1,29 @@
+# 배포 전 최종 점검 결과
+
+## 결과
+
+2026-10-27 기준 개발 브랜치 feat/job-url-import. 원격 main을 fetch하여 기준 커밋 01d000c5d414009c3f34edbd4db2cdbf5c487f9c과 동일함을 확인했습니다(HEAD...origin/main 0/0). main 변경·merge·Push·커밋·Vercel 배포는 수행하지 않았습니다.
+
+자동 테스트 175개 통과. git diff --check 통과. 버전 관리 대상 소스·문서·설정의 실제 OpenAI/Supabase 키 의심 패턴 없음. 테스트용 가짜 키는 별도 구분했습니다. 정적 패턴 검사는 모든 형태의 비밀값 부재를 완전히 증명하지는 않습니다.
+
+배포 전 점검에서 비활성 URL 수집 버튼이 URL 편집 후 다시 활성화될 수 있는 화면 문제를 수정하고 회귀 테스트를 추가했습니다. Node 24.x를 package.json/lockfile에 명시해 Vercel의 Node 24 설정과 맞췄습니다. SDK는 Node 22 이상을 요구합니다.
+
+## 확인된 외부 설정
+
+- Vercel: project-muttaji, Node 24.x. OPENAI_API_KEY·MUTTAJI_SUPABASE_SECRET_KEY·MUTTAJI_SESSION_SECRET 모두 Production의 Sensitive 항목으로 등록됨. 값은 복호화하지 않음
+- Vercel 공개 활성화 3개 플래그 모두 false. 기존 Gateway 설정은 수정하지 않음
+- Supabase muttaji(crhhmqwarkqcrhanzjbu), 서울, 조직 Free/생성 견적 $0
+- release1 원장: 예산 예약 $1, 모델 총 4회, IP·세션별 하루 3회. enabled=false, 사용량·예약액 0 유지
+- 사용자 컴퓨터에서 서버 Secret key로 실제 Supabase RPC 인증 성공을 확인함. Vercel에 저장한 키 값이 같은지는 별도 실행 검증 필요
+
+## 기존 기능과 보호 범위
+
+기존 자격증 DB 34개 원본 JSON 내용 보존. 직접 공고 입력·OCR·분류 수정·역량 저장·자격증 일치·추천·수동 상태·로드맵과 신규 링크 수집·경험 설명·모델 분석 경로를 테스트했습니다. 실제 공고 1건의 AI 결과가 표시됨을 사용자 결과로 확인했으며 마지막 표현 정책은 가짜 응답으로 검증했습니다.
+
+공개 모드는 로그인 없는 서명 세션과 IP 기반 제한입니다. 동일 IP 사용자 간 한도 공유·IP/쿠키 변경 회피 가능성이 있으므로 계정 인증과 동일한 보장으로 설명하지 않습니다. 그 경우에도 전체 예산·횟수 원장은 공유합니다. 예산은 실제 청구액과 구별한 보수적 사전 예약값이며 실패 시에도 자동 환급하지 않습니다. 단가 변경·다른 앱의 API 키 사용·호스팅 요금은 이 예산 밖입니다.
+
+## 배포 후 남은 검증
+
+실제 Vercel 빌드/서버 시작, 보안 쿠키·Origin, 클라우드 API→Supabase→OpenAI 전체 연결은 아직 실행하지 않았습니다. Production에만 비밀값을 등록했으므로 첫 비활성 Preview는 빌드·화면·기본 기능 확인용입니다. 활성 AI Preview를 별도로 검증하려면 정확한 Preview origin, 제한된 브랜치의 비밀 설정 및 기능 활성화 범위를 추가로 검토해야 합니다.
+
+다음 작업 승인 단위: 개발 브랜치 커밋·Push와 Vercel 비활성 Preview 배포. main 병합·운영 공개와 유료 AI 테스트 활성화는 별도 승인 후 수행합니다. Preview 배포도 배포 횟수에 포함될 수 있습니다.

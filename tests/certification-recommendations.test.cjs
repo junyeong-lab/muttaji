@@ -2,7 +2,7 @@
 const test=require("node:test");
 const assert=require("node:assert/strict");
 const db=require("../data/certifications.json");
-const {recommend,mentions}=require("../assets/certification-recommendations.js");
+const {recommend,mentions}=require("./load-browser-module.cjs")("../assets/certification-recommendations.js");
 const r=v=>recommend(db.certifications,v);
 test("현재 34개에서 3개 이하 후보",()=>{assert.equal(db.count,34);const x=r({posting:"Wazuh SIEM 보안관제"});assert.ok(x.length&&x.length<=3);assert.ok(x.every(y=>db.certifications.some(c=>c.name===y.name)));});
 test("명시된 보유 자격증 우선",()=>{const x=r({posting:"필수 정보보안기사",required:["정보보안기사"],owned:"정보보안기사"});assert.equal(x[0].name,"정보보안기사");assert.equal(x[0].owned,true);assert.equal(x[0].explicit,true);});

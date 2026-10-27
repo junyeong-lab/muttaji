@@ -88,6 +88,12 @@ async function checkGatewayModel() {
   }
 }
 async function handler(request) {
+  // The new public AI route owns quota reservations; never leave a legacy paid
+  // route available as a bypass when enabling the new public service.
+  if(process.env.MUTTAJI_PUBLIC_ENABLED==="true")return request.method==="GET"
+    ?json({enabled:false,mode:"disabled",consentRequired:true})
+    :json({error:"LEGACY_AI_DISABLED"},503);
+
   if(request.method==="GET")return json({enabled:active(),mode:"semantic-ai",consentRequired:true});
   if(request.method!=="POST")return json({error:"METHOD_NOT_ALLOWED"},405);
   // Disabled means there is no paid upstream call even for a valid request.

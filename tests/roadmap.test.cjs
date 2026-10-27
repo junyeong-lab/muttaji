@@ -4,7 +4,7 @@ const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const path=require("node:path");
 const vm=require("node:vm");
-const {buildRoadmap}=require("../assets/roadmap.js");
+const {buildRoadmap}=require("./load-browser-module.cjs")("../assets/roadmap.js");
 
 const comparison=[
   {id:"r0",kind:"required",text:"정보처리기사 또는 정보보안기사",status:"충족",explanation:"정보처리기사 취득"},
@@ -109,7 +109,7 @@ test("상태별 준비 단계는 실행 가능한 확인·학습 지침이며 �
     assert.ok(task.steps.every(s=>typeof s==="string"&&s.length>12));
   }
   assert.match(plan.tasks.find(t=>t.text.includes("컨설팅")).steps.join(" "),/대체한다고 가정하지 마세요/);
-  assert.match(plan.tasks.find(t=>t.text.includes("Wazuh")).steps.join(" "),/실무 경력이라고 표시하지 마세요/);
+  assert.match(plan.tasks.find(t=>t.text.includes("Wazuh")).steps.join(" "),/실습을 실무 경력과 구분하세요/);
   assert.match(plan.tasks.find(t=>t.text==="SQLD").steps.join(" "),/공식 검증 전/);
   assert.equal(plan.completed[0].steps,undefined);
 });
