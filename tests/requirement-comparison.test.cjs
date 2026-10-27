@@ -51,3 +51,36 @@ test("잘못된 상태 또는 공고 분석 불가를 오류로 처리",()=>{
   assert.throws(()=>assessment(item,"매우 우수","근거 없음"),TypeError);
   assert.throws(()=>requirements(posting,{}),TypeError);
 });
+
+test("대졸 이상 단독 조건에서 명시된 학사 졸업만 자동 충족하고 사유를 제공",()=>{
+ const {degreeSuggestion}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+ const item={kind:"required",text:"학력 : 대졸이상"};
+ const graduated=[
+   "국립목포해양대학교 기관·해양경찰학부 기관공학전공, 공학사 졸업",
+   "국립목포해양대학교 기관공학전공, 학사 졸업",
+   "4년제 대학교 졸업",
+   "학사학위 취득"
+ ];
+ for(const education of graduated){
+   const suggestion=degreeSuggestion(item,education);
+   assert.equal(suggestion?.status,"충족",education);
+   assert.match(suggestion.reason,/본인 입력 기준/);
+   assert.equal(assessment(item,suggestion.status,suggestion.reason).status,"충족");
+ }
+});
+test("재학·졸업예정·학교명·전문학사 및 복합 요구는 자동 충족 불가",()=>{
+ const {degreeSuggestion}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+ const item={kind:"required",text:"학력 : 대졸이상"};
+ for(const education of [
+  "국립목포해양대학교 기관공학전공", "국립목포해양대학교 기관공학전공 학사",
+  "국립목포해양대학교 기관공학전공 학사 졸업예정",
+  "국립목포해양대학교 기관공학전공 학사 재학",
+  "국립목포해양대학교 기관공학전공 학사 수료",
+  "전문학사 졸업", "2년제 대학 졸업", "고등학교 졸업", ""
+ ])assert.equal(degreeSuggestion(item,education),null,education);
+ for(const text of [
+  "석사 이상", "학력: 대졸 이상 및 경력 3년",
+  "컴퓨터공학과 대졸 이상", "대졸 이상, 정보처리기사 보유",
+  "정보처리기사", "학력 무관"
+ ])assert.equal(degreeSuggestion({kind:"required",text},"학사 졸업"),null,text);
+});

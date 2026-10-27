@@ -150,6 +150,22 @@
     return {status:"충족",names,
       reason:"보유 자격증 입력란의 '"+names.join(", ")+"'와 공고의 자격증명이 일치합니다. 본인 입력 기준이며 증빙 및 공식 검증은 별도입니다."};
   }
+  // Only an explicit, completed bachelor's degree can fulfill a standalone
+  // "대졸 이상" requirement on a self-reported basis. Do not infer completion
+  // from a school name, major, enrollment, expected graduation, or 2-year degree.
+  function degreeSuggestion(item,profileEducation){
+    if(!item||typeof item.text!=="string"||typeof profileEducation!=="string")return null;
+    const target=item.text.normalize("NFKC").replace(/\s+/g,"")
+      .replace(/^[·ㆍ•*\-\d.)]+/,"").replace(/^(?:(?:최종)?학력)[:：]/,"")
+      .replace(/[.!。]+$/,"");
+    if(!/^(?:대졸(?:이상|이상자)?|학사(?:학위)?(?:이상|이상자)?|4년제(?:대학(?:교)?)?졸업(?:이상|이상자)?)$/.test(target))return null;
+    const education=profileEducation.normalize("NFKC").replace(/\s+/g,"");
+    if(/재학|휴학|중퇴|자퇴|제적|수료|미졸업|비졸업|졸업예정|졸업유예|졸업전|졸업하지않|졸업못|학위미취득|학위취득예정|전문학사|전문대|2년제|3년제|고졸|고등학교/.test(education))return null;
+    const bachelor=/(?:학사|4년제)/.test(education);
+    const completed=/(?:졸업|학위취득|학위수여)/.test(education);
+    if(!bachelor||!completed)return null;
+    return {status:"충족",reason:"학력·전공 입력란에 학사 졸업 또는 학사학위 취득이 명시되어 '대졸 이상' 조건을 본인 입력 기준으로 충족 표시했습니다. 학력 증빙과 채용사 인정 여부는 별도 확인이 필요합니다."};
+  }
   function tally(items){
     const sum={"충족":0,"부분 충족":0,"미충족":0,"확인 필요":0};
     for(const item of items)sum[item.status==="충족"||item.status==="부분 충족"||item.status==="미충족"?item.status:"확인 필요"]++;
@@ -189,17 +205,24 @@
       const outcomes=collect();
       const total=tally(outcomes);
       const automatic=outcomes.filter((outcome,i)=>outcome.status==="충족" &&
+        list.children[i]?.dataset.autoKind==="certificate" &&
+        list.children[i]?.dataset.autoReason===outcome.explanation && !!outcome.explanation).length;
+      const academic=outcomes.filter((outcome,i)=>outcome.status==="충족" &&
+        list.children[i]?.dataset.autoKind==="education" &&
         list.children[i]?.dataset.autoReason===outcome.explanation && !!outcome.explanation).length;
       summary.textContent="총 "+outcomes.length+"개 요건 · 충족 "+total["충족"]+" · 부분 충족 "+total["부분 충족"]+
         " · 미충족 "+total["미충족"]+" · 확인 필요 "+total["확인 필요"]+
-        " · 자격증명 자동 일치 "+automatic+"개. 사용자 입력 기준이며 공식 자격증 검증 또는 합격 가능성 판정이 아닙니다.";
+        " · 자격증명 자동 일치 "+automatic+"개 · 학력 자동 일치 "+academic+"개. 사용자 입력 기준이며 학력·자격증 증빙 및 기업 인정·합격 가능성 판정이 아닙니다.";
       outcomes.forEach((outcome,i)=>{
         const card=list.children[i],flag=card.querySelector("[data-assessment-note]");
         const isAutomatic=outcome.status==="충족" &&
           card.dataset.autoReason===outcome.explanation && !!outcome.explanation;
+        const autoNote=card.dataset.autoKind==="education"
+          ?"학력 졸업 사실 자동 일치 · 본인 입력 기준이며 학위 증빙과 채용사 인정 여부는 별도 확인이 필요합니다."
+          :"자격증명 자동 일치 · 보유 여부는 본인 입력 기준이며 실제 증빙은 별도 확인이 필요합니다.";
         if(flag)flag.textContent=outcome.needsReason
           ?"사유가 5자 이상 입력되기 전에는 '확인 필요'로 집계합니다."
-          :(isAutomatic?"자격증명 자동 일치 · 보유 여부는 본인 입력 기준이며 실제 증빙은 별도 확인이 필요합니다."
+          :(isAutomatic?autoNote
           :(outcome.status==="확인 필요"?"확인 필요: 입력하신 이력만으로 해당 요건 충족을 단정하지 않습니다."
           :"선택한 상태: "+outcome.status+" · 본인이 입력한 근거 기준"));
       });
@@ -264,9 +287,13 @@
         const select=el("select","req-verdict");
         const selectId="req-verdict-"+i;select.id=selectId;selectLabel.htmlFor=selectId;
         verdicts.forEach(v=>{const opt=el("option","",v);opt.value=v;select.appendChild(opt);});
-        const suggested=credentialSuggestion(item,document.getElementById("certs").value);
+        const certSuggestion=credentialSuggestion(item,document.getElementById("certs").value);
+        const suggested=certSuggestion||degreeSuggestion(item,document.getElementById("education").value);
         select.value=suggested?suggested.status:"확인 필요";
-        if(suggested)card.dataset.autoReason=suggested.reason;
+        if(suggested){
+          card.dataset.autoReason=suggested.reason;
+          card.dataset.autoKind=certSuggestion?"certificate":"education";
+        }
         selectLabel.appendChild(select);
         card.appendChild(selectLabel);
         const reasonLabel=el("label","label","판단 근거 또는 부족한 점");
@@ -294,5 +321,5 @@
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {requirements,assessment,tally,credentialSuggestion,ownedCertificates,certificateMatches};
+  return {requirements,assessment,tally,credentialSuggestion,degreeSuggestion,ownedCertificates,certificateMatches};
 });
