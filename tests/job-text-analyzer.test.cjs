@@ -207,3 +207,32 @@ test("구어체 다른 제목도 인식하고 제목 없는 자격증은 미분�
   assert.equal(unheaded.preferred.length,0);
   assert.equal(unheaded.unresolved.length,2);
 });
+
+
+test("잡코리아 요약·상세 반복 직무명과 줄바꿈 근무지 주소를 정리한다",()=>{
+ const input=[
+  "기업명: ㈜에프원시큐리티", "",
+  "모집 직무: 정보보호컨설턴트 인재채용", "",
+  "근무지: 서울 금천구 벚꽃로 234 (가산동, 에이스하이엔드타워6차)",
+  "1402호", "",
+  "담당업무", "ㆍ정보보호 컨설팅", "",
+  "정보보호컨설턴트 인재 채용"
+ ].join("\n");
+ const result=analyze(input);
+ assert.deepEqual(result.role.map(row=>row.text),["정보보호컨설턴트 인재채용"]);
+ assert.equal(result.role[0].line,3);
+ const location=result.unresolved.find(row=>row.text.startsWith("근무지:"));
+ assert.ok(location);
+ assert.match(location.text,/1402호/);
+ assert.equal(location.line,5);
+ assert.equal(location.endLine,6);
+ assert.equal(result.responsibilities.length,1);
+});
+test("근무지 표시는 앞의 필수·모집 직무 구분을 이어받지 않는다",()=>{
+ const item=analyze("필수조건\n- 정보처리기사\n근무지: 서울 금천구\n우대사항\n- SQLD");
+ assert.equal(item.required.length,1);
+ assert.equal(item.unresolved.some(row=>row.text.startsWith("근무지:")),true);
+ assert.equal(item.preferred.length,1);
+ const roles=analyze("모집\n정보보호 컨설턴트(관리)\n정보보호 컨설턴트(기술)");
+ assert.equal(roles.role.length,2);
+});
