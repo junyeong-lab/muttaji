@@ -52,3 +52,17 @@ test("사용자 제공 신규 자격증 설명 2개 반영",()=>{
  }
  assert.equal(db.certifications.length,34);
 });
+
+test("PC정비사 1급/2급 설명은 입력받은 각각의 내용으로 유지",()=>{
+ const expected={
+  "PC정비사 1급": "컴퓨터 시스템과 하드웨어 전반에 대한 상급 수준의 유지보수, 시스템 최적화, 네트워크 활용 능력을 평가하는 자격",
+  "PC정비사 2급": "컴퓨터 시스템과 하드웨어에 대한 지식을 바탕으로 PC 진단, 수리, 업그레이드, 네트워크 유지보수 능력을 검정하는 자격"
+};
+ for(const [name,description] of Object.entries(expected)){
+  const record=db.certifications.find(x=>x.name===name);
+  assert.ok(record,name);
+  assert.equal(record.description,description);
+  assert.equal(record.verification_status,"verified");
+ }
+ assert.equal(db.certifications.length,34);
+});
