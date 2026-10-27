@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff7df">
-  <meta name="description" content="뭐따지? AI가 알려주는 나만의 취업 준비 가이드. 채용공고 분석, 역량 비교, 자격증 추천과 취업 준비 로드맵을 준비하고 있습니다.">
-  <title>뭐따지? | AI가 알려주는 취업 준비 가이드</title>
+  <meta name="description" content="뭐따지? 채용공고 분석, 내 역량 비교, 자격증 추천과 취업 준비 로드맵을 제공하는 취업 준비 가이드.">
+  <title>뭐따지? | 채용공고·역량 비교 취업 준비 가이드</title>
   <style>
     :root { --navy:#14213d; --navy2:#233957; --yellow:#ffd94d; --yellow2:#ffcf39; --orange:#ff8c00; --green:#4caf50; --cream:#fff7e5; --paper:#fffefa; --muted:#627084; --line:#ecdfc9; --shadow:0 14px 40px rgba(34,35,49,.075); color:var(--navy); font-family:system-ui,-apple-system,"Noto Sans KR","Apple SD Gothic Neo",sans-serif; }
     *{box-sizing:border-box} body{margin:0;background:radial-gradient(ellipse 65% 40% at 88% 4%,#ffe79f6b,transparent 78%),#fff9ed;min-height:100vh}button,input,textarea,select{font:inherit}
@@ -151,14 +151,14 @@
     <section id="home" class="panel" aria-labelledby="home-title">
       <div class="hero">
         <div>
-          <div class="eyebrow">뭘 따야 취업하지? AI가 알려드려요!</div>
+          <div class="eyebrow">뭘 따야 취업하지? 공고와 내 역량부터 비교해요!</div>
           <h1 id="home-title">나에게 필요한<br><strong>취업 준비,</strong><br>뭐부터 하지?</h1>
           <p class="desc">채용공고를 읽고 막막하셨나요? 「뭐따지?」는 공고에 필요한 역량과 내가 가진 경험을 비교해 다음 준비를 알려주는 서비스를 만들고 있습니다.</p>
           <div class="actions">
             <button type="button" class="primary" data-go="analyze">채용공고 입력하기 <span aria-hidden="true">→</span></button>
             <button type="button" class="outline" data-go="profile">내 역량 입력하기</button>
           </div>
-          <p class="subtext" style="margin-top:24px">자격증 검색과 채용공고 텍스트 1차 분류를 이용할 수 있습니다. AI 분석·개인별 추천은 개발 예정입니다.</p>
+          <p class="subtext" style="margin-top:24px">채용공고 텍스트 분석, 내 역량 비교, 관련 자격증 추천과 로드맵을 이용할 수 있습니다. 실제 AI 모델 분석과 채용공고 URL 자동 수집은 현재 운영 설정에서 비활성화 상태입니다.</p>
         </div>
         <div class="hero-art">
           <img src="./assets/muttaji-poster.webp" alt="기존 뭐따지? 병아리가 채용공고와 자격증을 고민하는 브랜드 포스터" width="850" height="789" onerror="this.style.display='none';document.getElementById('art-fallback').style.display='flex'">
@@ -168,7 +168,7 @@
       <h2 class="feature-title">뭐따지?가 준비하는 세 가지</h2>
       <div class="cards">
         <article class="card"><div class="feature-icon" aria-hidden="true">🔎</div><h3>채용공고 분석</h3><p>공고 속 필수 지원자격과 우대사항을 구분해 쉽게 설명해요.</p><span class="step-num">텍스트 1차 분류 제공 · AI 예정</span></article>
-        <article class="card"><div class="feature-icon" aria-hidden="true">🎓</div><h3>자격증·역량 추천</h3><p>내가 가진 역량과 공고의 요구사항을 비교하고 관련 자격정보를 찾아요.</p><span class="step-num">공식 DB 검증 예정</span></article>
+        <article class="card"><div class="feature-icon" aria-hidden="true">🎓</div><h3>자격증·역량 추천</h3><p>내가 가진 역량과 공고의 요구사항을 비교하고 관련 자격정보를 찾아요.</p><span class="step-num">사용자 확인 34개 목록 · 취득 증빙 별도</span></article>
         <article class="card"><div class="feature-icon" aria-hidden="true">🗺️</div><h3>맞춤형 취업 로드맵</h3><p>무작정 자격증부터 따기보다 중요한 조건부터 준비 순서를 정해요.</p><span class="step-num">비교 결과 기반 준비 순서 제공</span></article>
       </div>
     </section>
@@ -230,7 +230,7 @@
       <section class="sheet" id="ai-analysis-panel" aria-labelledby="ai-analysis-title">
         <span class="heading-kicker">02 · AI 의미 분석 · 선택 기능</span>
         <h2 id="ai-analysis-title" class="feature-title" style="margin:10px 0">AI로 공고의 의미 분석하기</h2>
-        <div class="info">현재 사용하는 텍스트 1차 분류는 AI가 아닙니다. 이 기능은 별도의 서버 설정을 마친 후 실제 AI 모델이 공고 문장을 해석하도록 만들어졌습니다. <strong>사용자가 동의하고 버튼을 눌렀을 때만</strong> 텍스트를 외부 AI 제공자에게 전송합니다. 이미지 파일과 내 역량 입력은 전송하지 않습니다.</div>
+        <div class="info">현재 사용하는 텍스트 1차 분류는 AI가 아닙니다. 이 선택 기능은 별도의 서버 활성화가 필요합니다. <strong>사용자가 동의하고 버튼을 눌렀을 때만</strong> 공고 텍스트를 외부 AI 제공자에게 전송하도록 설계했습니다. 이 기능에서는 내 역량과 이미지 파일을 전송하지 않습니다.</div>
         <p id="ai-availability" class="result-summary" role="status">AI 분석 서버 설정을 확인하고 있습니다.</p>
         <div id="ai-controls" hidden>
           <div class="group">
@@ -350,7 +350,7 @@
       </section>
     </section>
   </main>
-  <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>초기 MVP 개발 단계 · AI 추천 및 합격 확률 제공 전</div></footer>
+  <footer class="wrap"><div>© 2026 뭐따지? · SKT ALEPH 프로젝트</div><div>규칙 기반 분석·추천 제공 · 합격 확률 판정 없음</div></footer>
   <script src="./assets/job-text-analyzer.js"></script>
   <script>
     (function () {
@@ -499,7 +499,7 @@
         try{
           var result=window.JobTextAnalyzer.analyze(text);
           showJobResult(result);
-          message("job-message","규칙 기반 텍스트 1차 분류가 끝났습니다. 아래 원문 근거를 확인해 주세요. AI 분석·자격증 추천은 아직 연결되지 않았습니다.",false);
+          message("job-message","규칙 기반 텍스트 1차 분류가 끝났습니다. 원문 근거를 확인한 뒤 내 역량과 비교하면 관련 자격증 추천·로드맵도 이용할 수 있습니다. 실제 AI 모델 분석은 별도로 활성화해야 합니다.",false);
           jobResult.scrollIntoView({behavior:"smooth",block:"start"});
         }catch(err){
           message("job-message",err instanceof RangeError?err.message:"분석 중 문제가 발생했습니다. 입력을 확인한 뒤 다시 시도해 주세요.",true);

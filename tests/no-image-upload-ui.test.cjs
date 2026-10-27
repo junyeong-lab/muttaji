@@ -11,6 +11,10 @@ test("image upload and OCR UI stay removed while link and agent integrations rem
  assert.match(html,/Win\s*\+\s*Shift\s*\+\s*T/);
  assert.ok(html.includes("https://learn.microsoft.com/ko-kr/windows/powertoys/install"));
  assert.match(html,/Microsoft Store에서/);
+ assert.doesNotMatch(html,/자격증 추천은 아직 연결되지 않았습니다/);
+ assert.doesNotMatch(html,/공식 DB 검증 예정/);
+ assert.match(html,/자격증 추천과 로드맵을 이용할 수 있습니다/);
+ assert.match(html,/운영 설정에서 비활성화 상태입니다/);
  assert.match(html,/target="_blank" rel="noopener noreferrer"/);
  for(const marker of ['id="job-text"','assets/job-url-ui.js','assets/agent-analysis-ui.js','assets/model-analysis-ui.js'])assert.ok(html.includes(marker),marker);
 });

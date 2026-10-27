@@ -315,3 +315,9 @@
 
 - 채용공고 분석 화면의 ‘이미지 공고 입력 방법’에 Microsoft Store에서 Microsoft PowerToys 검색·설치 방법과 [Microsoft 공식 설치 안내](https://learn.microsoft.com/ko-kr/windows/powertoys/install)를 연결했습니다.
 - 단축키 Win + Shift + T를 안내하고 이미지 업로드/OCR UI는 삭제된 상태로 유지했습니다. URL 가져오기 및 Agent, 기존 비교·로드맵·자격증 DB는 변경하지 않았습니다.
+
+## 운영 UI의 과거 상태 안내 정정 · 2026-10-27
+
+- 실제로 구현된 자격증 추천·역량 비교·로드맵을 '아직 연결되지 않음'이라고 잘못 표시하던 홈·분석 완료 문구를 현재 상태에 맞게 수정했습니다.
+- 기존 규칙 기반 기능과 사용자 확인 34개 자격증을 안내하고, 운영에서 실제 AI 분석·URL 수집은 기능 코드가 있어도 비활성 상태임을 분명히 했습니다.
+- PowerToys 설치 링크·이미지 OCR 제거·URL/Agent 코드 및 비용 관련 서버 플래그는 유지했습니다.
