@@ -96,3 +96,15 @@ test('partial credential suggestion needs an actually requested credential, not 
  context.request.profile.certs='CISSP 보유';assert.equal(applySuggestionPolicy({items:[item]},context).items[0].proposedStatus,'부분 충족');
  context.requirements[0].sourceQuote='자격증: CISSP 및 보안 운영 경험';assert.equal(applySuggestionPolicy({items:[item]},context).items[0].proposedStatus,'부분 충족');
 });
+
+test('school and major alone cannot imply enrollment or graduation; explicit education is preserved',async()=>{
+ const {applySuggestionPolicy}=await import('../lib/agent/suggestion-policy.js');
+ const value={items:[{id:'degree',proposedStatus:'충족',reason:'대학 재학 정보가 있습니다.',profileEvidence:[{field:'education',quote:'해양대학교 기관공학 전공'}],missing:[],actions:[]}]};
+ const options={request:{posting:'학력: 대졸 이상',profile:{education:'해양대학교 기관공학 전공',certs:''}},requirements:[{id:'degree',sourceQuote:'학력: 대졸 이상'}],catalog:[]};
+ const item=applySuggestionPolicy(value,options).items[0];assert.equal(item.proposedStatus,'확인 필요');assert.equal(item.reason,'학교·전공 정보는 있으나 졸업 여부나 학위 취득 여부는 명시되지 않았습니다.');assert.doesNotMatch(item.reason,/재학/);
+ assert.equal(value.items[0].proposedStatus,'충족');assert.equal(value.items[0].reason,'대학 재학 정보가 있습니다.');
+ for(const education of ['해양대학교 기관공학 졸업','해양대학교 기관공학 재학','기관공학 학사']){
+  options.request.profile.education=education;assert.equal(applySuggestionPolicy(value,options).items[0].reason,value.items[0].reason);
+ }
+ options.requirements[0].sourceQuote='전공: 기관공학과';options.request.profile.education='기관공학 전공';assert.equal(applySuggestionPolicy(value,options).items[0].reason,value.items[0].reason);
+});
