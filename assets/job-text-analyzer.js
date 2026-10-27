@@ -9,10 +9,10 @@
   var CATEGORY = [
     { group: "company", label: /^(?:기업명|회사명|회사|기업)$/i },
     { group: "role", label: /^(?:모집|모집\s*(?:직무|분야|포지션|부서|공고)|채용\s*(?:분야|포지션)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
-    { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
-    { group: "required", label: /^(?:필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
+    { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|주요\s*역할\s*및\s*수행\s*업무|직무\s*개요|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
+    { group: "required", label: /^(?:공통\s*자격\s*요건|직무\s*필요\s*역량\s*및\s*자격\s*요건|필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
     { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus|이런\s*(?:경험|역량)(?:이|을)?\s*있으면\s*(?:더\s*)?(?:좋아요|좋습니다|좋겠어요)|이런\s*분(?:이라면|이면)\s*더\s*좋아요|이런\s*점이\s*있으면\s*(?:더\s*)?좋아요|있으면\s*더\s*좋은\s*경험)$/i },
-    { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*방법|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
+    { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
   ];
   // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
   var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■□◇▶▷▸▹●○◯]|[oO](?=\s)|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
@@ -35,12 +35,16 @@
     // Strip prefixes ONLY for testing a complete heading, not ordinary text.
     t=t.replace(/^(?:(?:[0-9]{1,3}|[IVXivx]{1,5}|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[가-하])\s*[.)．、]\s*|[※■□◆◇▶▷▸▹●○▪▫]\s*)/u,"").trim();
     var normalized=normalizeHeader(t.replace(/[:：]\s*$/, ""));
+    if(/^(?:전문\s*지식|직무\s*필요\s*역량)$/.test(normalized))return {preserveSection:true};
+    var roleMarker=normalized.match(/^정보보호\s*[-–]\s*(BLUE|RED)$/i);
+    if(roleMarker)return {group:"role",value:normalized,label:"모집 직무"};
     // Job site compound headings: "[정보보호 컨설턴트] 자격요건".
     var embedded=normalized.match(/^(?:.{2,45}?[\]】)]?\s+)?(자격\s*요건|지원\s*자격|필수\s*조건|우대\s*사항|우대\s*조건)$/i);
     if(embedded) {
       var explicitGroup=groupForLabel(embedded[1]);
       if(explicitGroup)return {group:explicitGroup,value:"",label:t};
     }
+    if(groupForLabel(normalized)==="responsibilities")return {group:"responsibilities",value:"",label:t};
     // "정보보호 컨설턴트 주요업무" names both the job and the section.
     var combined=t.match(/^(.{2,45}?)\s+(주요\s*업무|담당\s*업무|수행\s*업무)\s*[:：]?$/i);
     if(combined)return {group:"responsibilities",value:"",label:combined[2],roleCandidate:combined[1].trim()};
@@ -75,6 +79,9 @@
   }
   function nonRequirementKind(value){
     var v=withoutBullet(String(value||"")).trim();
+    if(/^(?:직무\s*개요|전문\s*지식|기타\s*사항)\s*[:：]?$/.test(v))return "unresolved";
+    if(/^정보보호\s*[-–]\s*(?:BLUE|RED)$/i.test(v))return "role";
+    if(/^(?:접수\s*기간|모집\s*기간(?:\s*및\s*마감일)?|마감일|접수\s*방법)\s*[:：]/.test(v))return "unresolved";
     if(/^[([（]?\s*(?:(?:모집|채용)\s*인원\s*[:：]?\s*)?(?:[○ㅇOo0-9]+|약간|다수)\s*명\s*[\])）]?$/.test(v))return "unresolved";
     if(v.length<=140&&/(?:채용|모집)(?:\s*(?:공고|신입|경력|신입[·/ㆍ]경력|\([^)]*\)))*$/.test(v))return "role";
     return null;
@@ -97,6 +104,7 @@
       if(!raw){prior=null;return;}
       out.sourceLines++;
       var head=headingFor(raw);
+      if(head&&head.preserveSection){prior=null;return;}
       if (head) {
         section=head.group;
         sectionLine=ix+1;
@@ -154,6 +162,7 @@
       }
       var nonRequirement=nonRequirementKind(cleaned);
       if(nonRequirement){kind=nonRequirement;prior=null;}
+      if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if(!head&&/^※\s*(?:기술|관리).{0,60}포지션.{0,40}채용/.test(raw))kind="unresolved";
@@ -173,7 +182,7 @@
         /[,，]/.test(cleaned);
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
           (cleaned.length<=16 || certExample ||
-           /(?:및|또는|관련|보안|\u002F|／|[,] )$/.test(prior.item.text))) {
+           /(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text))) {
         prior.item.text += /[\/／]$/.test(prior.item.text) ? cleaned : " "+cleaned;
         prior.item.source += "\n"+original.trim();
         prior.item.endLine=ix+1;

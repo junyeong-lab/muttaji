@@ -72,3 +72,27 @@ test('explicit entry route removes redundant inquiry but preserves career-recogn
  const options={request:{posting:'경력 : 신입·경력1년↑',profile:{certs:''}},requirements:[{id:'career',sourceQuote:'경력 : 신입·경력1년↑'}],catalog:[]};
  assert.deepEqual(applySuggestionPolicy(value,options).items[0].actions,['경력 인정 기준을 문의하세요.','업무 결과를 정리하세요.']);
 });
+
+test('financial security posting keeps headings and dates out of eligibility, including stale reviewed rows',()=>{
+ const posting=['필수조건','정보보호- BLUE','직무개요','ㆍ정보보호 법규에서 정하는','정보보호 관리체계 운영 업무로 사고 예방','주요역할 및 수행업무','ㆍ보안 솔루션 운영','공통자격요건','ㆍ학력: 학사 이상','ㆍ전문지식:','- 금융권 규제 이해도 보유자','- 정보보호 프로젝트 수행 경험자','ㆍ자격증: CISSP, 정보보안기사 보유자 우대','기타사항','ㆍ접수기간 : 2026.10.20 ~ 2026.11.02','접수방법: 홈페이지 지원'].join('\n');
+ const parsed=parser.analyze(posting),items=comparison.requirements(posting,parser);
+ assert.deepEqual(parsed.role.map(x=>x.text),['정보보호- BLUE']);
+ assert.equal(parsed.responsibilities[0].source,'ㆍ정보보호 법규에서 정하는\n정보보호 관리체계 운영 업무로 사고 예방');
+ assert.deepEqual(items.map(x=>x.text),['학력: 학사 이상','금융권 규제 이해도 보유자','정보보호 프로젝트 수행 경험자','자격증: CISSP, 정보보안기사 보유자 우대']);
+ assert.equal(items.at(-1).kind,'preferred');assert.doesNotMatch(items.at(-1).source,/기타사항/);
+ for(const item of items)assert.ok(posting.includes(item.source));
+ const stale={text:posting,result:{required:['직무개요','ㆍ전문지식:','정보보호- BLUE','접수기간 : 2026.11.02'].map(text=>({text,source:text,line:1})),preferred:[]}};
+ assert.equal(comparison.requirements(posting,parser,stale).length,0);
+});
+
+test('partial credential suggestion needs an actually requested credential, not another qualification',async()=>{
+ const {applySuggestionPolicy}=await import('../lib/agent/suggestion-policy.js');
+ const quote='자격증: CISSP, 정보보안기사 보유자 우대';
+ const item={id:'cert',proposedStatus:'부분 충족',reason:'정보처리기사 보유',profileEvidence:[{field:'certs',quote:'정보처리기사'}],missing:[],actions:[]};
+ const context={request:{posting:quote,profile:{certs:'정보처리기사\nSQLD',education:''}},requirements:[{id:'cert',sourceQuote:quote}],catalog:[{name:'CISSP'},{name:'정보보안기사'}]};
+ assert.equal(applySuggestionPolicy({items:[item]},context).items[0].proposedStatus,'확인 필요');
+ assert.equal(item.proposedStatus,'부분 충족');
+ context.request.profile.certs='CISSP 준비 중';assert.equal(applySuggestionPolicy({items:[item]},context).items[0].proposedStatus,'확인 필요');
+ context.request.profile.certs='CISSP 보유';assert.equal(applySuggestionPolicy({items:[item]},context).items[0].proposedStatus,'부분 충족');
+ context.requirements[0].sourceQuote='자격증: CISSP 및 보안 운영 경험';assert.equal(applySuggestionPolicy({items:[item]},context).items[0].proposedStatus,'부분 충족');
+});
