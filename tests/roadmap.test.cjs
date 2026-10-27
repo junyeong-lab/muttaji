@@ -239,3 +239,22 @@ test("추가 조건의 상태별 세 단계 유지 및 충족 처리 보존",()=
   assert.equal(completed.tasks.length,0);
   assert.equal(completed.completed.length,1);
 });
+
+
+test("직무의 일반 프로그래밍 요건에서는 없는 Python 요구를 만들어내지 않는다",()=>{
+  for(const text of ["프로그래밍가능자","프로그래밍 가능자","코딩 가능자"]){
+    const [task]=buildRoadmap([{kind:"preferred",text,status:"확인 필요"}]).tasks;
+    assert.equal(task.steps.length,3);
+    assert.match(task.steps[0],/프로그래밍 언어·도구/);
+    assert.doesNotMatch(task.steps.join(" "),/Python|비식별 샘플 로그/);
+    assert.match(task.steps[1],/직접 작성·수정한 코드/);
+  }
+});
+test("Python이 명시되어도 별도 로그 요건 없이는 로그 분석을 전제하지 않는다",()=>{
+  const simple=buildRoadmap([{kind:"preferred",text:"Python 프로그래밍 가능",status:"확인 필요"}]).tasks[0];
+  assert.match(simple.steps.join(" "),/Python/);
+  assert.doesNotMatch(simple.steps.join(" "),/비식별 샘플 로그/);
+  const logging=buildRoadmap([{kind:"preferred",text:"Python 로그 분석 자동화",status:"확인 필요"}]).tasks[0];
+  assert.match(logging.steps.join(" "),/Python 스크립트를 작성/);
+  assert.match(logging.steps.join(" "),/비식별 샘플 로그/);
+});
