@@ -38,3 +38,17 @@ test("사용자 제공 설명 5개를 정확히 반영하고 다른 자격증 �
  }
  assert.equal(db.count,34);
 });
+
+test("사용자 제공 신규 자격증 설명 2개 반영",()=>{
+ const descriptions={
+  "정보처리산업기사": "과학기술정보통신부 주관, 한국산업인력공단 시행의 IT 분야 중간 관리자급 국가기술자격",
+  "정보기기운용기능사": "컴퓨터 및 정보통신 장비의 설치·조작·유지보수·검사 등의 직무를 수행하는 전문 기술 자격"
+};
+ for(const [name,description] of Object.entries(descriptions)){
+  const record=db.certifications.find(x=>x.name===name);
+  assert.ok(record,name);
+  assert.equal(record.description,description);
+  assert.equal(record.verification_status,"verified");
+ }
+ assert.equal(db.certifications.length,34);
+});
