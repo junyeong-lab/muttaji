@@ -109,6 +109,22 @@
       if(hasPlan)explanation+=" 예정·계획은 앞으로 준비할 내용으로 소개할 수 있습니다.";
       let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
       if(assessment?.status==="미충족"||assessment?.status==="부분 충족")nextAction+=" 보완하고 싶은 부분은 작은 학습·실습 과제로 나누어 시작할 수 있습니다.";
+      // A degree is explicitly reported only when the education field states
+      // completion. "졸업예정", attendance, or a school name alone never does.
+      // This adjusts the explanation, not the user's self-assessment status.
+      if(topic.id==="degree"&&evidence.some(ref=>ref.source==="profile"&&ref.field==="education")){
+        const education=sourceProfile.education.normalize("NFKC").replace(/\s+/g," ");
+        const college=/(?:대학교|대학(?!원)|학부|학사|석사|박사|대졸)/.test(education);
+        const pending=/(?:졸업\s*예정|학위\s*취득\s*예정|재학|휴학|수료|중퇴|제적|미\s*졸업|비\s*졸업|졸업\s*하지\s*않|졸업\s*못|학위\s*미\s*취득)/.test(education);
+        const completed=college&&/(?:졸업|학위\s*(?:취득|수여))/.test(education)&&!pending;
+        if(completed){
+          explanation="학력 입력란에 대학 졸업 또는 학위 취득이 명시되어 있어 대졸 이상 요건을 검토할 근거가 있습니다. 다만 입력 내용의 증빙과 채용사의 인정 여부는 별도 확인이 필요합니다.";
+          nextAction="이력서에 졸업 학교, 전공, 학위와 졸업 연월을 실제 증빙에 맞게 기재하세요.";
+        }else if(pending){
+          explanation="학력 입력란에 재학·졸업예정 또는 미취득 상태가 표시되어 있습니다. 대졸 이상 조건의 적용 기준일과 졸업예정자 인정 여부는 공고 또는 채용사에 확인해야 합니다.";
+          nextAction="재학·졸업예정·중퇴 등 실제 학적 상태를 정확히 기재하고 지원 가능 여부를 확인하세요.";
+        }
+      }
       return {schemaVersion:1,mode:"local-rules",requirementId:item.id,topic:topic.id,interpretation:topic.meaning,explanation,nextAction,
         postingEvidence:{source:"posting",line,endLine,quote:source},inputEvidence:evidence,
         basis:manual.trim()?"direct-input":evidence.length?"topic-match":"not-linked"};

@@ -84,3 +84,24 @@ test("build and render do not need fetch or browser storage",()=>{
   globalThis.fetch=()=>{calls++;throw Error("No network");};
   try{assert.equal(run().explanations.length,6);assert.equal(calls,0);}finally{globalThis.fetch=old;}
 });
+test("graduation-specific degree explanations follow the actual education input without auto-changing status",()=>{
+  const posting="필수조건\nㆍ학력 : 대졸이상";
+  const requirements=[{id:"degree-1",kind:"required",text:"ㆍ학력 : 대졸이상",line:2,endLine:2}];
+  const build=education=>buildAnalysis({posting,requirements,profile:{education}}).explanations[0];
+  const completed=build("국립목포해양대학교 기관·해양경찰학부 기관공학전공, 학사 졸업");
+  assert.equal(completed.topic,"degree");
+  assert.match(completed.explanation,/졸업 또는 학위 취득이 명시/);
+  assert.doesNotMatch(completed.explanation,/학교·전공명만으로 졸업 여부/);
+  assert.match(completed.inputEvidence[0].quote,/학사 졸업/);
+  assert.equal(Object.hasOwn(completed,"status"),false);
+  const pending=build("국립목포해양대학교 기관공학전공 학사 졸업예정");
+  assert.match(pending.explanation,/재학·졸업예정/);
+  assert.doesNotMatch(pending.explanation,/졸업 또는 학위 취득이 명시/);
+  const attendance=build("국립목포해양대학교 기관공학전공 재학");
+  assert.match(attendance.explanation,/재학·졸업예정/);
+  const unknown=build("국립목포해양대학교 기관공학전공");
+  assert.match(unknown.explanation,/학교·전공명만으로 졸업 여부/);
+  assert.doesNotMatch(unknown.explanation,/졸업 또는 학위 취득이 명시/);
+  const unrelated=build("고등학교 졸업");
+  assert.doesNotMatch(unrelated.explanation,/졸업 또는 학위 취득이 명시/);
+});
