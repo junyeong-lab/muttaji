@@ -237,7 +237,7 @@ test("근무지 표시는 앞의 필수·모집 직무 구분을 이어받지 �
  assert.equal(roles.role.length,2);
 });
 
-test("잡코리아 스킬 제목을 담당업무와 분리하고 이후 자격요건을 유지",()=>{
+test("잡코리아 스킬은 담당업무와 분리해 기타로 보존하고 이후 자격요건을 유지",()=>{
   const source=[
     "담당업무",
     "ㆍ보안 솔루션 구축 및 기술 지원",
@@ -251,13 +251,14 @@ test("잡코리아 스킬 제목을 담당업무와 분리하고 이후 자격�
   ].join("\n");
   const o=analyze(source);
   assert.deepEqual(o.responsibilities.map(x=>x.text),["보안 솔루션 구축 및 기술 지원"]);
-  assert.deepEqual(o.skills.map(x=>x.line),[4]);
-  assert.match(o.skills[0].text,/정보처리기사 자격/);
+  assert.deepEqual(o.unresolved.map(x=>x.line),[4]);
+  assert.match(o.unresolved[0].text,/정보처리기사 자격/);
+  assert.match(o.unresolved[0].kindHint,/스킬 참고 정보/);
   assert.deepEqual(o.required.map(x=>x.line),[6,7]);
   assert.equal(o.preferred[0].line,9);
   assert.equal(o.totalItems,5);
 });
-test("스킬만 등장하면 필수·우대로 추측하지 않고 스킬로만 분류",()=>{
+test("스킬만 등장하면 필수·우대로 추측하지 않고 기타로 분류",()=>{
   for(const input of [
     "스킬\nㆍ정보처리기사 자격\nㆍ정보통신공사수첩",
     "기술 및 지식(원문)\nLinux, Python",
@@ -265,7 +266,8 @@ test("스킬만 등장하면 필수·우대로 추측하지 않고 스킬로만 
     "담당업무\nㆍ기술지원\n기술 스택\nㆍJavaScript"
   ]){
     const result=analyze(input);
-    assert.ok(result.skills.length>=1,input);
+    assert.ok(result.unresolved.length>=1,input);
+    assert.ok(result.unresolved.some(x=>/스킬 참고 정보/.test(x.kindHint)),input);
     assert.equal(result.responsibilities.some(x=>/정보처리기사|정보통신공사수첩|Linux|JavaScript/.test(x.text)),false,input);
     assert.equal(result.required.some(x=>/정보처리기사|정보통신공사수첩|Linux|JavaScript/.test(x.text)),false,input);
     assert.equal(result.preferred.length,0,input);
