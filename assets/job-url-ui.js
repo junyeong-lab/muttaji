@@ -80,12 +80,17 @@
   if(win.MuttajiSession)win.fetch("/api/job-url-import",{cache:"no-store"}).then(async response=>{
    if(!response.ok)return;const info=await response.json();
    if(info.requiresAccessCode===false){
-    available=info.enabled===true;
+    // Do not allow a URL click while the visible access-code field is hidden
+    // but the public CSRF session has not finished initializing yet.
+    available=false;get("job-url-fetch").disabled=true;
     get("job-url-access").hidden=true;const label=doc.querySelector?.('label[for="job-url-access"]');if(label)label.hidden=true;
     get("job-url-demo").hidden=true;
-    if(info.enabled){csrfToken=await win.MuttajiSession.get();publicMode=true;}
-    else message("URL 수집은 현재 비활성화 상태입니다. 본문을 직접 붙여넣어 주세요.");
-    get("job-url-fetch").disabled=!info.enabled;
+    if(info.enabled){
+      csrfToken=await win.MuttajiSession.get();
+      publicMode=true;available=true;
+      message("URL 수집 준비가 완료됐습니다. 공고 링크를 입력하고 본문 가져오기를 누르세요.");
+    }else message("URL 수집은 현재 비활성화 상태입니다. 본문을 직접 붙여넣어 주세요.");
+    get("job-url-fetch").disabled=!available;
    }
   }).catch(()=>{available=false;get("job-url-fetch").disabled=true;message("URL 수집 준비 상태를 확인하지 못했습니다. 직접 붙여넣기를 사용해 주세요.");});
   return {invalidate};
