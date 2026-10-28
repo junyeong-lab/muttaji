@@ -44,6 +44,13 @@
     if(/^이런\s*분이라면\s*더욱\s*좋아요$/.test(normalized))return {group:"preferred",value:"",label:normalized};
     if(/^(?:이런\s*기술이\s*필요해요|이런\s*조건에서\s*근무할\s*예정이에요|전형\s*절차\s*및\s*유의\s*사항|채용\s*포지션\s*안내)$/.test(normalized))
       return {group:"unresolved",value:"",label:normalized};
+    // Some job-board tables flatten a role name and [지원 자격] into one line.
+    // Preserve any leading role text separately instead of losing its source.
+    var inlineBracket=t.match(/^(.*?)\s*\[\s*(지원\s*자격|자격\s*요건|필수\s*조건|우대\s*(?:사항|요건|조건))\s*\]\s*(.*)$/i);
+    if(inlineBracket){
+      var inlineGroup=groupForLabel(inlineBracket[2]);
+      if(inlineGroup)return {group:inlineGroup,value:inlineBracket[3].trim(),label:inlineBracket[2],prefix:inlineBracket[1].trim()||null};
+    }
     var roleMarker=normalized.match(/^정보보호\s*[-–]\s*(BLUE|RED)$/i);
     if(roleMarker)return {group:"role",value:normalized,label:"모집 직무"};
     if(/^실무\s*경험\s*및\s*보안\s*엔지니어링\s*역량$/.test(normalized))return {preserveSection:true};
@@ -185,6 +192,8 @@
       var nonRequirement=nonRequirementKind(cleaned);
       if(nonRequirement){kind=nonRequirement;prior=null;}
       if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
+      // A standalone explicit "... 우대" bullet is preferred even when it follows a compact required-qualifications table cell.
+      if(!head&&kind==="required"&&cleaned.length<=90&&/\S.{2,}\s+우대\s*$/.test(cleaned))kind="preferred";
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if(!head&&/^※\s*(?:기술|관리).{0,60}포지션.{0,40}채용/.test(raw))kind="unresolved";
