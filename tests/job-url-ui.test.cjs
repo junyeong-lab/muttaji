@@ -8,14 +8,14 @@ class Element{
  dispatchEvent(event){for(const fn of this.handlers[event.type]||[])fn(event);}
  async emit(type){for(const fn of this.handlers[type]||[])await fn({type});}
 }
-async function setup(fetchOverride,publicMode=false,publicEnabled=true){
+async function setup(fetchOverride,publicMode=false,publicEnabled=true,csrfProvider){
  const {extractPosting}=await import("../lib/job-url/extract.js");
  const data=extractPosting(fs.readFileSync(path.join(__dirname,"fixtures/job-url/structured.html"),"utf8"),"https://jobs.example.org/demo/security");
  const ids=["job-url","job-url-access","job-url-fetch","job-url-demo","job-url-status","job-url-review","job-url-draft","job-url-confirm","job-url-apply","job-url-undo","job-url-evidence","job-url-source","job-text"];
  const nodes=Object.fromEntries(ids.map(id=>[id,new Element()]));const calls=[];
  nodes["job-text"].value="기존에 작성한 직접 입력 공고";
  const win={Event:class{constructor(type){this.type=type;}},fetch:async(url,options)=>{calls.push({url,options});if(publicMode&&!options?.method)return new Response(JSON.stringify({enabled:publicEnabled,requiresAccessCode:false,mode:"public"}));return fetchOverride?fetchOverride(url,options):new Response(JSON.stringify({mode:"mock",aiEnabled:false,data}),{headers:{"content-type":"application/json"}});}};
- if(publicMode)win.MuttajiSession={get:async()=>"fake-csrf-token"};
+ if(publicMode)win.MuttajiSession={get:csrfProvider||async()=>"fake-csrf-token"};
  const controller=mount({getElementById:id=>nodes[id],createElement:()=>new Element()},win);
  if(publicMode)await new Promise(setImmediate);
  return {nodes,win,calls,controller,data};
@@ -63,4 +63,22 @@ test('disabled public import stays disabled after editing URL and cannot send a 
  const {nodes,calls}=await setup(null,true,false);assert.equal(nodes['job-url-fetch'].disabled,true);
  nodes['job-url'].value='https://jobs.example.org/job';await nodes['job-url'].emit('input');assert.equal(nodes['job-url-fetch'].disabled,true);
  await nodes['job-url-fetch'].emit('click');assert.equal(calls.length,1);assert.match(nodes['job-url-status'].textContent,/직접 붙여넣/);
+});
+
+test("public URL button remains disabled while its session is initializing, then becomes clickable",async()=>{
+ let resolveSession;
+ const pending=new Promise(resolve=>{resolveSession=resolve;});
+ const {nodes,calls}=await setup(null,true,true,()=>pending);
+ assert.equal(nodes["job-url-access"].hidden,true,"access-code input is hidden");
+ assert.equal(nodes["job-url-fetch"].disabled,true,"URL click must wait for CSRF");
+ nodes["job-url"].value="https://jobs.example.org/demo/security";
+ await nodes["job-url-fetch"].emit("click");
+ assert.equal(calls.length,1,"blocked click must not send a POST");
+ resolveSession("fake-csrf-token");
+ await new Promise(setImmediate);
+ assert.equal(nodes["job-url-fetch"].disabled,false);
+ await nodes["job-url-fetch"].emit("click");
+ assert.equal(calls.length,2);
+ assert.equal(calls[1].options.headers["x-muttaji-csrf"],"fake-csrf-token");
+ assert.equal(nodes["job-url-review"].hidden,false);
 });
