@@ -43,6 +43,8 @@
       return {group:"unresolved",value:"",label:normalized};
     if(/^(?:지원\s*대상|지원\s*대상자)$/i.test(normalized))
       return {group:"required",value:"",label:normalized};
+    if(/^.{2,55}에\s*지원하려면$/i.test(normalized))
+      return {group:"required",value:"",label:normalized};
     if(/^우대\s*(?:사항|조건|요건)\s*\((?:경력|신입|공통)\)?$/i.test(normalized))
       return {group:"preferred",value:"",label:normalized};
     if(/^(?:채용\s*부문|모집\s*부문|포지션)$/i.test(normalized))
