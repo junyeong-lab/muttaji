@@ -37,6 +37,13 @@
     t=t.replace(/^(?:(?:[0-9]{1,3}|[IVXivx]{1,5}|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[가-하])\s*[.)．、]\s*|[※■□◆◇▶▷▸▹●○▪▫]\s*)/u,"").trim();
     var normalized=normalizeHeader(t.replace(/[:：]\s*$/, ""));
     if(/^(?:전문\s*지식|직무\s*필요\s*역량)$/.test(normalized))return {preserveSection:true};
+    // Public Korean posting sections: never carry a prior required/preferred
+    // category across an explicitly titled new section.
+    if(/^이런\s*업무를\s*해요$/.test(normalized))return {group:"responsibilities",value:"",label:normalized};
+    if(/^이런\s*분들을\s*찾고\s*있어요$/.test(normalized))return {group:"required",value:"",label:normalized};
+    if(/^이런\s*분이라면\s*더욱\s*좋아요$/.test(normalized))return {group:"preferred",value:"",label:normalized};
+    if(/^(?:이런\s*기술이\s*필요해요|이런\s*조건에서\s*근무할\s*예정이에요|전형\s*절차\s*및\s*유의\s*사항|채용\s*포지션\s*안내)$/.test(normalized))
+      return {group:"unresolved",value:"",label:normalized};
     var roleMarker=normalized.match(/^정보보호\s*[-–]\s*(BLUE|RED)$/i);
     if(roleMarker)return {group:"role",value:normalized,label:"모집 직무"};
     if(/^실무\s*경험\s*및\s*보안\s*엔지니어링\s*역량$/.test(normalized))return {preserveSection:true};
