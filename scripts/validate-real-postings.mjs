@@ -1,5 +1,6 @@
 // A bounded, non-AI smoke test of real public job-posting URLs.
 // This checks the existing application modules, not a browser's private profile.
+// Retest bracketed qualification headings and mixed Korean section headers (2026-10-28).
 // Respect robots.txt and access restrictions; never bypass a challenge.
 import {readFileSync} from "node:fs";
 import {createRequire} from "node:module";
