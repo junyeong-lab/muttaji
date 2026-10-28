@@ -3,6 +3,17 @@
 작성일: 2026-10-28 (KST)
 프로젝트: junyeong-lab/muttaji
 
+## 추가 원문 의미 검증 현황 (2026-10-29)
+
+> 아래 과거 25/25 구성의 브라우저 검증은 **당시 대상 50개에 대한 실행 이력**입니다. 이후 작성자가 미완성 상태로 남겨둔 공고 1건을 교체하여 **현재 대상은 잡코리아 24건 + 사람인 26건**입니다. 이전 실행 숫자를 현재 대상의 최신 브라우저 실적처럼 취급하지 않습니다.
+
+- [실제 50건 필수·우대 의미 검증 및 직접 수정 내용](./real-posting-50-semantic-audit.md)
+- [50건 공고별 필수·우대 추출 및 후속 주의점 매트릭스](./real-posting-50-semantic-matrix.md)
+- [Codex 후속 처리 목록](./codex-semantic-backlog-50.md)
+- 최종 교체 목록에 대한 실제 원문 50건 수집·분류 자료: [GitHub Actions #40723619518](https://github.com/junyeong-lab/muttaji/actions/runs/40723619518)
+- 최신 파서로 고정된 동일 원문 50건 재분류: [GitHub Actions #40724265669](https://github.com/junyeong-lab/muttaji/actions/runs/40724265669). 필수 236개, 우대 223개. **항목 수 = 정답 검증 완료가 아닙니다.**
+- 운영 URL 버튼 전체 최종 재검증: [GitHub Actions #40724498250](https://github.com/junyeong-lab/muttaji/actions/runs/40724498250) (완료 및 성공 여부는 해당 로그에서 별도로 확인)
+
 ## 실제 운영 웹앱 50건 최종 브라우저 검증 (2026-10-29 KST)
 
 **검증 완료:** [실제 URL 입력 → 본문 가져오기 → 확인·적용 → 분류 → 실제 보유역량 입력 비교 → 로드맵 화면 연결 테스트](https://github.com/junyeong-lab/muttaji/actions/runs/40715817444)
