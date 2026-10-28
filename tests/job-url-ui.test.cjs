@@ -15,7 +15,7 @@ async function setup(fetchOverride,publicMode=false,publicEnabled=true,csrfProvi
  const nodes=Object.fromEntries(ids.map(id=>[id,new Element()]));const calls=[];
  nodes["job-text"].value="기존에 작성한 직접 입력 공고";
  const win={Event:class{constructor(type){this.type=type;}},fetch:async(url,options)=>{calls.push({url,options});if(publicMode&&!options?.method)return new Response(JSON.stringify({enabled:publicEnabled,requiresAccessCode:false,mode:"public"}));return fetchOverride?fetchOverride(url,options):new Response(JSON.stringify({mode:"mock",aiEnabled:false,data}),{headers:{"content-type":"application/json"}});}};
- if(publicMode)win.MuttajiSession={get:csrfProvider||async()=>"fake-csrf-token"};
+ if(publicMode)win.MuttajiSession={get:csrfProvider||(async()=>"fake-csrf-token")};
  const controller=mount({getElementById:id=>nodes[id],createElement:()=>new Element()},win);
  if(publicMode)await new Promise(setImmediate);
  return {nodes,win,calls,controller,data};
