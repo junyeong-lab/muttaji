@@ -8,7 +8,7 @@
   if(root)root.MuttajiJobCorrections=api;
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
-  const keys=["company","role","responsibilities","required","preferred","unresolved"];
+  const keys=["company","role","responsibilities","skills","required","preferred","unresolved"];
   function headingType(text){
     const normalized=String(text||"").trim()
       .replace(/^(?:(?:[0-9]{1,3}|[IVXivx]{1,5}|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[가-하])\s*[.)．、]\s*|[※■□◆◇▶▷▸▹●○▪▫]\s*)/u,"")
@@ -16,6 +16,7 @@
     if(/^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred)$/i.test(normalized))return "preferred";
     if(/^(?:필수(?:\s*(?:자격|요건|조건|사항))?|자격\s*요건|지원\s*자격|필수\s*조건|requirements)$/i.test(normalized))return "required";
     if(/^(?:담당\s*업무|주요\s*업무|수행\s*업무)$/i.test(normalized))return "responsibilities";
+    if(/^(?:스킬|기술\s*(?:및\s*)?(?:스킬|지식)|기술\s*스택|skill[s]?)$/i.test(normalized))return "skills";
     return null;
   }
   function sortedItems(result){
@@ -58,7 +59,7 @@
         if(next.manualSectionStart!=null &&
            Number(next.manualSectionStart)>sectionStart)break;
         // Do not accidentally cross into unrelated job/company groups.
-        if(["company","role","responsibilities"].includes(ordered[i].key) &&
+        if(["company","role","responsibilities","skills"].includes(ordered[i].key) &&
            destination!=="responsibilities")break;
       }
       selected.push(next);
