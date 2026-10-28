@@ -368,3 +368,51 @@ test("지니언스형 표 원문: 직무·인원 뒤 [지원 자격]과 명시�
  assert.equal(result.unresolved.some(x=>/인턴 3명/.test(x.text)),true);
  assert.equal(result.required.find(x=>/서버, 네트워크/.test(x.text)).line,3);
 });
+
+
+test("실공고 유형: 근무환경·출퇴근·교통 안내는 우대요건에 섞이지 않는다",()=>{
+ const out=analyze(["모집분야","담당업무 / 자격조건 / 우대사항","운영 엔지니어","신입: 00명",
+ "주요 업무","- 클라우드 인프라 운영","자격요건","- Linux 관리 경험","우대 사항","- AWS 구축 경험",
+ "근무 환경","세부사항","근무일시","주 5일 (월~금)","근무시간","09:00 ~ 18:00","근 무 지","서울 구로구","오시는길","가산디지털단지역"].join("\n"));
+ assert.deepEqual(out.required.map(x=>x.text),["Linux 관리 경험"]);
+ assert.deepEqual(out.preferred.map(x=>x.text),["AWS 구축 경험"]);
+ assert.equal(out.unresolved.some(x=>/09:00/.test(x.text)),true);
+ assert.equal(out.preferred.some(x=>/운영 엔지니어|신입:|근무|지하철|디지털단지/.test(x.text)),false);
+});
+test("실공고 유형: 자격요건 중 명시된 가점·우대는 필수가 아닌 우대",()=>{
+ const out=analyze(["자격요건","- 유관 경력 8년 이상","- 취업보호대상자는 채용 시 우대함","- 과천 거주자는 서류 전형 시 가점 부여",
+ "이런 분을 찾아요","- 정보보호 관리체계 운영 경험","이런 분이라면 더욱 좋아요","- CPPG 자격증","※ 상세 공고는 공식 홈페이지에서 확인하세요","전형절차 및 유의사항","서류전형"].join("\n"));
+ assert.deepEqual(out.required.map(x=>x.text),["유관 경력 8년 이상","정보보호 관리체계 운영 경험"]);
+ assert.equal(out.preferred.some(x=>x.text.includes("우대함")),true);
+ assert.equal(out.preferred.some(x=>x.text.includes("가점 부여")),true);
+ assert.equal(out.preferred.some(x=>/서류전형|상세 공고는/.test(x.text)),false);
+});
+test("실공고 유형: 지원 대상 섹션은 필수이고 홍보 문구는 우대가 아니다",()=>{
+ const out=analyze(["모집 분야 / 업무내용 / 모집인원","- 정보보호 컨설팅 / 보안점검 / 0명",
+ "지원 대상","- 학사 학위를 취득하였거나 졸업 예정자","- 보안업무 경력 1-2년",
+ "우대 사항","- 정보처리기사 자격","회사에 대해 더 알고 싶으시다면 홈페이지에서 확인하세요.","pieinc.co.kr"].join("\n"));
+ assert.deepEqual(out.required.map(x=>x.text),["학사 학위를 취득하였거나 졸업 예정자","보안업무 경력 1-2년"]);
+ assert.deepEqual(out.preferred.map(x=>x.text),["정보처리기사 자격"]);
+});
+test("실공고 유형: 우대사항 다음 복리후생·채용절차는 분류에서 제외",()=>{
+ const out=analyze(["담당업무","- 보안 관리체계 운영","신입사원 성장 지원","- 신입 교육 제공","CELA만의 특별한 문화","- 탄력근무제",
+ "풍부한 복리후생","- 퇴직금 제공","우대사항","- 보안 관련 자격증 취득자","채용 절차","서류전형","면접전형"].join("\n"));
+ assert.deepEqual(out.required.map(x=>x.text),[]);
+ assert.deepEqual(out.preferred.map(x=>x.text),["보안 관련 자격증 취득자"]);
+ assert.equal(out.responsibilities.some(x=>/신입 교육|탄력근무제|퇴직금/.test(x.text)),false);
+});
+test("실공고 유형: 제출서류와 절차안내가 우대조건 뒤에 있어도 유출되지 않는다",()=>{
+ const out=analyze(["자격요건","- Python 개발 경험","우대사항","- 클라우드 기반 서비스 구축",
+ "제출서류","- 이력서","- 포트폴리오","절차안내","- 서류전형 > 면접 > 최종합격",
+ "유의사항","- 서류 합격자 개별 연락"].join("\n"));
+ assert.deepEqual(out.required.map(x=>x.text),["Python 개발 경험"]);
+ assert.deepEqual(out.preferred.map(x=>x.text),["클라우드 기반 서비스 구축"]);
+ assert.equal(out.unresolved.some(x=>/포트폴리오|서류전형/.test(x.text)),true);
+});
+test("실공고 유형: 지원자격/채용부문/복수 경력 표제는 구분",()=>{
+ const out=analyze(["공통 자격요건","- 대졸 이상","채용부문","정보시스템 기술적 취약점 분석",
+ "지원자격","- 신입/경력","우대사항","- 정보처리기사 자격","근무조건","- 정규직"].join("\n"));
+ assert.deepEqual(out.required.map(x=>x.text),["대졸 이상","신입/경력"]);
+ assert.deepEqual(out.preferred.map(x=>x.text),["정보처리기사 자격"]);
+ assert.equal(out.required.some(x=>/분석$/.test(x.text)),false);
+});
