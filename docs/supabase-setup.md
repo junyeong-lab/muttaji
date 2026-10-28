@@ -61,3 +61,11 @@ Vercel project-muttaji의 Production 환경에 새 비밀값 이외 설정 8개�
 아직 Production에 없는 사용자 비밀값은 OPENAI_API_KEY와 MUTTAJI_SUPABASE_SECRET_KEY입니다. 이 값들은 사용자 PowerShell 프로세스에만 있어 도구에서 가져오지 않았습니다. Vercel의 project-muttaji → Settings → Environment Variables에서 Sensitive·Production으로 사용자가 직접 등록해야 합니다. 채팅·소스·로그에 키를 남기지 않습니다. 기존 MUTTAJI_SESSION_SECRET은 덮어쓰지 않습니다.
 
 배포 승인 전이므로 Supabase 예약 및 공개 기능을 켜지 않았고 Push·배포·유료 호출도 하지 않았습니다. 승인 후에는 예산 원장의 enabled와 Vercel 공개 활성화 설정, Preview용 정확한 Origin 등을 검토하여 적용합니다. Production 외 환경은 아직 설정하지 않았습니다.
+
+## 2026-10-28 · URL 수집 일일·누적 앱 제한 해제
+
+URL 수집은 일일/누적 앱 횟수 한도를 적용하지 않습니다. 대신 동일 IP 또는 익명 서명 세션의 분당 20회 초과 연속 요청을 일시 제한합니다. 이는 플랫폼 남용을 막기 위한 단기 보호 장치이지 일별 이용 한도가 아닙니다. Supabase `quota_state`의 URL 누적 카운터는 기록만 계속되며 기존 통계는 보존합니다. 모델 사용 예산·일일·누적 제한, 공개 활성화/비상중단 스위치, SSRF 및 robots 검증은 그대로 유지합니다.
+
+요금제나 유료 기능은 변경하지 않았습니다. 클라우드 운영사 기본 제공량은 유한하므로 서비스 중단 또는 기존 유료 플랜의 초과 사용 요금 가능성은 남습니다. 코드상 횟수 제한 해제가 클라우드 자원 무제한을 의미하지 않습니다.
+
+적용 마이그레이션: `db/migrations/20261028_unlimited_url_with_burst_guard.sql`. 기존 DB에 임의 재실행하거나 카운터를 초기화하지 마세요.

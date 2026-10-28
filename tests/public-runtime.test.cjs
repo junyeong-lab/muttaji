@@ -86,3 +86,31 @@ test('shared browser session initialization is reused by parallel features',asyn
  vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../assets/session-client.js'),'utf8'),{window,fetch:async()=>{calls++;return new Response(JSON.stringify({enabled:true,csrfToken:'fake-token'}));}});
  const tokens=await Promise.all([window.MuttajiSession.get(),window.MuttajiSession.get()]);assert.equal(calls,1);assert.deepEqual(tokens,['fake-token','fake-token']);
 });
+
+test('public URL endpoint distinguishes burst throttling from daily usage limits',async()=>{
+ const {createPublicHandler}=await import('../lib/public/handler.js');
+ const {createSessions}=await import('../lib/public/session.js');
+ const sessions=createSessions({secret:'s'.repeat(40)});
+ const bootstrap=sessions.establish(new Request('https://app.example'));
+ const handler=createPublicHandler({
+  kind:'url',settings:{enabled:true,origin:'https://app.example'},sessions,
+  quota:{scope:'shared',reserve:async()=> 'RATE_LIMITED'},
+  importer:async()=>{throw Error('must not import after rate limit');}
+ });
+ const auth={cookie:bootstrap.cookie.split(';')[0],csrf:bootstrap.csrfToken};
+ const res=await handler(post(auth,{url:'https://jobs.example.org/job'}));
+ assert.equal(res.status,429);
+ const data=await res.json();
+ assert.equal(data.error,'RATE_LIMITED');assert.match(data.message,/1분 후/);
+});
+test('URL unlimited migration retains burst limit, model cost guard and authenticated service role',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const sql=fs.readFileSync(path.join(__dirname,'../db/migrations/20261028_unlimited_url_with_burst_guard.sql'),'utf8');
+ assert.match(sql,/if p_kind='url' then/);
+ assert.match(sql,/ip_count>=20 or session_count>=20/);
+ assert.match(sql,/return 'ALLOWED'/);
+ assert.match(sql,/if not state.enabled then return 'NOT_INITIALIZED'/);
+ assert.match(sql,/reserved_micros\s*\+\s*charge\s*>\s*state.budget_micros/);
+ assert.match(sql,/to service_role/);
+ assert.match(sql,/enable row level security/);
+});
