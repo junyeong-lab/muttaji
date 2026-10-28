@@ -149,3 +149,17 @@ test("roadmap: generic certificate condition links owned credential without misr
  const notOwned=buildAnalysis({posting,requirements:[requirements[0]],profile:{certs:"정보처리기사 취득 예정"},certificateMatcher:certificateMatches}).explanations[0];
  assert.equal(notOwned.inputEvidence.length,0);
 });
+
+test("학력무관은 졸업 증빙을 요구하는 조건처럼 설명하지 않는다",()=>{
+  const posting="필수조건\nㆍ학력 : 학력무관";
+  const reqs=requirements(posting,{analyze});
+  assert.equal(reqs.length,1);
+  const proposal=require("./load-browser-module.cjs")("../assets/requirement-comparison.js").degreeSuggestion(reqs[0],"");
+  const selected=assessment(reqs[0],proposal.status,proposal.reason);
+  const result=buildAnalysis({posting,requirements:reqs,profile:{education:""},assessments:[selected]}).explanations[0];
+  assert.equal(result.topic,"unrestricted-degree");
+  assert.match(result.interpretation,/학력 제한이 없는/);
+  assert.match(result.nextAction,/다른 요건/);
+  assert.doesNotMatch(result.interpretation,/졸업예정 여부/);
+  assert.equal(selected.status,"충족");
+});
