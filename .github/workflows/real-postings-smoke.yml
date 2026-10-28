@@ -1,0 +1,23 @@
+name: Real posting pipeline smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/validate-real-postings.mjs'
+      - 'tests/fixtures/real-postings-smoke.json'
+      - '.github/workflows/real-postings-smoke.yml'
+  workflow_dispatch:
+jobs:
+  validate-real-postings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/validate-real-postings.mjs
