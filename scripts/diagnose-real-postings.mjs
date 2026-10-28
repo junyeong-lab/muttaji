@@ -4,8 +4,8 @@ import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const load=require("../tests/load-browser-module.cjs");
 const {analyze}=load("../assets/job-text-analyzer.js");
-const ids=["50121037","50217123","49941715","49736878","49554833"];
-const importer=createImporter();
+const ids=["50217123","49941715","49736878"];
+const importer=createImporter({timeoutMs:18000});
 for(const id of ids){
  const site=id==="49554833"?"saramin":"jobkorea";
  const url=site==="saramin"?"https://www.saramin.co.kr/zf_user/jobs/view?rec_idx="+id:"https://www.jobkorea.co.kr/Recruit/GI_Read/"+id;
