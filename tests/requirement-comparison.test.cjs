@@ -81,6 +81,21 @@ test("재학·졸업예정·학교명·전문학사 및 복합 요구는 자동 
  for(const text of [
   "석사 이상", "학력: 대졸 이상 및 경력 3년",
   "컴퓨터공학과 대졸 이상", "대졸 이상, 정보처리기사 보유",
-  "정보처리기사", "학력 무관"
+  "정보처리기사", "학력 무관 및 경력 3년 이상"
  ])assert.equal(degreeSuggestion({kind:"required",text},"학사 졸업"),null,text);
+});
+
+test("단독 학력무관은 입력 학위에 무관하게 학력 항목만 충족",()=>{
+  const {degreeSuggestion}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+  for(const text of ["학력무관","학력 무관","학력 : 학력무관","최종학력 : 학력무관"]){
+    for(const education of ["","학사 졸업","전문학사","고졸","재학 중"]){
+      const proposal=degreeSuggestion({kind:"required",text},education);
+      assert.equal(proposal?.status,"충족",text+" / "+education);
+      assert.match(proposal.reason,/학력 제한이 없다고/);
+      assert.equal(assessment({text},proposal.status,proposal.reason).status,"충족");
+    }
+  }
+  for(const text of ["학력무관 및 경력 3년 이상","학력무관, 정보처리기사 보유"]){
+    assert.equal(degreeSuggestion({kind:"required",text},"학사 졸업"),null,text);
+  }
 });
