@@ -128,5 +128,149 @@
     "site": "saramin",
     "field": "정보보안",
     "url": "https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=52117436"
+  },
+  {
+    "site": "jobkorea",
+    "field": "클라우드",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50201445",
+    "note": "제타존 Cloud/Infra 엔지니어"
+  },
+  {
+    "site": "jobkorea",
+    "field": "시스템",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50186173",
+    "note": "인사이드정보 시스템 엔지니어"
+  },
+  {
+    "site": "jobkorea",
+    "field": "시스템",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50038885",
+    "note": "오에스테크 서버 엔지니어"
+  },
+  {
+    "site": "jobkorea",
+    "field": "시스템",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49936272",
+    "note": "에이닷 서버 엔지니어"
+  },
+  {
+    "site": "jobkorea",
+    "field": "정보통신",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50146625",
+    "note": "성진정보통신 네트워크 기술지원"
+  },
+  {
+    "site": "jobkorea",
+    "field": "데이터",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50208491",
+    "note": "굿리치 데이터 엔지니어"
+  },
+  {
+    "site": "jobkorea",
+    "field": "데이터분석",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49945988",
+    "note": "인실리코젠 데이터 분석가"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49723768",
+    "note": "소만사 엔드포인트 보안 개발"
+  },
+  {
+    "site": "jobkorea",
+    "field": "정보보안",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49707673",
+    "note": "소만사 보안 솔루션 인증"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49705761",
+    "note": "소만사 엔드포인트 보안 개발"
+  },
+  {
+    "site": "jobkorea",
+    "field": "네트워크",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49705741",
+    "note": "소만사 네트워크 보안 기술지원"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49705720",
+    "note": "소만사 네트워크 보안 개발"
+  },
+  {
+    "site": "jobkorea",
+    "field": "시스템",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49611849",
+    "note": "소만사 보안 기술지원"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49436146",
+    "note": "소만사 EDR 보안 개발"
+  },
+  {
+    "site": "jobkorea",
+    "field": "개인정보보호",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49436140",
+    "note": "소만사 개인정보보호 컨설턴트"
+  },
+  {
+    "site": "jobkorea",
+    "field": "네트워크",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49674063",
+    "note": "에스넷아이씨티 네트워크 보안"
+  },
+  {
+    "site": "jobkorea",
+    "field": "네트워크",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49576981",
+    "note": "에스넷아이씨티 네트워크 보안"
+  },
+  {
+    "site": "jobkorea",
+    "field": "네트워크",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49539251",
+    "note": "에스넷아이씨티 대전 네트워크"
+  },
+  {
+    "site": "jobkorea",
+    "field": "정보보안",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49737804",
+    "note": "네비웍스 IT 보안 인프라"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49737052",
+    "note": "네비웍스 AI 백엔드"
+  },
+  {
+    "site": "jobkorea",
+    "field": "IT",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49736936",
+    "note": "네비웍스 소프트웨어 QA"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49736878",
+    "note": "네비웍스 SW 개발"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49686815",
+    "note": "네비웍스 SW 개발"
+  },
+  {
+    "site": "jobkorea",
+    "field": "소프트웨어",
+    "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/49686537",
+    "note": "네비웍스 AI 서비스 백엔드"
   }
 ]

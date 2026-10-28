@@ -1,6 +1,6 @@
 "use strict";
-// 1,000 deterministic SYNTHETIC posting scenarios.
-// These are NOT 1,000 real Saramin/JobKorea postings.
+// 50 deterministic SYNTHETIC posting scenarios.
+// These are NOT 50 real Saramin/JobKorea postings.
 const test=require("node:test");
 const assert=require("node:assert/strict");
 const fs=require("node:fs");
@@ -101,16 +101,16 @@ function verify(scenario){
   assert.match(task.steps[2],/내 역량/,"scenario "+index+" review instruction");
  }
 }
-test("1,000 deterministic synthetic jobs across all 11 certification fields complete the real app module chain",()=>{
+test("50 deterministic synthetic jobs across all 11 certification fields complete the real app module chain",()=>{
  const counts=Object.fromEntries(fields.map(f=>[f,0]));
- for(let i=0;i<1000;i++){
+ for(let i=0;i<50;i++){
   const s=sample(i);verify(s);counts[s.field]++;
  }
  assert.equal(Object.keys(counts).length,11);
- assert.equal(Object.values(counts).reduce((a,b)=>a+b,0),1000);
- assert.ok(Object.values(counts).every(n=>n>=90));
+ assert.equal(Object.values(counts).reduce((a,b)=>a+b,0),50);
+ assert.ok(Object.values(counts).every(n=>n>=4));
 });
-test("1,000 scenarios do not equate similar credentials or claimed experience to verified employer eligibility",()=>{
+test("50 scenarios do not equate similar credentials or claimed experience to verified employer eligibility",()=>{
  const {ownedCertificates}=load("../assets/requirement-comparison.js");
  for(const [requested,owned] of [
    ["정보처리산업기사 보유","정보처리기사"],

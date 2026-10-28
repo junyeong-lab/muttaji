@@ -19,7 +19,7 @@ for(const entry of corpus){
   if(!key)throw Error("URL identifier absent");
   if(!seen.has(entry.site+":"+key)){seen.add(entry.site+":"+key);unique.push(entry);}
 }
-if(unique.length>1000)throw Error("1000 posting safety cap");
+if(unique.length>50)throw Error("50 posting safety cap");
 const importer=createImporter();
 const profile={
   "goal-job":"정보보안·개인정보보호·IT 서비스·데이터 분야",
@@ -71,7 +71,7 @@ for(const entry of unique){
  await new Promise(resolve=>setTimeout(resolve,1200));
 }
 const summary={
- target:1000,
+ target:50,
  uniqueSeeded:unique.length,
  moduleChainPass:rows.filter(x=>x.validation==="module-chain-pass").length,
  incomplete:rows.filter(x=>x.validation!=="module-chain-pass").length,
