@@ -9,11 +9,11 @@
   var CATEGORY = [
     { group: "company", label: /^(?:기업명|회사명|회사|기업)$/i },
     { group: "role", label: /^(?:모집|모집\s*(?:직무|분야|포지션|부서|공고)|채용\s*(?:분야|포지션)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
-    { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|주요\s*역할\s*및\s*수행\s*업무|직무\s*개요|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
-    { group: "unresolved", label: /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)(?:\s*\(원문\)?)?|기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)$/i },
-    { group: "required", label: /^(?:공통\s*자격\s*요건|직무\s*필요\s*역량\s*및\s*자격\s*요건|필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
-    { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus|이런\s*(?:경험|역량)(?:이|을)?\s*있으면\s*(?:더\s*)?(?:좋아요|좋습니다|좋겠어요)|이런\s*분(?:이라면|이면)\s*더\s*좋아요|이런\s*점이\s*있으면\s*(?:더\s*)?좋아요|있으면\s*더\s*좋은\s*경험)$/i },
-    { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
+    { group: "responsibilities", label: /^(?:이런\s*업무를\s*하시게\s*돼요|담당\s*업무|주요\s*업무|주요\s*역할\s*및\s*수행\s*업무|직무\s*개요|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
+    { group: "unresolved", label: /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)(?:\s*\(원문\)?)?|(?:상세\s*)?기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)$/i },
+    { group: "required", label: /^(?:이런\s*경험을\s*가지신\s*분을\s*찾고\s*있어요|공통\s*자격\s*요건|직무\s*필요\s*역량\s*및\s*자격\s*요건|필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
+    { group: "preferred", label: /^(?:이런\s*경험이\s*있다면\s*더욱\s*좋아요|우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus|이런\s*(?:경험|역량)(?:이|을)?\s*있으면\s*(?:더\s*)?(?:좋아요|좋습니다|좋겠어요)|이런\s*분(?:이라면|이면)\s*더\s*좋아요|이런\s*점이\s*있으면\s*(?:더\s*)?좋아요|있으면\s*더\s*좋은\s*경험)$/i },
+    { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|유의\s*사항|공통\s*사항|지원\s*방법)$/i }
   ];
   // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
   var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■□◇▶▷▸▹●○◯]|[oO](?=\s)|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
@@ -39,6 +39,11 @@
     if(/^(?:전문\s*지식|직무\s*필요\s*역량)$/.test(normalized))return {preserveSection:true};
     var roleMarker=normalized.match(/^정보보호\s*[-–]\s*(BLUE|RED)$/i);
     if(roleMarker)return {group:"role",value:normalized,label:"모집 직무"};
+    if(/^실무\s*경험\s*및\s*보안\s*엔지니어링\s*역량$/.test(normalized))return {preserveSection:true};
+    // A complete conversational heading may be glued to the end of an intro.
+    // Keep the intro as a separate source span on the SAME physical line.
+    var suffix=t.match(/^(.+[.!?。])\s*(이런\s*업무를\s*하시게\s*돼요[!！]?|이런\s*경험을\s*가지신\s*분을\s*찾고\s*있어요[!！]?|이런\s*경험이\s*있다면\s*더욱\s*좋아요[!！]?)$/);
+    if(suffix)return {group:groupForLabel(suffix[2]),value:"",label:suffix[2],prefix:line.slice(0,line.lastIndexOf(suffix[2])).trim()};
     // Job site compound headings: "[정보보호 컨설턴트] 자격요건".
     var embedded=normalized.match(/^(?:.{2,45}?[\]】)]?\s+)?(자격\s*요건|지원\s*자격|필수\s*조건|우대\s*사항|우대\s*조건)$/i);
     if(embedded) {
@@ -107,9 +112,13 @@
       out.sourceLines++;
       var head=headingFor(raw);
       if(head&&head.preserveSection){prior=null;return;}
+      if(head&&head.prefix){
+        out.unresolved.push({text:withoutBullet(head.prefix),source:head.prefix,line:ix+1,endLine:ix+1,sectionLine:sectionLine});
+        out.totalItems++;prior=null;
+      }
       if (head) {
         section=head.group;
-        skillContext=section==="unresolved" && /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)|기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)/i.test(head.label||"");
+        skillContext=section==="unresolved" && /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)|(?:상세\s*)?기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)/i.test(head.label||"");
         sectionLine=ix+1;
         roleHeaderLabel=section==="role"?head.label:null;
         if(section!=="responsibilities")workArea="";

@@ -273,3 +273,34 @@ test("스킬만 등장하면 필수·우대로 추측하지 않고 기타로 분
     assert.equal(result.preferred.length,0,input);
   }
 });
+
+
+const worxphereSource=require('node:fs').readFileSync(require('node:path').join(__dirname,'fixtures/job-text/worxphere-50176196.txt'),'utf8');
+test('웍스피어 실제 추출 공고: 담당 10·필수 6·우대 7 및 원문 행/인용 보존',()=>{
+ const out=analyze(worxphereSource),range=(start,n)=>Array.from({length:n},(_,i)=>start+i);
+ assert.deepEqual(out.responsibilities.map(x=>x.line),range(27,10));
+ assert.deepEqual(out.required.map(x=>x.line),range(39,6));
+ assert.deepEqual(out.preferred.map(x=>x.line),range(52,7));
+ assert.equal(out.company[0].text,'웍스피어(유)');assert.match(out.role[0].text,/보안 엔지니어/);
+ const lines=worxphereSource.split('\n');
+ for(const kind of ['company','role','responsibilities','required','preferred','unresolved'])for(const item of out[kind]){
+  assert.equal(item.source,lines.slice(item.line-1,item.endLine).map(x=>x.trim()).join('\n'));
+ }
+ assert.ok(range(46,5).every(line=>out.unresolved.some(x=>x.line===line&&/스킬 참고 정보/.test(x.kindHint))));
+ assert.equal('skills' in out,false);assert.ok(![...out.required,...out.preferred].some(x=>x.line<=25||x.line>=59));
+ assert.ok(![...out.required,...out.preferred].some(x=>/실무 경험 및 보안 엔지니어링 역량|상세 기술 스택/.test(x.text)));
+});
+test('회사 소개에 붙은 제목은 같은 원문 행에서 분리하며 소개를 담당업무에 넣지 않음',()=>{
+ const lines=worxphereSource.split('\n'),intro=lines[24];lines.splice(24,2,intro+lines[25]);const source=lines.join('\n'),out=analyze(source);
+ assert.equal(out.responsibilities.length,10);assert.equal(out.required.length,6);assert.equal(out.preferred.length,7);
+ assert.equal(out.responsibilities[0].line,26);assert.equal(out.required[0].line,38);assert.equal(out.preferred[0].line,51);
+ const preserved=out.unresolved.find(x=>x.line===25);assert.equal(preserved.source,intro);assert.ok(source.includes(preserved.source));
+ assert.ok(!out.responsibilities.some(x=>x.text.includes('만들어 갑니다')));
+});
+test('구어체 제목·번호 소제목·기술 스택·유의사항의 경계와 보통 문장 구분',()=>{
+ const source='이런 업무를 하시게 돼요!\n- 로그 분석\n이런 경험을 가지신 분을 찾고 있어요!\n1. 실무 경험 및 보안 엔지니어링 역량\n- 보안 경력 3년\n2. 상세 기술 스택\n- WAF\n이런 경험이 있다면 더욱 좋아요!\n- 자격증 보유\n유의사항\n- 제출서류 확인';
+ const out=analyze(source);assert.equal(out.responsibilities.length,1);assert.equal(out.required.length,1);assert.equal(out.preferred.length,1);
+ assert.ok(out.unresolved.some(x=>x.text==='WAF'));assert.ok(out.unresolved.some(x=>x.text==='제출서류 확인'));
+ const ordinary=analyze('회사 소개\n지원서에는 이런 업무를 하시게 돼요!라는 문장을 적지 마세요.\n필수조건\n- 문서 작성 가능');
+ assert.equal(ordinary.responsibilities.length,0);assert.equal(ordinary.required.length,1);
+});
