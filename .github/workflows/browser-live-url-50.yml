@@ -1,0 +1,35 @@
+name: Real URL button 50-posting browser E2E
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/browser-live-url-50-e2e.mjs'
+      - '.github/workflows/browser-live-url-50.yml'
+  workflow_dispatch:
+jobs:
+  url-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: |
+          npm ci
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - run: node scripts/browser-live-url-50-e2e.mjs
+        env:
+          MUTTAJI_E2E_BASE_URL: https://project-muttaji.vercel.app
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-url-button-50-results
+          path: |
+            real-url-browser-report.json
+            live-url-browser-failure.png
+          retention-days: 7
