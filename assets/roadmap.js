@@ -31,7 +31,19 @@
     const text=String(item.text||"").normalize("NFKC");
     let guide;
     // Work-experience duration and educational credentials must not be replaced by lab work.
-    if(/경력|실무\s*(?:경험|경력)|\d+\s*년\s*이상/.test(text)){
+    if(/L7|제로데이|제로\s*데이|\bIR\b/i.test(text)&&/분석|위협|사고|대응/.test(text)){
+      guide={
+        scope:"L7 위협 분석, 제로데이 취약점 정보 분석, 침해사고 대응(IR)을 별개의 수행 업무로 구분해 확인하세요.",
+        evidence:"직접 분석한 위협 자료와 실제 사고 조사·대응에 참여한 기록을 구분하고 본인의 역할을 확인하세요.",
+        prepare:"공개 보안 권고문과 비식별 예제 로그로 분석 요약 및 가상 사고 대응 절차를 기록하세요. 모의 활동을 IR 실무로 표시하지 마세요."
+      };
+    }else if(/ISMS-P|보안\s*컴플라이언스/i.test(text)&&/심사|체계|인증|대응/.test(text)){
+      guide={
+        scope:"ISMS-P 관리체계 구축, 인증심사 대응, 통제 항목 검토에서 공고가 요구하는 역할을 구분하세요.",
+        evidence:"기관평가에서 적용한 기준·증빙과 본인 역할을 정리하되 ISMS-P 심사 참여 경력과 구분하세요.",
+        prepare:"공개 관리체계 통제 항목으로 가상 조직의 정책·증빙·미흡사항·개선 계획을 대응표로 작성하세요."
+      };
+    }else if(/경력|실무\s*(?:경험|경력)|\d+\s*년\s*이상/.test(text)){
       guide={
         scope:"공고가 요구하는 실무 분야, 담당업무와 경력 기간을 구분해 확인하세요.",
         evidence:"실제 업무별 수행 기간과 본인 역할을 정리하고 경력증명·업무 기록처럼 확인 가능한 근거가 있는지 점검하세요.",
