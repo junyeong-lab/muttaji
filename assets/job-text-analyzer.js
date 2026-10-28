@@ -37,6 +37,7 @@
     t=t.replace(/^(?:(?:[0-9]{1,3}|[IVXivx]{1,5}|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[가-하])\s*[.)．、]\s*|[※■□◆◇▶▷▸▹●○▪▫]\s*)/u,"").trim();
     var normalized=normalizeHeader(t.replace(/[:：]\s*$/, ""));
     if(/^(?:전문\s*지식|직무\s*필요\s*역량)$/.test(normalized))return {preserveSection:true};
+    if(/^(?:공통|경력|신입)$/.test(normalized)&&/^\[(?:공통|경력|신입)\]$/.test(t.trim()))return {preserveSection:true};
 
     // Do not assign a combined job-table title to either eligibility bucket.
     if(/^(?:포지션\s*및\s*자격\s*요건|모집\s*분야\s*및\s*자격\s*요건(?:\s*정보)?|모집\s*부문\s*자격\s*요건\s*및\s*우대\s*사항|자격\s*요건\s*및\s*우대\s*사항|담당\s*업무\s*\/\s*자격\s*조건\s*\/\s*우대\s*사항|모집\s*분야\s*\/\s*업무\s*내용\s*\/\s*모집\s*인원)$/i.test(normalized))
@@ -250,8 +251,6 @@
 
       // A negative condition must never be treated as a positive requirement.
       if(!head&&kind==="required"&&/필수(?:\s*조건)?(?:는|가)?\s*아닙니다/.test(cleaned))kind="unresolved";
-      // A single explicit preferential clause may appear outside the preference section.
-      if(!head&&kind==="unresolved"&&/(?:우대(?:함|합니다|대상)?|가점\s*부여)\s*[.!]?$/.test(cleaned)&&!/우대하지\s*않/.test(cleaned))kind="preferred";
 
       // Employment, application and welfare labels are not qualifications.
       if(!head&&/^(?:근무\s*(?:형태|일시|요일|시간|지|지역|조건)|채용\s*형태|제출\s*서류|접수\s*(?:방법|기간)|전형\s*절차|지원\s*방법|지원\s*서류)\s*[:：]/.test(cleaned)){

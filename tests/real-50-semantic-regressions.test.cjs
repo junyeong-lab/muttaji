@@ -68,5 +68,6 @@ test("필수가 아닙니다 문장은 필수 항목으로 주장하지 않고 �
 });
 test("명시적인 우대 조항은 다른 제목 아래서도 우대하고, 취득비 지원은 자격조건으로 세지 않는다",()=>{
  const s=["공통 사항","- 국가보훈대상자는 관련법에 의거 우대합니다","자격요건","- 보안 운영 경험","우대사항","- 정보처리기사","※ 필요시 자격증 취득 기회와 비용 지원 가능"].join("\n");
- assert.deepEqual(texts(s,"preferred"),["국가보훈대상자는 관련법에 의거 우대합니다","정보처리기사"]);
+ assert.deepEqual(texts(s,"preferred"),["정보처리기사"]);
+ assert.equal(texts(s,"unresolved").some(x=>x.includes("보훈대상자")),true);
 });
