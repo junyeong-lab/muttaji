@@ -304,3 +304,47 @@ test('구어체 제목·번호 소제목·기술 스택·유의사항의 경계�
  const ordinary=analyze('회사 소개\n지원서에는 이런 업무를 하시게 돼요!라는 문장을 적지 마세요.\n필수조건\n- 문서 작성 가능');
  assert.equal(ordinary.responsibilities.length,0);assert.equal(ordinary.required.length,1);
 });
+
+
+test("가비아형 한국어 모집요강: 자격/업무/우대/전형 제목이 다른 조건으로 섞이지 않는다",()=>{
+ const source=[
+  "기업명: 예시 정보보호 회사",
+  "■ 자격요건",
+  "· 유관 경력 8년 이상",
+  "■ 이런 일을 해요",
+  "· 보안 정책 점검",
+  "■ 이런 분을 찾아요",
+  "· 개인정보보호 운영 경험",
+  "■ 이런 분이라면 더욱 좋아요",
+  "· CPPG 자격증 취득",
+  "전형절차 및 유의사항",
+  "서류전형",
+  "면접전형"
+ ].join("\n");
+ const parsed=analyze(source);
+ assert.deepEqual(parsed.required.map(x=>x.text),["유관 경력 8년 이상","개인정보보호 운영 경험"]);
+ assert.deepEqual(parsed.responsibilities.map(x=>x.text),["보안 정책 점검"]);
+ assert.deepEqual(parsed.preferred.map(x=>x.text),["CPPG 자격증 취득"]);
+ assert.equal(parsed.preferred[0].line,9);
+ assert.equal(parsed.required.some(x=>/전형|면접/.test(x.text)),false);
+});
+test("네비웍스형 한국어 모집요강: 기술과 근무조건은 우대조건으로 유출되지 않는다",()=>{
+ const source=[
+  "이런 업무를 해요",
+  "- SW 설계 및 개발",
+  "이런 분들을 찾고 있어요",
+  "- 관련 경력 3년 이상",
+  "이런 분이면 더 좋아요",
+  "- 협업 경험",
+  "이런 기술이 필요해요",
+  "- C++ 활용",
+  "이런 조건에서 근무할 예정이에요",
+  "- 경기 안양시 사무실"
+ ].join("\n");
+ const parsed=analyze(source);
+ assert.deepEqual(parsed.required.map(x=>x.text),["관련 경력 3년 이상"]);
+ assert.deepEqual(parsed.preferred.map(x=>x.text),["협업 경험"]);
+ assert.deepEqual(parsed.responsibilities.map(x=>x.text),["SW 설계 및 개발"]);
+ assert.equal(parsed.unresolved.some(x=>x.text.includes("C++")),true);
+ assert.equal(parsed.unresolved.some(x=>x.text.includes("경기 안양시")),true);
+});
