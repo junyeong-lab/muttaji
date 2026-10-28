@@ -1,3 +1,4 @@
+// Reaudit all fifty real posted texts after corrected semantic section boundaries.
 import {readFileSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import {createImporter} from "../lib/job-url/service.js";
