@@ -238,7 +238,7 @@
       if(topic.id==="security"&&/\d+\s*년|경력|실무/.test(item.text)&&evidence.length)
         explanation+=" 관련 보안 업무 입력을 연결했을 뿐, 요구한 실무경력 기간이나 보안 솔루션 운영 경력을 확인·산정한 것은 아닙니다.";
       if(topic.focused&&evidence.length){
-        if(evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
+        if(evidence.some(ref=>ref.source==="profile"&&ref.label.includes("교육·실습 입력")))
           explanation+=" 연결된 교육·실습 이력은 업무 실적이나 실제 운영 경력의 증빙이 아닙니다.";
         if(evidence.some(ref=>ref.source==="profile"&&ref.label.includes("유사·연관")))
           explanation+=" 유사한 분야의 경험은 공고의 동일 기술·인증·업무를 수행했다는 뜻이 아닙니다.";

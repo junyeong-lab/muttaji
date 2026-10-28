@@ -309,6 +309,7 @@ test("웍스피어의 경력 연수, 정책 점검, 협업과 문서 작성을 �
   assert.ok(out[2].inputEvidence.some(x=>/부서 간 협업/.test(x.quote)&&/협업 관련 입력/.test(x.label)));
   assert.ok(out[2].inputEvidence.every(x=>!/교육·실습 입력/.test(x.label)));
   assert.match(out[2].explanation,/동일한 보안 이슈를 공동 해결/);
+  assert.doesNotMatch(out[2].explanation,/연결된 교육·실습 이력/);
   assert.ok(out.every(x=>!Object.hasOwn(x,"status")&&!Object.hasOwn(x,"score")));
   assert.ok(out.every(x=>x.postingEvidence.quote===posting.split("\n")[x.postingEvidence.line-1]));
 });
@@ -321,4 +322,26 @@ test("정책 변경이 명시된 입력과 일반 보안점검 입력을 구분�
   assert.match(direct.inputEvidence[0].label,/조치 관련 입력/);
   const unrelated=buildAnalysis({posting,requirements:items,profile:{experience:"사이버보안 관련 기관평가 준비 및 대응"}}).explanations[0];
   assert.equal(unrelated.inputEvidence.length,0);
+});
+
+test("교육 문구와 협업이 함께 있어도 협업 근거를 교육·실습 이력으로 단정하지 않는다",()=>{
+  const posting="필수조건\n보안 이슈를 유관 부서와 협업하여 해결하고, 운영 내용을 문서화할 수 있는 분";
+  const items=requirements(posting,{analyze});
+  const out=buildAnalysis({posting,requirements:items,profile:{
+    skills:"보안교육 및 부서 간 협업"
+  }}).explanations[0];
+  assert.equal(out.topic,"collaboration-documentation");
+  assert.equal(out.inputEvidence.length,1);
+  assert.match(out.inputEvidence[0].label,/협업 관련 입력/);
+  assert.doesNotMatch(out.inputEvidence[0].label,/교육·실습 입력/);
+  assert.doesNotMatch(out.explanation,/연결된 교육·실습 이력/);
+  assert.equal(Object.hasOwn(out,"status"),false);
+
+  const aiPosting="우대사항\nAI 관련 경험이 있으신 분";
+  const aiItems=requirements(aiPosting,{analyze});
+  const ai=buildAnalysis({posting:aiPosting,requirements:aiItems,profile:{
+    skills:"SKT ALEPH AI Agent 실무 교육과정"
+  }}).explanations[0];
+  assert.match(ai.inputEvidence[0].label,/교육·실습 입력/);
+  assert.match(ai.explanation,/연결된 교육·실습 이력/);
 });
