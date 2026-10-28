@@ -11,9 +11,9 @@
     { group: "role", label: /^(?:모집|모집\s*(?:직무|분야|포지션|부서|공고)|채용\s*(?:분야|포지션)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
     { group: "responsibilities", label: /^(?:이런\s*업무를\s*하시게\s*돼요|담당\s*업무|주요\s*업무|주요\s*역할\s*및\s*수행\s*업무|직무\s*개요|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
     { group: "unresolved", label: /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)(?:\s*\(원문\)?)?|(?:상세\s*)?기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)$/i },
-    { group: "required", label: /^(?:이런\s*경험을\s*가지신\s*분을\s*찾고\s*있어요|공통\s*자격\s*요건|직무\s*필요\s*역량\s*및\s*자격\s*요건|필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
+    { group: "required", label: /^(?:이런\s*경험을\s*가지신\s*분을\s*찾고\s*있어요|공통\s*자격\s*요건|직무\s*필요\s*역량\s*및\s*자격\s*요건|필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|지원\s*대상|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
     { group: "preferred", label: /^(?:이런\s*경험이\s*있다면\s*더욱\s*좋아요|우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus|이런\s*(?:경험|역량)(?:이|을)?\s*있으면\s*(?:더\s*)?(?:좋아요|좋습니다|좋겠어요)|이런\s*분(?:이라면|이면)\s*더\s*좋아요|이런\s*점이\s*있으면\s*(?:더\s*)?좋아요|있으면\s*더\s*좋은\s*경험)$/i },
-    { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|유의\s*사항|공통\s*사항|지원\s*방법)$/i }
+    { group: "unresolved", label: /^(?:근무\s*조건|근무\s*환경|근\s*무\s*지|근무\s*(?:일시|형태|시간)|근무\s*지역|복리\s*후생|풍부한\s*복리후생|제출\s*서류|절차\s*안내|채용\s*절차|채용\s*부문|모집부문상세내용|세부\s*사항|오시는\s*길|신입사원\s*성장\s*지원|CELA만의\s*특별한\s*문화|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|유의\s*사항|공통\s*사항|지원\s*방법)$/i }
   ];
   // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
   var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■□◇▶▷▸▹●○◯]|[oO](?=\s)|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
@@ -76,6 +76,11 @@
     var suffix=t.match(/^(.+[.!?。])\s*(이런\s*업무를\s*하시게\s*돼요[!！]?|이런\s*경험을\s*가지신\s*분을\s*찾고\s*있어요[!！]?|이런\s*경험이\s*있다면\s*더욱\s*좋아요[!！]?)$/);
     if(suffix)return {group:groupForLabel(suffix[2]),value:"",label:suffix[2],prefix:line.slice(0,line.lastIndexOf(suffix[2])).trim()};
     // Job site compound headings: "[정보보호 컨설턴트] 자격요건".
+    // Multiple qualification column headers must not label a role/headcount as preferred.
+    if(/담당\s*업무/.test(normalized)&&/자격\s*조건/.test(normalized)&&/우대\s*사항/.test(normalized))
+      return {group:"unresolved",value:"",label:"복합 표 머리글"};
+    if(/^(?:※\s*)?상세\s*공고는|^회사에\s*대해\s*더\s*알고\s*싶으시다면|^CELA와\s*함께\s*미래를\s*만들어가세요/.test(normalized))
+      return {group:"unresolved",value:normalized,label:"안내 문구"};
     var embedded=normalized.match(/^(?:.{2,45}?[\]】)]?\s+)?(자격\s*요건|지원\s*자격|필수\s*조건|우대\s*사항|우대\s*조건)$/i);
     if(embedded) {
       var explicitGroup=groupForLabel(embedded[1]);
@@ -256,6 +261,8 @@
       if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
       // A standalone explicit "... 우대" bullet is preferred even when it follows a compact required-qualifications table cell.
       if(!head&&kind==="required"&&cleaned.length<=90&&/\S.{2,}\s+우대\s*$/.test(cleaned))kind="preferred";
+      // Explicit bonus/preference under general qualifications is not an eligibility barrier.
+      if(!head&&kind==="required"&&/(?:채용\s*시\s*우대함|우대\s*(?:함|합니다|대상)|가점\s*부여)\s*[.)]?$/.test(cleaned))kind="preferred";
 
       if(!head&&kind==="required"&&/(?:채용\s*시\s*우대(?:함|합니다)?|우대(?:함|합니다|대상)?|서류\s*전형\s*시\s*가점\s*부여|가점\s*부여)\s*$/.test(cleaned))kind="preferred";
 
