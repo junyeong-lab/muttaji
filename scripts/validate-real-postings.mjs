@@ -15,7 +15,7 @@ const knownFields=new Set(JSON.parse(readFileSync(new URL("../data/certification
 const seen=new Set(),unique=[];
 for(const entry of corpus){
   if(!knownFields.has(entry.field)||!["jobkorea","saramin"].includes(entry.site))throw Error("invalid field or provider");
-  const key=entry.site==="jobkorea"?entry.url.match(/GI_Read\\/(\\d+)/)?.[1]:entry.url.match(/rec_idx=(\\d+)/)?.[1];
+  const key=entry.site==="jobkorea"?entry.url.match(/GI_Read\/(\d+)/)?.[1]:entry.url.match(/rec_idx=(\d+)/)?.[1];
   if(!key)throw Error("URL identifier absent");
   if(!seen.has(entry.site+":"+key)){seen.add(entry.site+":"+key);unique.push(entry);}
 }
@@ -30,12 +30,12 @@ const profile={
 };
 const rows=[];
 for(const entry of unique){
- const record={site:entry.site,field:entry.field,id:entry.site==="jobkorea"?entry.url.match(/GI_Read\\/(\\d+)/)[1]:entry.url.match(/rec_idx=(\\d+)/)[1]};
+ const record={site:entry.site,field:entry.field,id:entry.site==="jobkorea"?entry.url.match(/GI_Read\/(\d+)/)[1]:entry.url.match(/rec_idx=(\d+)/)[1]};
  try{
   const posting=await importer(entry.url);
   record.import=posting.contentStatus==="partial"?"partial":"ok";
   record.method=posting.method;
-  if(posting.text.length>20000||posting.text.split(/\\r?\\n/).length>400)throw Object.assign(Error("input too large for browser parser"),{code:"PARSER_LIMIT"});
+  if(posting.text.length>20000||posting.text.split(/\r?\n/).length>400)throw Object.assign(Error("input too large for browser parser"),{code:"PARSER_LIMIT"});
   const parsed=analyze(posting.text);
   record.sections={required:parsed.required.length,preferred:parsed.preferred.length,unresolved:parsed.unresolved.length};
   const items=requirements(posting.text,{analyze});
@@ -47,7 +47,7 @@ for(const entry of unique){
   const explanations=buildAnalysis({posting:posting.text,requirements:items,profile,assessments:decisions,certificateMatcher:certificateMatches});
   const plan=buildRoadmap(decisions.map((item,i)=>({...item,experienceExplanation:explanations.explanations[i]})));
   if(plan.total!==items.length||plan.groups.reduce((n,g)=>n+g.items.length,0)!==items.length)throw Object.assign(Error("roadmap requirement count mismatch"),{code:"ROADMAP_INCONSISTENT"});
-  if(explanations.explanations.some(x=>x.postingEvidence.line<1||x.postingEvidence.endLine>posting.text.split(/\\r?\\n/).length))throw Object.assign(Error("source evidence out of bounds"),{code:"EVIDENCE_MISMATCH"});
+  if(explanations.explanations.some(x=>x.postingEvidence.line<1||x.postingEvidence.endLine>posting.text.split(/\r?\n/).length))throw Object.assign(Error("source evidence out of bounds"),{code:"EVIDENCE_MISMATCH"});
   if(plan.tasks.some(x=>x.steps.length!==3))throw Object.assign(Error("roadmap steps mismatch"),{code:"ROADMAP_STEPS"});
   record.validation="module-chain-pass";
   record.requirements=items.length;
