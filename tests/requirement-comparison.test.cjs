@@ -99,3 +99,20 @@ test("단독 학력무관은 입력 학위에 무관하게 학력 항목만 충�
     assert.equal(degreeSuggestion({kind:"required",text},"학사 졸업"),null,text);
   }
 });
+
+test("학력무관 자동 충족을 학사 졸업 일치로 표시하지 않는다",()=>{
+ const {isUnrestrictedEducation,degreeSuggestion}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+ for(const text of ["학력무관","학력 : 학력무관","최종학력 : 학력제한없음"]){
+  const item={kind:"required",text};
+  assert.equal(isUnrestrictedEducation(item),true);
+  const x=degreeSuggestion(item,"");
+  assert.equal(x?.status,"충족");
+  assert.match(x.reason,/학력 제한이 없다고/);
+ }
+ for(const text of ["학력 : 대졸 이상","정보처리기사","학력무관 및 경력 3년"]){
+  assert.equal(isUnrestrictedEducation({text}),false);
+ }
+ const other=degreeSuggestion({text:"학력 : 대졸 이상"},"공학사 졸업");
+ assert.equal(other?.status,"충족");
+ assert.match(other.reason,/학사 졸업/);
+});
