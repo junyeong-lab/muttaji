@@ -80,8 +80,8 @@
       meaning:"보안 관리체계 및 인증·심사 대응 경험에 관한 조건입니다.",
       connection:"관리체계·인증심사 관련 입력 또는 기관평가 등 유사 경험을 연결했습니다. 기관평가와 ISMS-P 인증심사는 동일한 수행 경험으로 간주하지 않습니다.",
       action:"실제 수행한 평가·심사의 종류, 적용 기준과 본인 역할을 구분해 기술하세요. ISMS-P 참여 여부는 별도 확인해야 합니다."},
-    {id:"security-tools",requirement:/\b(?:WAF|IPS|IDS|EDR|EPP|XDR|DLP)\b|방화벽|서버\s*접근제어|보안\s*(?:장비|솔루션)\s*(?:운영|구축|유지보수|관리)/i,
-      profile:/\b(?:WAF|IPS|IDS|EDR|EPP|XDR|DLP)\b|방화벽|서버\s*접근제어|(?:보안\s*)?(?:솔루션|장비)\s*(?:운영|구축|유지보수|설정|관리)/i,
+    {id:"security-tools",requirement:/\b(?:WAF|IPS|IDS|EDR|EPP|XDR|DLP)\b|방화벽|서버\s*접근제어|보안\s*(?:장비|솔루션)(?:을|를)?\s*(?:운영|구축|유지보수|관리)/i,
+      profile:/\b(?:WAF|IPS|IDS|EDR|EPP|XDR|DLP)\b|방화벽|서버\s*접근제어|(?:보안\s*)?(?:솔루션|장비)(?:을|를)?\s*(?:운영|구축|유지보수|설정|관리)/i,
       related:/보안\s*장비\s*점검|네트워크\s*보안\s*장비/i,
       fields:["experience","skills"],
       meaning:"구체적인 보안 제품·장비의 구축 또는 운영 경험을 요구하는 조건입니다.",
@@ -145,7 +145,8 @@
       // the requirement to these lines, then display the unchanged source quote.
       const normalized=value=>value.normalize("NFKC").replace(/\s+/g," ").trim();
       if(!normalized(source).includes(normalized(fromItem)) && !normalized(source).includes(normalized(item.text)))throw new TypeError("공고 원문과 요건이 일치하지 않습니다.");
-      const focused=focusedTopics.find(entry=>entry.requirement.test(item.text));
+      const focused=focusedTopics.find(entry=>entry.requirement.test(item.text)&&
+        !(entry.id==="security-tools"&&/정보보호\s*또는\s*보안\s*솔루션/i.test(item.text)));
       const topic=focused?{...focused,focused:true}:(topics.find(entry=>entry.requirement.test(item.text))||fallback);
       // A broad "related certificate holder" condition can show self-reported
       // credentials as context, but does not imply the employer accepts them.
