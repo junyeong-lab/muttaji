@@ -31,7 +31,7 @@
    if(!publicMode&&!get("job-url-access").value){message("URL 수집 접근 코드를 입력해 주세요. 로컬 예제는 ‘가상 예제 링크 넣기’를 사용할 수 있습니다.");return;}
    invalidate();const current=generation;const controller=new AbortController();active=controller;
    get("job-url-fetch").disabled=true;message("공개 본문을 가져오고 있습니다. 사용자 프로필과 AI 분석은 전송하지 않습니다.");
-   const timer=setTimeout(()=>controller.abort(),15000);
+   const timer=setTimeout(()=>controller.abort(),19000);
    try{
     const response=await win.fetch("/api/job-url-import",{method:"POST",headers:{"content-type":"application/json",...(publicMode?{"x-muttaji-csrf":csrfToken}:{"x-job-import-token":get("job-url-access").value})},body:JSON.stringify({url}),cache:"no-store",signal:controller.signal});
     if(current!==generation)return;

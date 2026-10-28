@@ -141,3 +141,10 @@ test("job posting with several separate role sections exposes a warning rather t
  assert.equal(result.reviewRequired,true);
  assert.doesNotMatch(result.text,/보유 자격증을 확인했으므로 충족/);
 });
+
+test("public URL import timeout budget stays below the function duration and browser timeout",async()=>{
+ const [{LIMITS}]=await modules;
+ assert.equal(LIMITS.timeoutMs,17000);
+ assert.ok(LIMITS.timeoutMs<19000,"client must outlive the server's bounded importer");
+ assert.ok(LIMITS.timeoutMs<20000,"importer must finish before Vercel's URL function limit");
+});
