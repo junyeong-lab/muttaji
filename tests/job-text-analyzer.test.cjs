@@ -348,3 +348,23 @@ test("네비웍스형 한국어 모집요강: 기술과 근무조건은 우대�
  assert.equal(parsed.unresolved.some(x=>x.text.includes("C++")),true);
  assert.equal(parsed.unresolved.some(x=>x.text.includes("경기 안양시")),true);
 });
+
+
+test("지니언스형 표 원문: 직무·인원 뒤 [지원 자격]과 명시적 우대 표현을 구분한다",()=>{
+ const lines=[
+  "기업명: 예시 보안기업",
+  "분야 모집 인원 지원 자격 및 우대 요건",
+  "보안솔루션 엔지니어 인턴 3명 [지원 자격] 서버, 네트워크 보안 지식 및 기술 보유자",
+  "장애인 복지카드 소유자 우대",
+  "영어 가능자 우대",
+  "보안 솔루션 엔지니어에 지원하려면",
+  "- 졸업예정자는 졸업요건 충족 필요"
+ ];
+ const result=analyze(lines.join("\n"));
+ assert.equal(result.required.some(x=>/서버, 네트워크 보안 지식/.test(x.text)),true);
+ assert.equal(result.preferred.some(x=>/장애인 복지카드 소유자 우대/.test(x.text)),true);
+ assert.equal(result.preferred.some(x=>/영어 가능자 우대/.test(x.text)),true);
+ assert.equal(result.required.some(x=>/인턴 3명/.test(x.text)),false);
+ assert.equal(result.unresolved.some(x=>/인턴 3명/.test(x.text)),true);
+ assert.equal(result.required.find(x=>/서버, 네트워크/.test(x.text)).line,3);
+});
