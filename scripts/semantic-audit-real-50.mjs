@@ -1,3 +1,4 @@
+// Capture final current 50 public vacancies after replacement of an unfilled employer template.
 // Reaudit all fifty real posted texts after corrected semantic section boundaries.
 import {readFileSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
