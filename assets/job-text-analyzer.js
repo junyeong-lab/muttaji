@@ -37,6 +37,20 @@
     t=t.replace(/^(?:(?:[0-9]{1,3}|[IVXivx]{1,5}|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[가-하])\s*[.)．、]\s*|[※■□◆◇▶▷▸▹●○▪▫]\s*)/u,"").trim();
     var normalized=normalizeHeader(t.replace(/[:：]\s*$/, ""));
     if(/^(?:전문\s*지식|직무\s*필요\s*역량)$/.test(normalized))return {preserveSection:true};
+
+    // Do not assign a combined job-table title to either eligibility bucket.
+    if(/^(?:포지션\s*및\s*자격\s*요건|모집\s*분야\s*및\s*자격\s*요건(?:\s*정보)?|모집\s*부문\s*자격\s*요건\s*및\s*우대\s*사항|자격\s*요건\s*및\s*우대\s*사항|담당\s*업무\s*\/\s*자격\s*조건\s*\/\s*우대\s*사항|모집\s*분야\s*\/\s*업무\s*내용\s*\/\s*모집\s*인원)$/i.test(normalized))
+      return {group:"unresolved",value:"",label:normalized};
+    if(/^(?:지원\s*대상|지원\s*대상자)$/i.test(normalized))
+      return {group:"required",value:"",label:normalized};
+    if(/^우대\s*(?:사항|조건|요건)\s*\((?:경력|신입|공통)\)$/i.test(normalized))
+      return {group:"preferred",value:"",label:normalized};
+    if(/^(?:채용\s*부문|모집\s*부문|포지션)$/i.test(normalized))
+      return {group:"role",value:"",label:normalized};
+    // Clear prior required/preferred/duty buckets at non-eligibility sections.
+    if(/^(?:근무\s*환경|근무\s*일시|근무\s*형태|근무\s*시간|근\s*무\s*지|오시는\s*길|근무\s*안내[·\s]*복지|세부\s*사항|채용\s*절차|절차\s*안내|제출\s*서류|전형\s*안내|팀\s*소개|지원\s*방법\s*및\s*전형\s*절차는|신입\s*사원\s*성장\s*지원|CELA만의\s*특별한\s*문화|풍부한\s*복리\s*후생|(?:업무|복지)\s*환경|함께\s*일할\s*팀|팀과\s*일하는\s*방식|기술\s*환경|인턴십\s*기간(?:\s*급여)?는|인턴십\s*근무\s*환경은|정규직\s*전환\s*시\s*더\s*많은\s*복지가\s*기다리고\s*있습니다|회사에\s*대해\s*더\s*알고\s*싶으시다면.+|[\[\(]?\s*(?:제출\s*서류|기술\s*환경)\s*[\]\)]?)$/i.test(normalized))
+      return {group:"unresolved",value:"",label:normalized};
+
     // Public Korean posting sections: never carry a prior required/preferred
     // category across an explicitly titled new section.
     if(/^이런\s*업무를\s*해요$/.test(normalized))return {group:"responsibilities",value:"",label:normalized};
@@ -100,6 +114,13 @@
   function nonRequirementKind(value){
     var v=withoutBullet(String(value||"")).trim();
     if(/^(?:직무\s*개요|전문\s*지식|기타\s*사항)\s*[:：]?$/.test(v))return "unresolved";
+
+    if(/^(?:상세\s*내용을\s*입력하세요|채용\s*제목을\s*입력해\s*주세요|필수\s*기재\s*사항(?:\s*[:：].*)?|서류\s*전형|최종\s*합격|면접\s*전형)\s*$/i.test(v))return "unresolved";
+    if(/^※\s*(?:상세\s*공고|지원\s*방법|자세한\s*사항)/.test(v))return "unresolved";
+    if(/^\d{1,2}$/.test(v))return "unresolved";
+    if(/^.{2,80}\s+(?:0+|[1-9]\d{0,2}|○+)\s*명$/.test(v))return "unresolved";
+    if(/^(?:학력|전공|경력|역량)\s*[:：]\s*$/.test(v))return "unresolved";
+
     if(/^정보보호\s*[-–]\s*(?:BLUE|RED)$/i.test(v))return "role";
     if(/^(?:접수\s*기간|모집\s*기간(?:\s*및\s*마감일)?|마감일|접수\s*방법)\s*[:：]/.test(v))return "unresolved";
     if(/^[([（]?\s*(?:(?:모집|채용)\s*인원\s*[:：]?\s*)?(?:[○ㅇOo0-9]+|약간|다수)\s*명\s*[\])）]?$/.test(v))return "unresolved";
@@ -124,6 +145,31 @@
       // A blank line separates paragraphs even if the previous item was bulleted.
       if(!raw){prior=null;return;}
       out.sourceLines++;
+
+      // Public job boards sometimes flatten several [section] table cells into
+      // one physical line. Split by explicit source markers without inventing
+      // extra line numbers or transferring a preference into a requirement.
+      var joined=[...raw.matchAll(/\[\s*(담당\s*업무|주요\s*업무|자격\s*요건|지원\s*자격|우대\s*(?:사항|요건|조건))\s*\]/gi)];
+      if(joined.length>=2){
+        var prefix=raw.slice(0,joined[0].index).trim();
+        if(prefix){
+          out.unresolved.push({text:withoutBullet(prefix),line:ix+1,endLine:ix+1,source:original.trim(),kindHint:"표 형태 모집 직무·인원 후보 · 확인 필요"});
+          out.totalItems++;
+        }
+        joined.forEach(function(match,j){
+          var g=groupForLabel(match[1]);
+          if(!g)return;
+          var next=joined[j+1];
+          var value=raw.slice(match.index+match[0].length,next?next.index:raw.length).trim();
+          section=g;sectionLine=ix+1;prior=null;
+          if(value){
+            out[g].push({text:withoutBullet(value),line:ix+1,endLine:ix+1,source:original.trim(),sectionLine:sectionLine,kindHint:"한 원문 행에 여러 구역이 연결됨 · 원문 확인 필요"});
+            out.totalItems++;
+          }
+        });
+        return;
+      }
+
       var head=headingFor(raw);
       if(head&&head.preserveSection){prior=null;return;}
       if(head&&head.prefix){
@@ -194,6 +240,13 @@
       if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
       // A standalone explicit "... 우대" bullet is preferred even when it follows a compact required-qualifications table cell.
       if(!head&&kind==="required"&&cleaned.length<=90&&/\S.{2,}\s+우대\s*$/.test(cleaned))kind="preferred";
+
+      if(!head&&kind==="required"&&/(?:채용\s*시\s*우대(?:함|합니다)?|우대(?:함|합니다|대상)?|서류\s*전형\s*시\s*가점\s*부여|가점\s*부여)\s*$/.test(cleaned))kind="preferred";
+      // Employment, application and welfare labels are not qualifications.
+      if(!head&&/^(?:근무\s*(?:형태|일시|요일|시간|지|지역|조건)|채용\s*형태|제출\s*서류|접수\s*(?:방법|기간)|전형\s*절차|지원\s*방법|지원\s*서류)\s*[:：]/.test(cleaned)){
+        kind="unresolved";section="unresolved";skillContext=false;prior=null;
+      }
+
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if(!head&&/^※\s*(?:기술|관리).{0,60}포지션.{0,40}채용/.test(raw))kind="unresolved";
@@ -227,6 +280,8 @@
         return;
       }
       var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim(),sectionLine:sectionLine};
+      if((kind==="required"||kind==="preferred")&&/^(?:관리진단|기술진단)\s*컨설팅\s*\([^)]*\)$/.test(cleaned))item.sectionHeading=true;
+
       if(kind==="unresolved"&&skillContext)item.kindHint="원문 스킬 참고 정보 · 필수·우대 여부 미확정";
       if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
       if(suspectedHeading)item.kindHint="제목으로 보이는 문구 · 분류 및 아래 구간을 확인해 주세요";
