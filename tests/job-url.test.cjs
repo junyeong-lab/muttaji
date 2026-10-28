@@ -122,3 +122,22 @@ test("pathologically deep or tag-dense HTML is rejected before DOM construction"
  assert.throws(()=>extractPosting("<div>".repeat(301)+"</div>".repeat(301),url),{code:"TOO_LARGE"});
  assert.throws(()=>extractPosting("<br>".repeat(12001),url),{code:"TOO_LARGE"});
 });
+
+test("job posting with several separate role sections exposes a warning rather than silently merging roles",async()=>{
+ const [,,{extractPosting}]=await modules;
+ const src=[
+  "<html><main>",
+  "<h2>담당 업무</h2><p>클라우드 네트워크 구축과 보안 운영 업무를 담당합니다.</p>",
+  "<h2>자격요건</h2><p>네트워크 운영 2년 이상의 실무경험</p>",
+  "<h2>우대사항</h2><p>CCNA 자격증 보유자 우대</p>",
+  "<h2>담당 업무</h2><p>데이터베이스 개발과 SQL 운영 업무를 담당합니다.</p>",
+  "<h2>자격요건</h2><p>SQL 데이터 모델링 경험</p>",
+  "<h2>우대사항</h2><p>SQLD 자격증 보유자 우대</p>",
+  "</main></html>"
+ ].join("");
+ const result=extractPosting(src,url);
+ assert.equal(result.contentStatus,"body");
+ assert.equal(result.warnings.some(x=>x.includes("여러 모집 포지션")),true);
+ assert.equal(result.reviewRequired,true);
+ assert.doesNotMatch(result.text,/보유 자격증을 확인했으므로 충족/);
+});
