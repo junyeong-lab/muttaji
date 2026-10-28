@@ -46,7 +46,7 @@ for(const entry of unique){
     continue;
   }
 
-  if(parsed.required.length>20&&parsed.preferred.length===0){
+  if(parsed.required.length>25){
     record.validation="requires-human-review";
     record.reason="SUSPICIOUS_REQUIRED_SPLIT";
     record.sectionHeadings=posting.text.split(/\r?\n/).filter(x=>/필수|우대|자격|요건|담당업무/.test(x)).slice(0,12).map(x=>x.slice(0,75));
