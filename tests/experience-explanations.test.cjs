@@ -283,3 +283,42 @@ test("동일 제품 언급과 다른 제품 언급을 구분하고 운영 경험
   const unrelated=get("정보자산 및 보안정책 점검");
   assert.equal(unrelated.inputEvidence.length,0);
 });
+
+test("웍스피어의 경력 연수, 정책 점검, 협업과 문서 작성을 혼동하지 않는다",()=>{
+  const posting=[
+    "필수조건",
+    "정보보호 또는 보안 솔루션 운영 분야에서 3년 이상의 실무 경험을 보유하신 분",
+    "보안 정책 변경, 장애 대응, 운영 절차 수립 및 개선 경험이 있으신 분",
+    "보안 이슈를 유관 부서와 원활히 협업하여 해결하고, 운영 내용을 명확히 문서화할 수 있으신 분"
+  ].join("\n");
+  const items=requirements(posting,{analyze});
+  assert.equal(items.length,3);
+  const profile={
+    experience:"[사이버보안 기획 및 점검 업무]\n- 사이버보안 관련 기관평가 준비 및 대응\n- 정보자산, 보안정책 및 취약점 점검\n- 주요 지휘관 보고용 월간 위협 분석 자료 작성",
+    skills:"- 보안 위협 동향 보고서 작성\n- 보안교육 및 부서 간 협업"
+  };
+  const out=buildAnalysis({posting,requirements:items,profile}).explanations;
+  assert.equal(out[0].topic,"security");
+  assert.match(out[0].explanation,/실무경력 기간이나 보안 솔루션 운영 경력을 확인·산정한 것은 아닙니다/);
+  assert.equal(out[1].topic,"security-operations");
+  assert.deepEqual(out[1].inputEvidence.map(x=>x.quote),["- 정보자산, 보안정책 및 취약점 점검"]);
+  assert.match(out[1].inputEvidence[0].label,/유사·연관 경험/);
+  assert.match(out[1].explanation,/정책 점검과 정책 변경은 다른 활동/);
+  assert.equal(out[2].topic,"collaboration-documentation");
+  assert.ok(out[2].inputEvidence.some(x=>/보고용 월간 위협 분석 자료 작성/.test(x.quote)&&/문서 작성 관련/.test(x.label)));
+  assert.ok(out[2].inputEvidence.some(x=>/부서 간 협업/.test(x.quote)&&/협업 관련 입력/.test(x.label)));
+  assert.ok(out[2].inputEvidence.every(x=>!/교육·실습 입력/.test(x.label)));
+  assert.match(out[2].explanation,/동일한 보안 이슈를 공동 해결/);
+  assert.ok(out.every(x=>!Object.hasOwn(x,"status")&&!Object.hasOwn(x,"score")));
+  assert.ok(out.every(x=>x.postingEvidence.quote===posting.split("\n")[x.postingEvidence.line-1]));
+});
+
+test("정책 변경이 명시된 입력과 일반 보안점검 입력을 구분한다",()=>{
+  const posting="필수조건\n보안 정책 변경, 장애 대응, 운영 절차 수립 및 개선 경험";
+  const items=requirements(posting,{analyze});
+  const direct=buildAnalysis({posting,requirements:items,profile:{experience:"보안정책 변경 및 운영 절차 수립"}}).explanations[0];
+  assert.equal(direct.topic,"security-operations");
+  assert.match(direct.inputEvidence[0].label,/조치 관련 입력/);
+  const unrelated=buildAnalysis({posting,requirements:items,profile:{experience:"사이버보안 관련 기관평가 준비 및 대응"}}).explanations[0];
+  assert.equal(unrelated.inputEvidence.length,0);
+});

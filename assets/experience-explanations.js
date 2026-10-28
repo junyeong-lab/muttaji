@@ -67,6 +67,19 @@
   // "security" words. A related input is evidence for discussion, never proof
   // that the named technology was operated or the qualification was met.
   const focusedTopics=[
+    {id:"security-operations",requirement:/보안\s*정책\s*변경|운영\s*절차\s*(?:수립|개선)/i,
+      profile:/보안\s*정책\s*(?:변경|수립|개선|설정)|(?:보안\s*)?장애\s*(?:대응|처리|복구)|운영\s*절차\s*(?:수립|개선)|보안\s*프로세스\s*(?:수립|개선)/i,
+      related:/보안\s*정책|운영\s*절차/i,
+      fields:["experience","skills"],
+      meaning:"보안정책 변경, 장애 대응, 운영 절차 수립·개선 등 실제로 수행한 조치를 요구하는 조건입니다.",
+      connection:"정책 점검과 정책 변경은 다른 활동입니다. 연결된 문구만으로 장애 대응이나 절차 수립·개선까지 수행했다고 판단하지 않습니다.",
+      action:"실제로 변경한 정책, 해결한 장애, 수립하거나 개선한 운영 절차가 있다면 각각 역할과 결과를 구분해 기록하세요."},
+    {id:"collaboration-documentation",requirement:/유관\s*부서[\s\S]{0,100}(?:문서화|문서|보고서|기록)/i,
+      profile:/협업|협의|조율|부서\s*간|유관\s*부서|문서화|보고용|보고서|(?:분석|보고)\s*자료\s*작성/i,
+      fields:["experience","skills"],
+      meaning:"보안 이슈를 유관 부서와 함께 해결하는 역량과 운영 내용을 문서로 남기는 역량을 함께 요구하는 조건입니다.",
+      connection:"협업과 보고·문서 작성 근거를 각각 연결했습니다. 별개의 경험이 있다고 해서 동일한 보안 이슈를 공동 해결하고 운영 내용을 문서화했다는 뜻은 아닙니다.",
+      action:"공동 해결한 보안 이슈가 있다면 협업 대상과 본인 역할을, 문서화한 내용이 있다면 자료의 용도와 작성 범위를 별도로 정리하세요."},
     {id:"aws",requirement:/\bAWS\b|Amazon\s+Web\s+Services|아마존\s*웹\s*서비스/i,
       profile:/\bAWS\b|Amazon\s+Web\s+Services|아마존\s*웹\s*서비스/i,
       fields:["experience","skills"],
@@ -116,6 +129,19 @@
   function profileLinkKind(topic,quote,requirementText=""){
     if(!topic.focused){
       if(learningEvidence.test(quote))return "교육·실습 입력";
+      return null;
+    }
+    if(topic.id==="security-operations"){
+      if(topic.profile.test(quote))return "조치 관련 입력(정책 변경·장애 대응·절차 개선은 별도 확인)";
+      if(topic.related?.test(quote))return "유사·연관 경험(정책 점검과 정책 변경은 다름)";
+      return null;
+    }
+    if(topic.id==="collaboration-documentation"){
+      const cooperation=/협업|협의|조율|부서\s*간|유관\s*부서/i.test(quote);
+      const documentation=/문서화|보고용|보고서|(?:분석|보고)\s*자료\s*작성/i.test(quote);
+      if(cooperation&&documentation)return "협업·문서 관련 입력(보안 이슈 해결 여부 미확인)";
+      if(cooperation)return "협업 관련 입력(보안 이슈 해결 여부 미확인)";
+      if(documentation)return "보고·문서 작성 관련 입력(운영 내용 문서화 여부 미확인)";
       return null;
     }
     if(topic.id==="security-tools"){
@@ -199,7 +225,7 @@
             : topic.focused?!!profileLinkKind(topic,ref.quote,item.text):topic.profile.test(ref.quote);
           if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote))){
             const linkKind=profileLinkKind(topic,ref.quote,item.text);
-            const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":learningEvidence.test(ref.quote)?"교육·실습 입력":linkKind;
+            const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":(topic.id==="collaboration-documentation"&&/협업|협의|조율|부서\s*간/i.test(ref.quote))?linkKind:learningEvidence.test(ref.quote)?"교육·실습 입력":linkKind;
             evidence.push({...ref,label:note?ref.label+" · "+note:ref.label});
           }
           if(evidence.length>=3)break;
@@ -209,6 +235,8 @@
       const hasPlan=evidence.some(ref=>planned.test(ref.quote));
       const hasAbsence=evidence.some(ref=>absent.test(ref.quote));
       let explanation=evidence.length?topic.connection:"현재 입력에서 이 조건에 연결할 문구를 찾지 못했습니다. 선택한 상태는 그대로 유지합니다.";
+      if(topic.id==="security"&&/\d+\s*년|경력|실무/.test(item.text)&&evidence.length)
+        explanation+=" 관련 보안 업무 입력을 연결했을 뿐, 요구한 실무경력 기간이나 보안 솔루션 운영 경력을 확인·산정한 것은 아닙니다.";
       if(topic.focused&&evidence.length){
         if(evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
           explanation+=" 연결된 교육·실습 이력은 업무 실적이나 실제 운영 경력의 증빙이 아닙니다.";
