@@ -19,7 +19,7 @@ for(const entry of corpus){
   if(!key)throw Error("URL identifier absent");
   if(!seen.has(entry.site+":"+key)){seen.add(entry.site+":"+key);unique.push(entry);}
 }
-if(unique.length>50)throw Error("50 posting safety cap");
+if(unique.length!==50)throw Error("Expected 50 distinct posting URLs");
 const importer=createImporter();
 const profile={
   "goal-job":"정보보안·개인정보보호·IT 서비스·데이터 분야",
@@ -45,6 +45,13 @@ for(const entry of unique){
     rows.push(record);
     continue;
   }
+  // A suspicious one-sided large split must not be counted as verified.
+  if(parsed.preferred.length>30||(parsed.required.length===0&&parsed.preferred.length>10)){
+    record.validation="requires-human-review";
+    record.reason="SUSPICIOUS_PREFERRED_SPLIT";
+    rows.push(record);
+    continue;
+  }
   const items=requirements(posting.text,{analyze});
   if(!items.length){record.validation="requires-human-review";record.reason="NO_REQUIRED_OR_PREFERRED";rows.push(record);continue;}
   const decisions=items.map(item=>{
@@ -64,6 +71,7 @@ for(const entry of unique){
    record.reason=error.code||error.name||"UNKNOWN";
    if(["ROBOTS_DENIED","ROBOTS_UNAVAILABLE","ACCESS_DENIED","BOT_CHALLENGE","LOGIN_REQUIRED"].includes(record.reason))record.blocker="source-access";
    else if(["PARTIAL_POSTING","NO_POSTING","TIMEOUT","NO_REQUIRED_OR_PREFERRED"].includes(record.reason))record.blocker="insufficient-public-content";
+   else if(record.reason==="IMAGE_POSTING")record.blocker="source-format-image";
    else record.blocker="investigate";
  }
  rows.push(record);
