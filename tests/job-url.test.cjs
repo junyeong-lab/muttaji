@@ -148,3 +148,13 @@ test("public URL import timeout budget stays below the function duration and bro
  assert.ok(LIMITS.timeoutMs<19000,"client must outlive the server's bounded importer");
  assert.ok(LIMITS.timeoutMs<20000,"importer must finish before Vercel's URL function limit");
 });
+
+
+test("unfilled real employer template is incomplete, not valid required/preferred evidence",async()=>{
+ const [,,{extractPosting}]=await modules;
+ const markup="<html><body><main><h1>정보통신 엔지니어</h1><h2>담당업무</h2><p>상세내용을 입력하세요</p><p>상세내용을 입력하세요</p><h2>자격요건</h2><p>학력 무관</p><h2>우대사항</h2><p>상세내용을 입력하세요</p></main></body></html>";
+ const result=extractPosting(markup,url);
+ assert.equal(result.contentStatus,"partial");
+ assert.equal(result.reviewRequired,true);
+ assert.equal(result.warnings.some(x=>x.includes("미작성")||x.includes("입력하지 않은")),true);
+});
