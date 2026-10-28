@@ -98,3 +98,23 @@ test("다른 경력·학력·기술 조건이나 모두 보유 조건까지 자�
   assert.equal(suggestion("정보처리기사 또는 정보보안기사")?.status,"충족");
   assert.equal(suggestion("SQLDP","SQLD"),null);
 });
+
+test("우대 자격증 나열 중 보유한 정보처리기사를 본인 입력 기준으로 충족",()=>{
+  const item={kind:"preferred",text:"자격증 : 정보처리기사, 정보처리산업기사, 전기기사"};
+  const proposal=credentialSuggestion(item,"정보처리기사\nSQLD\n네트워크관리사 2급");
+  assert.equal(proposal?.status,"충족");
+  assert.deepEqual(proposal.names,["정보처리기사"]);
+  assert.match(proposal.reason,/회사 인정 여부는 별도 확인/);
+  assert.equal(assessment(item,proposal.status,proposal.reason).status,"충족");
+});
+test("필수 나열·모두 요구·경력 결합·다른 자격증은 자동 충족하지 않음",()=>{
+  const entries=[
+    {kind:"required",text:"자격증 : 정보처리기사, 정보처리산업기사, 전기기사"},
+    {kind:"preferred",text:"자격증 : 정보처리기사, 정보처리산업기사 및 전기기사"},
+    {kind:"preferred",text:"자격증 : 정보처리기사, 정보처리산업기사, 전기기사 모두"},
+    {kind:"preferred",text:"자격증 : 정보처리기사, 정보처리산업기사, 전기기사 및 경력 3년"},
+    {kind:"preferred",text:"자격증 : 정보처리산업기사, 전기기사"},
+    {kind:"preferred",text:"자격증 : 정보처리기사, 전기기사, 관련 실무 경력"}
+  ];
+  entries.forEach(item=>assert.equal(credentialSuggestion(item,"정보처리기사"),null,item.text));
+});
