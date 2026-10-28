@@ -169,11 +169,17 @@
   // Only an explicit, completed bachelor's degree can fulfill a standalone
   // "대졸 이상" requirement on a self-reported basis. Do not infer completion
   // from a school name, major, enrollment, expected graduation, or 2-year degree.
-  function degreeSuggestion(item,profileEducation){
-    if(!item||typeof item.text!=="string")return null;
-    const target=item.text.normalize("NFKC").replace(/\s+/g,"")
+  function degreeTarget(text){
+    return String(text||"").normalize("NFKC").replace(/\s+/g,"")
       .replace(/^[·ㆍ•*\-\d.)]+/,"").replace(/^(?:(?:최종)?학력)[:：]/,"")
       .replace(/[.!。]+$/,"");
+  }
+  function isUnrestrictedEducation(item){
+    return !!item&&typeof item.text==="string"&&/^(?:학력무관|학력제한없음)$/.test(degreeTarget(item.text));
+  }
+  function degreeSuggestion(item,profileEducation){
+    if(!item||typeof item.text!=="string")return null;
+    const target=degreeTarget(item.text);
     // No academic threshold: this standalone eligibility item needs no CV
     // evidence, even if the education field was not filled in.
     if(/^(?:학력무관|학력제한없음)$/.test(target))
@@ -228,7 +234,7 @@
         list.children[i]?.dataset.autoKind==="certificate" &&
         list.children[i]?.dataset.autoReason===outcome.explanation && !!outcome.explanation).length;
       const academic=outcomes.filter((outcome,i)=>outcome.status==="충족" &&
-        list.children[i]?.dataset.autoKind==="education" &&
+        list.children[i]?.dataset.autoKind?.startsWith("education") &&
         list.children[i]?.dataset.autoReason===outcome.explanation && !!outcome.explanation).length;
       summary.textContent="총 "+outcomes.length+"개 요건 · 충족 "+total["충족"]+" · 부분 충족 "+total["부분 충족"]+
         " · 미충족 "+total["미충족"]+" · 확인 필요 "+total["확인 필요"]+
@@ -237,8 +243,10 @@
         const card=list.children[i],flag=card.querySelector("[data-assessment-note]");
         const isAutomatic=outcome.status==="충족" &&
           card.dataset.autoReason===outcome.explanation && !!outcome.explanation;
-        const autoNote=card.dataset.autoKind==="education"
-          ?"학력 졸업 사실 자동 일치 · 본인 입력 기준이며 학위 증빙과 채용사 인정 여부는 별도 확인이 필요합니다."
+        const autoNote=card.dataset.autoKind==="education-unrestricted"
+          ?"학력 제한 없음 · 공고에 '학력무관'이 명시되어 학위와 관계없이 이 학력 조건을 충족합니다. 다른 지원 요건은 별도 확인이 필요합니다."
+          :card.dataset.autoKind==="education"
+          ?"학사 졸업 정보 자동 일치 · 본인 입력 기준이며 학위 증빙과 채용사 인정 여부는 별도 확인이 필요합니다."
           :"자격증명 자동 일치 · 보유 여부는 본인 입력 기준이며 실제 증빙은 별도 확인이 필요합니다.";
         if(flag)flag.textContent=outcome.needsReason
           ?"사유가 5자 이상 입력되기 전에는 '확인 필요'로 집계합니다."
@@ -312,7 +320,7 @@
         select.value=suggested?suggested.status:"확인 필요";
         if(suggested){
           card.dataset.autoReason=suggested.reason;
-          card.dataset.autoKind=certSuggestion?"certificate":"education";
+          card.dataset.autoKind=certSuggestion?"certificate":isUnrestrictedEducation(item)?"education-unrestricted":"education";
         }
         selectLabel.appendChild(select);
         card.appendChild(selectLabel);
@@ -341,5 +349,5 @@
     return {update,checkStale};
   }
   if(typeof document!=="undefined"&&typeof window!=="undefined")create();
-  return {requirements,assessment,tally,credentialSuggestion,degreeSuggestion,ownedCertificates,certificateMatches};
+  return {requirements,assessment,tally,credentialSuggestion,degreeSuggestion,isUnrestrictedEducation,ownedCertificates,certificateMatches};
 });
