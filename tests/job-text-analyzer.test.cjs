@@ -236,3 +236,38 @@ test("근무지 표시는 앞의 필수·모집 직무 구분을 이어받지 �
  const roles=analyze("모집\n정보보호 컨설턴트(관리)\n정보보호 컨설턴트(기술)");
  assert.equal(roles.role.length,2);
 });
+
+test("잡코리아 스킬 제목을 담당업무와 분리하고 이후 자격요건을 유지",()=>{
+  const source=[
+    "담당업무",
+    "ㆍ보안 솔루션 구축 및 기술 지원",
+    "스킬",
+    "ㆍ정보처리기사 자격, 정보처리산업기사 자격, 정보통신공사수첩, 전기기사 자격",
+    "자격요건",
+    "ㆍ학력 : 학력무관",
+    "ㆍ경력 : 신입·경력",
+    "우대사항",
+    "ㆍ문서 작성 가능자"
+  ].join("\n");
+  const o=analyze(source);
+  assert.deepEqual(o.responsibilities.map(x=>x.text),["보안 솔루션 구축 및 기술 지원"]);
+  assert.deepEqual(o.skills.map(x=>x.line),[4]);
+  assert.match(o.skills[0].text,/정보처리기사 자격/);
+  assert.deepEqual(o.required.map(x=>x.line),[6,7]);
+  assert.equal(o.preferred[0].line,9);
+  assert.equal(o.totalItems,5);
+});
+test("스킬만 등장하면 필수·우대로 추측하지 않고 스킬로만 분류",()=>{
+  for(const input of [
+    "스킬\nㆍ정보처리기사 자격\nㆍ정보통신공사수첩",
+    "기술 및 지식(원문)\nLinux, Python",
+    "Skills: 자격증 보유\n필수조건\nㆍ학력무관",
+    "담당업무\nㆍ기술지원\n기술 스택\nㆍJavaScript"
+  ]){
+    const result=analyze(input);
+    assert.ok(result.skills.length>=1,input);
+    assert.equal(result.responsibilities.some(x=>/정보처리기사|정보통신공사수첩|Linux|JavaScript/.test(x.text)),false,input);
+    assert.equal(result.required.some(x=>/정보처리기사|정보통신공사수첩|Linux|JavaScript/.test(x.text)),false,input);
+    assert.equal(result.preferred.length,0,input);
+  }
+});
