@@ -38,6 +38,13 @@ for(const entry of unique){
   if(posting.text.length>20000||posting.text.split(/\r?\n/).length>400)throw Object.assign(Error("input too large for browser parser"),{code:"PARSER_LIMIT"});
   const parsed=analyze(posting.text);
   record.sections={required:parsed.required.length,preferred:parsed.preferred.length,unresolved:parsed.unresolved.length};
+  if(parsed.required.length>20&&parsed.preferred.length===0){
+    record.validation="requires-human-review";
+    record.reason="SUSPICIOUS_REQUIRED_SPLIT";
+    record.sectionHeadings=posting.text.split(/\r?\n/).filter(x=>/필수|우대|자격|요건|담당업무/.test(x)).slice(0,12).map(x=>x.slice(0,75));
+    rows.push(record);
+    continue;
+  }
   const items=requirements(posting.text,{analyze});
   if(!items.length){record.validation="requires-human-review";record.reason="NO_REQUIRED_OR_PREFERRED";rows.push(record);continue;}
   const decisions=items.map(item=>{
