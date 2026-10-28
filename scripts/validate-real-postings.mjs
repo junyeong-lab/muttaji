@@ -38,6 +38,13 @@ for(const entry of unique){
   if(posting.text.length>20000||posting.text.split(/\r?\n/).length>400)throw Object.assign(Error("input too large for browser parser"),{code:"PARSER_LIMIT"});
   const parsed=analyze(posting.text);
   record.sections={required:parsed.required.length,preferred:parsed.preferred.length,unresolved:parsed.unresolved.length};
+  if(posting.warnings?.some(note=>typeof note==="string"&&note.startsWith("여러 모집 포지션"))){
+    record.validation="requires-human-review";
+    record.reason="MULTIPLE_ROLE_SECTIONS";
+    rows.push(record);
+    continue;
+  }
+
   if(parsed.required.length>20&&parsed.preferred.length===0){
     record.validation="requires-human-review";
     record.reason="SUSPICIOUS_REQUIRED_SPLIT";
