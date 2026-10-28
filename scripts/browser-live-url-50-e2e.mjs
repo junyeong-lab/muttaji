@@ -1,3 +1,4 @@
+// Verify the final 25 JobKorea + 25 Saramin corpus after live-checked network source replacement.
 // Revalidate the deployed 17-second bounded importer and 19-second client timeout.
 // Live production URL-button-to-roadmap browser test, sequential public requests.
 import fs from "node:fs";
