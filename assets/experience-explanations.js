@@ -85,7 +85,7 @@
       related:/보안\s*장비\s*점검|네트워크\s*보안\s*장비/i,
       fields:["experience","skills"],
       meaning:"구체적인 보안 제품·장비의 구축 또는 운영 경험을 요구하는 조건입니다.",
-      connection:"보안 제품명 또는 구체적 장비 운영·구축 관련 입력만 연결했습니다. 일반적인 보안점검 이력은 제품 운영 경력으로 보지 않습니다.",
+      connection:"보안 제품명 또는 구체적 장비 운영·구축 관련 입력만 연결했습니다. 요구 제품과 다른 기술의 프로젝트는 유사 경험으로만 표시하며, 일반 보안점검 이력은 제품 운영 경력으로 보지 않습니다.",
       action:"실제 취급한 솔루션명과 구축·운영·장애 대응 범위, 실습과 실무의 차이를 구분해 정리하세요."},
     {id:"network-protocols",requirement:/TCP\s*\/\s*IP|HTTP(?:S|\/HTTPS)?|SSL\s*\/\s*TLS|주요\s*프로토콜|네트워크.{0,30}서버.{0,30}웹/i,
       profile:/TCP\s*\/\s*IP|HTTP(?:S|\/HTTPS)?|SSL\s*\/\s*TLS/i,
@@ -103,9 +103,42 @@
       action:"취약점 분석, 위협 분석, 실제 침해사고 대응 중 수행한 업무와 결과를 각각 구분해 기록하세요."}
   ];
   const learningEvidence=/교육(?:\s*(?:과정|수강|이수))?|실습|수강|스터디|학습|훈련/;
-  function profileLinkKind(topic,quote){
+  // Different security products are not interchangeable. Listing XDR in a
+  // profile is related context for an EDR/WAF vacancy, not evidence of
+  // operating the named products or troubleshooting a deployed solution.
+  const namedSecurityTools=[
+    {name:"WAF",pattern:/\bWAF\b/i},{name:"IPS",pattern:/\bIPS\b/i},
+    {name:"IDS",pattern:/\bIDS\b/i},{name:"EDR",pattern:/\bEDR\b/i},
+    {name:"EPP",pattern:/\bEPP\b/i},{name:"XDR",pattern:/\bXDR\b/i},
+    {name:"DLP",pattern:/\bDLP\b/i},{name:"방화벽",pattern:/방화벽/},
+    {name:"서버접근제어",pattern:/서버\s*접근제어/}
+  ];
+  function profileLinkKind(topic,quote,requirementText=""){
     if(!topic.focused){
       if(learningEvidence.test(quote))return "교육·실습 입력";
+      return null;
+    }
+    if(topic.id==="security-tools"){
+      const required=namedSecurityTools.filter(tool=>tool.pattern.test(requirementText)).map(tool=>tool.name);
+      const mentioned=namedSecurityTools.filter(tool=>tool.pattern.test(quote)).map(tool=>tool.name);
+      if(required.length){
+        if(mentioned.some(name=>required.includes(name)))
+          return "요구 제품명 일치(실제 운영 여부 미확인)";
+        if(mentioned.length)
+          return "유사·연관 프로젝트(공고 요구 제품과 다름)";
+        if(topic.profile.test(quote)||topic.related?.test(quote))
+          return "유사·연관 경험(공고 요구 제품 미확인)";
+        return null;
+      }
+      if(topic.profile.test(quote)){
+        // A security product name or project alone does not establish hands-on
+        // solution deployment, operations or incident troubleshooting.
+        if(/구축|운영|장애|트러블슈팅|유지보수/.test(requirementText)&&
+            !/구축|운영|장애|트러블슈팅|유지보수|설정|관리/.test(quote))
+          return "유사·연관 프로젝트(구축·운영 여부 미확인)";
+        return "관련 기술·업무 명시(실제 수행 확인 필요)";
+      }
+      if(topic.related?.test(quote))return "유사·연관 경험(동일 경험 아님)";
       return null;
     }
     if(topic.profile.test(quote))return "관련 기술·표준 명시";
@@ -163,9 +196,9 @@
             ? (genericCertificate
               ? topic.profile.test(ref.quote)&&!/미보유|미취득|준비\s*중|취득\s*예정|보유하지\s*않|취득하지\s*않|없습니다/.test(ref.quote)
               : (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote):ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());})))
-            : topic.focused?!!profileLinkKind(topic,ref.quote):topic.profile.test(ref.quote);
+            : topic.focused?!!profileLinkKind(topic,ref.quote,item.text):topic.profile.test(ref.quote);
           if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote))){
-            const linkKind=profileLinkKind(topic,ref.quote);
+            const linkKind=profileLinkKind(topic,ref.quote,item.text);
             const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":learningEvidence.test(ref.quote)?"교육·실습 입력":linkKind;
             evidence.push({...ref,label:note?ref.label+" · "+note:ref.label});
           }
@@ -179,7 +212,7 @@
       if(topic.focused&&evidence.length){
         if(evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
           explanation+=" 연결된 교육·실습 이력은 업무 실적이나 실제 운영 경력의 증빙이 아닙니다.";
-        if(evidence.some(ref=>ref.source==="profile"&&topic.related?.test(ref.quote)&&!topic.profile.test(ref.quote)))
+        if(evidence.some(ref=>ref.source==="profile"&&ref.label.includes("유사·연관")))
           explanation+=" 유사한 분야의 경험은 공고의 동일 기술·인증·업무를 수행했다는 뜻이 아닙니다.";
       }
       if(topic.id==="ai-usage"&&evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
