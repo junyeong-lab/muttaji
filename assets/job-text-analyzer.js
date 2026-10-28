@@ -10,7 +10,7 @@
     { group: "company", label: /^(?:기업명|회사명|회사|기업)$/i },
     { group: "role", label: /^(?:모집|모집\s*(?:직무|분야|포지션|부서|공고)|채용\s*(?:분야|포지션)|소속\s*부서|담당\s*부서|직무\s*명|직무|포지션)$/i },
     { group: "responsibilities", label: /^(?:담당\s*업무|주요\s*업무|주요\s*역할\s*및\s*수행\s*업무|직무\s*개요|수행\s*업무|업무\s*내용|직무\s*내용|하는\s*일|이런\s*(?:업무|일)(?:를|을)\s*(?:하시게|하게)\s*(?:될\s*(?:거예요|거에요|겁니다)|됩니다)|이런\s*일을\s*해요|합류(?:하면|해서)\s*(?:할|하게\s*될)\s*일|함께\s*(?:하실|할)\s*(?:업무|일))$/i },
-    { group: "skills", label: /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)(?:\s*\(원문\)?)?|기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)$/i },
+    { group: "unresolved", label: /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)(?:\s*\(원문\)?)?|기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)$/i },
     { group: "required", label: /^(?:공통\s*자격\s*요건|직무\s*필요\s*역량\s*및\s*자격\s*요건|필수(?:\s*(?:지원|자격|요건|조건|사항|역량|자격\s*요건))?|지원\s*자격(?:\s*요건)?|자격\s*요건|지원\s*요건|필수\s*조건|requirements|qualifications|이런\s*분(?:을|과)\s*(?:원해요|원합니다|찾아요|찾습니다|찾고\s*있어요|기다려요|모십니다)|이런\s*분이\s*필요해요|우리가\s*찾는\s*분|이런\s*분과\s*함께하고\s*싶어요)$/i },
     { group: "preferred", label: /^(?:우대(?:\s*(?:사항|조건|요건|자격|역량))?|preferred|plus|이런\s*(?:경험|역량)(?:이|을)?\s*있으면\s*(?:더\s*)?(?:좋아요|좋습니다|좋겠어요)|이런\s*분(?:이라면|이면)\s*더\s*좋아요|이런\s*점이\s*있으면\s*(?:더\s*)?좋아요|있으면\s*더\s*좋은\s*경험)$/i },
     { group: "unresolved", label: /^(?:근무\s*조건|근무\s*지역|복리\s*후생|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|공통\s*사항|지원\s*방법)$/i }
@@ -91,11 +91,12 @@
     if (typeof input !== "string") throw new TypeError("채용공고는 문자열이어야 합니다.");
     if (input.length > 20000) throw new RangeError("최대 20,000자까지 분석할 수 있습니다.");
     var text = input.replace(/\r\n?/g,"\n");
-    var out = { method: "rule-based", company: [], role: [], responsibilities: [], skills: [], required: [], preferred: [], unresolved: [], totalItems: 0, sourceLines: 0 };
+    var out = { method: "rule-based", company: [], role: [], responsibilities: [], required: [], preferred: [], unresolved: [], totalItems: 0, sourceLines: 0 };
     var section="unresolved";
     var roleHeaderLabel=null;
     var sectionLine=0;
     var workArea="";
+    var skillContext=false;
     var lines=text.split("\n");
     if (lines.length > 400) throw new RangeError("최대 400줄까지 분석할 수 있습니다.");
     var prior=null;
@@ -108,6 +109,7 @@
       if(head&&head.preserveSection){prior=null;return;}
       if (head) {
         section=head.group;
+        skillContext=section==="unresolved" && /^(?:스킬|기술\s*[··&/]\s*스킬|기술\s*(?:및\s*)?(?:지식|스킬)|기술\s*스택|테크\s*스택|보유\s*스킬|skill[s]?|tech\s*stack)/i.test(head.label||"");
         sectionLine=ix+1;
         roleHeaderLabel=section==="role"?head.label:null;
         if(section!=="responsibilities")workArea="";
@@ -163,7 +165,7 @@
       }
       // An explicit location label must not inherit a role or eligibility section.
       var isLocation=!head&&/^(?:근무\s*(?:지|지역|장소|주소))\s*[:：]\s*\S/.test(cleaned);
-      if(isLocation){kind="unresolved";section="unresolved";sectionLine=ix+1;roleHeaderLabel=null;prior=null;}
+      if(isLocation){kind="unresolved";section="unresolved";skillContext=false;sectionLine=ix+1;roleHeaderLabel=null;prior=null;}
       var nonRequirement=nonRequirementKind(cleaned);
       if(nonRequirement){kind=nonRequirement;prior=null;}
       if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
@@ -200,6 +202,7 @@
         return;
       }
       var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim(),sectionLine:sectionLine};
+      if(kind==="unresolved"&&skillContext)item.kindHint="원문 스킬 참고 정보 · 필수·우대 여부 미확정";
       if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
       if(suspectedHeading)item.kindHint="제목으로 보이는 문구 · 분류 및 아래 구간을 확인해 주세요";
       if(kind==="role"&&roleHeaderLabel&&/부서/.test(roleHeaderLabel))item.kindHint="모집 부서";
