@@ -63,6 +63,55 @@
       meaning:"관련 업무의 종류나 수행 기간에 관한 조건입니다.",connection:"입력한 업무 경험을 공고와 함께 살펴볼 수 있도록 연결했습니다. 경력 기간을 새로 계산하거나 추정하지 않습니다.",
       action:"이미 입력한 업무와 수행 기간을 경력 소개에 활용할 수 있습니다."}
   ];
+  // Specific technology/standard requirements take precedence over generic
+  // "security" words. A related input is evidence for discussion, never proof
+  // that the named technology was operated or the qualification was met.
+  const focusedTopics=[
+    {id:"aws",requirement:/\bAWS\b|Amazon\s+Web\s+Services|아마존\s*웹\s*서비스/i,
+      profile:/\bAWS\b|Amazon\s+Web\s+Services|아마존\s*웹\s*서비스/i,
+      fields:["experience","skills"],
+      meaning:"AWS 환경 또는 AWS 보안 서비스에 관한 조건입니다.",
+      connection:"AWS를 명시한 사용자 입력만 연결했습니다. 단순 언급·교육·실습과 실제 운영 경험은 다르며, 수행 범위는 별도 확인이 필요합니다.",
+      action:"AWS에서 실제로 다룬 서비스, 설정·운영 내용과 본인 역할을 구분해 작성하세요."},
+    {id:"isms-compliance",requirement:/ISMS(?:\s*-\s*P)?|보안\s*컴플라이언스|정보보호\s*관리\s*체계|인증\s*심사/i,
+      profile:/ISMS(?:\s*-\s*P)?|정보보호\s*관리\s*체계|보안\s*컴플라이언스|인증\s*심사/i,
+      related:/기관\s*평가|보안\s*감사|ISO\s*27001|심사\s*대응/i,
+      fields:["experience","skills"],
+      meaning:"보안 관리체계 및 인증·심사 대응 경험에 관한 조건입니다.",
+      connection:"관리체계·인증심사 관련 입력 또는 기관평가 등 유사 경험을 연결했습니다. 기관평가와 ISMS-P 인증심사는 동일한 수행 경험으로 간주하지 않습니다.",
+      action:"실제 수행한 평가·심사의 종류, 적용 기준과 본인 역할을 구분해 기술하세요. ISMS-P 참여 여부는 별도 확인해야 합니다."},
+    {id:"security-tools",requirement:/\b(?:WAF|IPS|IDS|EDR|EPP|XDR|DLP)\b|방화벽|서버\s*접근제어|보안\s*(?:장비|솔루션)\s*(?:운영|구축|유지보수|관리)/i,
+      profile:/\b(?:WAF|IPS|IDS|EDR|EPP|XDR|DLP)\b|방화벽|서버\s*접근제어|(?:보안\s*)?(?:솔루션|장비)\s*(?:운영|구축|유지보수|설정|관리)/i,
+      related:/보안\s*장비\s*점검|네트워크\s*보안\s*장비/i,
+      fields:["experience","skills"],
+      meaning:"구체적인 보안 제품·장비의 구축 또는 운영 경험을 요구하는 조건입니다.",
+      connection:"보안 제품명 또는 구체적 장비 운영·구축 관련 입력만 연결했습니다. 일반적인 보안점검 이력은 제품 운영 경력으로 보지 않습니다.",
+      action:"실제 취급한 솔루션명과 구축·운영·장애 대응 범위, 실습과 실무의 차이를 구분해 정리하세요."},
+    {id:"network-protocols",requirement:/TCP\s*\/\s*IP|HTTP(?:S|\/HTTPS)?|SSL\s*\/\s*TLS|주요\s*프로토콜|네트워크.{0,30}서버.{0,30}웹/i,
+      profile:/TCP\s*\/\s*IP|HTTP(?:S|\/HTTPS)?|SSL\s*\/\s*TLS/i,
+      related:/\b(?:GNS3|VLAN|OSPF|BGP)\b|라우팅|네트워크\s*(?:설계|구축|운영)|서버\s*(?:구축|운영)/i,
+      fields:["experience","skills"],
+      meaning:"네트워크·서버 환경과 프로토콜 이해에 관한 조건입니다.",
+      connection:"명시된 프로토콜 입력 또는 네트워크·서버 구축 관련 입력을 구분해 연결했습니다. 주변 기술 경험만으로 모든 프로토콜 이해를 확정하지 않습니다.",
+      action:"TCP/IP·HTTP/HTTPS·TLS 중 실제 이해하거나 실습한 내용을 구분해 확인하고 설명 자료를 준비하세요."},
+    {id:"incident-response",requirement:/제로\s*데이|제로데이|\bL7\b|침해\s*사고\s*대응|침해사고\s*대응|\bIR\b.*(?:실무|경험)/i,
+      profile:/제로\s*데이|제로데이|\bL7\b|침해\s*사고|침해사고|\bIR\b/i,
+      related:/(?:사이버\s*)?위협\s*분석|취약점\s*분석|침입\s*탐지/i,
+      fields:["experience","skills"],
+      meaning:"특정 위협 분석 또는 침해사고 대응 경험에 관한 조건입니다.",
+      connection:"침해사고 대응을 명시한 입력 또는 위협·취약점 분석 등 유사 경험을 구분해 연결했습니다. 분석 업무만으로 사고 대응 경험을 확정하지 않습니다.",
+      action:"취약점 분석, 위협 분석, 실제 침해사고 대응 중 수행한 업무와 결과를 각각 구분해 기록하세요."}
+  ];
+  const learningEvidence=/교육(?:\s*(?:과정|수강|이수))?|실습|수강|스터디|학습|훈련/;
+  function profileLinkKind(topic,quote){
+    if(!topic.focused){
+      if(learningEvidence.test(quote))return "교육·실습 입력";
+      return null;
+    }
+    if(topic.profile.test(quote))return "관련 기술·표준 명시";
+    if(topic.related?.test(quote))return "유사·연관 경험(동일 경험 아님)";
+    return null;
+  }
   const fallback={id:"general",meaning:"공고에 적힌 내용을 사용자 입력과 함께 살펴보는 항목입니다.",connection:"이 조건에 직접 입력한 내용을 설명의 근거로 함께 보여드립니다.",action:"입력한 경험 중 이 조건과 연결해 소개하고 싶은 내용을 지원 준비에 활용할 수 있습니다."};
   const planned=/예정|계획|준비\s*중|목표로|할\s*생각|구축할|개발할/;
   const absent=/없(?:음|습니다|어요|다)|미경험|미보유|하지\s*않|하지\s*못|아직.*(?:않|못)/;
@@ -96,7 +145,8 @@
       // the requirement to these lines, then display the unchanged source quote.
       const normalized=value=>value.normalize("NFKC").replace(/\s+/g," ").trim();
       if(!normalized(source).includes(normalized(fromItem)) && !normalized(source).includes(normalized(item.text)))throw new TypeError("공고 원문과 요건이 일치하지 않습니다.");
-      const topic=topics.find(entry=>entry.requirement.test(item.text))||fallback;
+      const focused=focusedTopics.find(entry=>entry.requirement.test(item.text));
+      const topic=focused?{...focused,focused:true}:(topics.find(entry=>entry.requirement.test(item.text))||fallback);
       // A broad "related certificate holder" condition can show self-reported
       // credentials as context, but does not imply the employer accepts them.
       // Named credentials must still be exact-matched against the posting.
@@ -112,8 +162,12 @@
             ? (genericCertificate
               ? topic.profile.test(ref.quote)&&!/미보유|미취득|준비\s*중|취득\s*예정|보유하지\s*않|취득하지\s*않|없습니다/.test(ref.quote)
               : (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote):ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());})))
-            : topic.profile.test(ref.quote);
-          if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote)))evidence.push({...ref});
+            : topic.focused?!!profileLinkKind(topic,ref.quote):topic.profile.test(ref.quote);
+          if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote))){
+            const linkKind=profileLinkKind(topic,ref.quote);
+            const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":linkKind;
+            evidence.push({...ref,label:note?ref.label+" · "+note:ref.label});
+          }
           if(evidence.length>=3)break;
         }
         if(evidence.length>=3)break;
@@ -121,6 +175,14 @@
       const hasPlan=evidence.some(ref=>planned.test(ref.quote));
       const hasAbsence=evidence.some(ref=>absent.test(ref.quote));
       let explanation=evidence.length?topic.connection:"현재 입력에서 이 조건에 연결할 문구를 찾지 못했습니다. 선택한 상태는 그대로 유지합니다.";
+      if(topic.focused&&evidence.length){
+        if(evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
+          explanation+=" 연결된 교육·실습 이력은 업무 실적이나 실제 운영 경력의 증빙이 아닙니다.";
+        if(evidence.some(ref=>ref.source==="profile"&&topic.related?.test(ref.quote)&&!topic.profile.test(ref.quote)))
+          explanation+=" 유사한 분야의 경험은 공고의 동일 기술·인증·업무를 수행했다는 뜻이 아닙니다.";
+      }
+      if(topic.id==="ai-usage"&&evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
+        explanation+=" 교육 이력은 실제 AI 자동화 수행 경험을 증명하지 않습니다.";
       if(genericCertificate&&evidence.length)
         explanation="자격증 입력란의 보유 자격증을 참고 근거로 연결했습니다. 해당 자격이 공고에서 말하는 '관련 자격증'에 해당하는지는 채용사의 인정 기준을 확인해야 합니다.";
       if(topic.id==="related-work"&&/인턴|알바/.test(item.text)&&evidence.length)explanation+=" 인턴·알바 표기만으로 다른 고용 형태의 경험을 배제하지 않습니다.";
