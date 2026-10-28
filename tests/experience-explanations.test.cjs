@@ -244,3 +244,42 @@ test("광범위한 보안 이력만 입력해도 특정 AWS·솔루션 구축 �
   assert.deepEqual(out.map(x=>x.basis),["not-linked","not-linked"]);
   assert.ok(out.every(x=>x.inputEvidence.length===0));
 });
+
+
+test("웍스피어의 WAF/EDR 운영과 보안솔루션 구축에 XDR 프로젝트를 동일한 경험으로 연결하지 않는다",()=>{
+  const posting=[
+    "필수조건",
+    "WAF, IPS, 방화벽, EDR/EPP, 서버 접근제어 등 보안 장비·솔루션 운영 경험이 있으신 분",
+    "우대사항",
+    "다양한 인프라 환경에서 보안 솔루션을 구축하고 장애를 트러블슈팅한 경험이 풍부하신 분"
+  ].join("\n");
+  const items=requirements(posting,{analyze});
+  assert.equal(items.length,2);
+  const result=buildAnalysis({posting,requirements:items,profile:{
+    skills:"- XDR 보안 탐지·대응 관련 프로젝트"
+  }}).explanations;
+  assert.equal(result[0].topic,"security-tools");
+  assert.equal(result[1].topic,"security-tools");
+  assert.equal(result[0].inputEvidence.length,1);
+  assert.equal(result[1].inputEvidence.length,1);
+  assert.match(result[0].inputEvidence[0].label,/유사·연관 프로젝트\(공고 요구 제품과 다름\)/);
+  assert.match(result[1].inputEvidence[0].label,/유사·연관 프로젝트\(구축·운영 여부 미확인\)/);
+  assert.match(result[0].explanation,/요구 제품과 다른 기술/);
+  assert.match(result[1].explanation,/동일 기술·인증·업무를 수행했다는 뜻이 아닙니다/);
+  assert.ok(result.every(row=>row.basis==="topic-match"));
+  assert.ok(result.every(row=>!Object.hasOwn(row,"status")&&!Object.hasOwn(row,"score")));
+});
+
+test("동일 제품 언급과 다른 제품 언급을 구분하고 운영 경험을 추론하지 않는다",()=>{
+  const posting="필수조건\nWAF, IPS, EDR/EPP 보안 솔루션 운영 경험";
+  const items=requirements(posting,{analyze});
+  const get=skill=>buildAnalysis({posting,requirements:items,profile:{skills:skill}}).explanations[0];
+  const exact=get("EDR 운영 예정");
+  assert.equal(exact.inputEvidence.length,1);
+  assert.match(exact.inputEvidence[0].label,/계획·준비 입력/);
+  assert.doesNotMatch(exact.explanation,/운영 경험을 보유합니다|운영 요건을 충족/);
+  const other=get("XDR 탐지 프로젝트");
+  assert.match(other.inputEvidence[0].label,/공고 요구 제품과 다름/);
+  const unrelated=get("정보자산 및 보안정책 점검");
+  assert.equal(unrelated.inputEvidence.length,0);
+});
