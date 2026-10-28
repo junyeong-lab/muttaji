@@ -11,7 +11,7 @@
 - [50건 공고별 필수·우대 추출 및 후속 주의점 매트릭스](./real-posting-50-semantic-matrix.md)
 - [Codex 후속 처리 목록](./codex-semantic-backlog-50.md)
 - 최종 교체 목록에 대한 실제 원문 50건 수집·분류 자료: [GitHub Actions #40723619518](https://github.com/junyeong-lab/muttaji/actions/runs/40723619518)
-- 최신 파서로 고정된 동일 원문 50건 재분류: [GitHub Actions #40724265669](https://github.com/junyeong-lab/muttaji/actions/runs/40724265669). 필수 236개, 우대 223개. **항목 수 = 정답 검증 완료가 아닙니다.**
+- 최신 파서로 고정된 동일 원문 50건 재분류: [GitHub Actions #40724265669](https://github.com/junyeong-lab/muttaji/actions/runs/40725308047). 필수 235개, 우대 223개. **항목 수 = 정답 검증 완료가 아닙니다.**
 - 운영 URL 버튼 전체 최종 재검증: [GitHub Actions #40724498250](https://github.com/junyeong-lab/muttaji/actions/runs/40724498250) (완료 및 성공 여부는 해당 로그에서 별도로 확인)
 
 ## 실제 운영 웹앱 50건 최종 브라우저 검증 (2026-10-29 KST)
