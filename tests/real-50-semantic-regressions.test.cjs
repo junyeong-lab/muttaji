@@ -88,3 +88,10 @@ test("지원 시 제출할 SQL 코드와 포트폴리오는 기술 요건으로 
  assert.deepEqual(texts(s,"required"),["SQL 초급 이상"]);
  assert.equal(texts(s,"unresolved").some(x=>x.includes("포트폴리오 제출")),true);
 });
+
+
+test("번호가 매겨진 DW ETL/ELT 필수조건의 다음 행 이어짐은 하나의 조건",()=>{
+ const s=["지원자격","3. DW(Data Warehouse) 및 데이터 수집·가공·적재(ETL/ELT)","프로세스에 대한 이해도가 있는 자","4. 데이터베이스 장애 분석 경험자","우대사항 (경력)","3. 유관 부서와의 원활한 기술 협의 및 협업 역량 보유자"].join("\n");
+ assert.deepEqual(texts(s,"required"),["DW(Data Warehouse) 및 데이터 수집·가공·적재(ETL/ELT) 프로세스에 대한 이해도가 있는 자","데이터베이스 장애 분석 경험자"]);
+ assert.deepEqual(texts(s,"preferred"),["유관 부서와의 원활한 기술 협의 및 협업 역량 보유자"]);
+});

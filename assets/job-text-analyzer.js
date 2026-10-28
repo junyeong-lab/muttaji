@@ -293,6 +293,7 @@
       }
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
           (cleaned.length<=16 || certExample ||
+           (/\bETL\/ELT\)\s*$/.test(prior.item.text)&&/^프로세스(?:에|를|의|\s)/.test(cleaned)) ||
            /(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text))) {
         prior.item.text += /[\/／]$/.test(prior.item.text) ? cleaned : " "+cleaned;
         prior.item.source += "\n"+original.trim();
