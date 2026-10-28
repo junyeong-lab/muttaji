@@ -166,7 +166,7 @@
             : topic.focused?!!profileLinkKind(topic,ref.quote):topic.profile.test(ref.quote);
           if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote))){
             const linkKind=profileLinkKind(topic,ref.quote);
-            const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":linkKind;
+            const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":learningEvidence.test(ref.quote)?"교육·실습 입력":linkKind;
             evidence.push({...ref,label:note?ref.label+" · "+note:ref.label});
           }
           if(evidence.length>=3)break;
