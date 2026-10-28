@@ -163,3 +163,84 @@ test("학력무관은 졸업 증빙을 요구하는 조건처럼 설명하지 �
   assert.doesNotMatch(result.interpretation,/졸업예정 여부/);
   assert.equal(selected.status,"충족");
 });
+
+
+test("웍스피어 13개 요건: 일반 보안점검은 AWS·장비 운영·IR 직접경험으로 연결하지 않는다",()=>{
+  const posting=[
+    "필수조건",
+    "정보보호 또는 보안 솔루션 운영 분야에서 3년 이상의 실무 경험을 보유하신 분",
+    "WAF, IPS, 방화벽, EDR/EPP, 서버 접근제어 등 보안 장비·솔루션 운영 경험이 있으신 분",
+    "보안 이벤트와 로그를 분석하고, 이상 징후·침해사고의 원인을 파악해 대응할 수 있으신 분",
+    "네트워크·서버·웹 서비스 환경 및 TCP/IP, HTTP/HTTPS, SSL/TLS 등 주요 프로토콜을 이해하고 계신 분",
+    "보안 정책 변경, 장애 대응, 운영 절차 수립 및 개선 경험이 있으신 분",
+    "보안 이슈를 유관 부서와 원활히 협업하여 해결하고, 운영 내용을 명확히 문서화할 수 있으신 분",
+    "우대사항",
+    "ISMS-P 등 보안 컴플라이언스 체계 구축·심사 대응 경험이 있으신 분",
+    "다양한 인프라 환경에서 보안 솔루션을 구축하고 장애를 트러블슈팅한 경험이 풍부하신 분",
+    "L7 애플리케이션 계층 위협 분석, 제로데이 취약점 분석, 침해사고 대응(IR) 실무 경험이 있으신 분",
+    "망분리 환경에서 AI 관련 보안 리스크를 검토하고, 안전한 업무 적용 및 보안 프로세스 개선을 수행한 경험이 있으신 분",
+    "n8n 또는 AI를 활용해 보안 운영·분석·보고 업무를 자동화한 경험이 있으신 분",
+    "AWS 환경 및 주요 보안 서비스에 대한 이해 또는 운영 경험이 있으신 분",
+    "정보보안기사, CISA, CISSP 등 정보보안 관련 자격증을 보유하신 분"
+  ].join("\n");
+  const items=requirements(posting,{analyze});
+  assert.equal(items.length,13);
+  const userProfile={
+    experience:"[사이버보안 기획 및 점검 업무]\n- 사이버보안 관련 기관평가 준비 및 대응\n- 정보자산, 보안정책 및 취약점 점검\n- 주요 지휘관 보고용 월간 위협 분석 자료 작성",
+    skills:"- Wazuh SIEM 구축 및 보안 로그 분석 실습\n- 보안 위협 동향 보고서 작성\n- 보안교육 및 부서 간 협업\n- SKT ALEPH AI 인프라 운영·AI Agent 실무 교육과정",
+    certs:"정보처리기사\nSQLD\n네트워크관리사 2급"
+  };
+  const result=buildAnalysis({posting,requirements:items,profile:userProfile,certificateMatcher:certificateMatches}).explanations;
+  assert.equal(result.length,13);
+  assert.equal(result[0].topic,"security");
+  assert.ok(result[0].inputEvidence.length>0); // General infosec background remains relevant; years not inferred.
+  for(const i of [1,3,7,11,12])assert.equal(result[i].inputEvidence.length,0,"unexpected broad link on item "+(i+1));
+  assert.equal(result[2].topic,"logs");
+  assert.match(result[2].inputEvidence[0].quote,/Wazuh/);
+  assert.match(result[2].inputEvidence[0].label,/교육·실습/);
+  assert.equal(result[6].topic,"isms-compliance");
+  assert.equal(result[6].inputEvidence.length,1);
+  assert.match(result[6].inputEvidence[0].label,/유사·연관 경험/);
+  assert.match(result[6].explanation,/ISMS-P 인증심사는 동일한 수행 경험으로 간주하지/);
+  assert.equal(result[8].topic,"incident-response");
+  assert.ok(result[8].inputEvidence.every(x=>/유사·연관/.test(x.label)));
+  assert.equal(result[10].topic,"ai-usage");
+  assert.match(result[10].explanation,/교육 이력은 실제 AI 자동화 수행 경험을 증명하지/);
+  assert.equal(result[11].topic,"aws");
+  assert.equal(result[12].topic,"certificate");
+  assert.equal(result.some(x=>Object.hasOwn(x,"status")||Object.hasOwn(x,"score")),false);
+});
+
+test("고유 기술명을 쓴 경우만 연결하며 기술 언급·실습을 운영 경력으로 단정하지 않는다",()=>{
+  const posting=[
+    "우대사항",
+    "AWS 환경 및 주요 보안 서비스에 대한 이해 또는 운영 경험",
+    "ISMS-P 인증 심사 대응 경험",
+    "WAF·IPS·EDR 보안 솔루션 운영 경험",
+    "네트워크 TCP/IP, HTTP/HTTPS, SSL/TLS 주요 프로토콜 이해"
+  ].join("\n");
+  const reqs=requirements(posting,{analyze});
+  assert.equal(reqs.length,4);
+  const p={experience:"기관평가 준비 및 대응\nGNS3 네트워크 구축 및 VLAN 설정",skills:"AWS IAM 설정 실습\nEDR 운영 예정"};
+  const out=buildAnalysis({posting,requirements:reqs,profile:p}).explanations;
+  assert.equal(out[0].topic,"aws");
+  assert.match(out[0].inputEvidence[0].quote,/AWS/);
+  assert.match(out[0].inputEvidence[0].label,/교육·실습/);
+  assert.equal(out[1].topic,"isms-compliance");
+  assert.match(out[1].inputEvidence[0].label,/유사·연관/);
+  assert.equal(out[2].topic,"security-tools");
+  assert.match(out[2].inputEvidence[0].label,/계획·준비/);
+  assert.equal(out[3].topic,"network-protocols");
+  assert.match(out[3].inputEvidence[0].label,/유사·연관/);
+  assert.ok(out.every(x=>!Object.hasOwn(x,"status")));
+});
+
+test("광범위한 보안 이력만 입력해도 특정 AWS·솔루션 구축 요건과 잘못 연결되지 않는다",()=>{
+  const posting="우대사항\nAWS 운영 경험\n보안 솔루션을 구축하고 장애를 처리한 경험";
+  const reqs=requirements(posting,{analyze});
+  const profile={experience:"정보자산, 보안정책 및 취약점 점검\n사이버보안 기관평가 수행"};
+  const out=buildAnalysis({posting,requirements:reqs,profile}).explanations;
+  assert.deepEqual(out.map(x=>x.topic),["aws","security-tools"]);
+  assert.deepEqual(out.map(x=>x.basis),["not-linked","not-linked"]);
+  assert.ok(out.every(x=>x.inputEvidence.length===0));
+});
