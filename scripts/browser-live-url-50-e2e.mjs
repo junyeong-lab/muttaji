@@ -1,3 +1,4 @@
+// Revalidate the deployed 17-second bounded importer and 19-second client timeout.
 // Live production URL-button-to-roadmap browser test, sequential public requests.
 import fs from "node:fs";
 import {performance} from "node:perf_hooks";
