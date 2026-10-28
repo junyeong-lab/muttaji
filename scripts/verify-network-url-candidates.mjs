@@ -2,9 +2,9 @@ import {chromium} from "playwright";
 import {performance} from "node:perf_hooks";
 const root="https://project-muttaji.vercel.app";
 const candidates=[
- {id:"54767562",field:"네트워크",label:"원아이티 네트워크 보안 엔지니어"},
- {id:"54452855",field:"네트워크",label:"송우인포텍 정보통신 네트워크 엔지니어"},
- {id:"52726293",field:"네트워크",label:"대신네트웍스 엔지니어"}
+ {id:"53558904",field:"정보통신",label:"뉴콤시스 정보통신기술자"},
+ {id:"54571811",field:"정보통신",label:"오픈시스 정보통신기술자"},
+ {id:"53613803",field:"정보통신",label:"세이프로보 IoT 정보통신 기술자"}
 ];
 let browser;
 let passes=0;
