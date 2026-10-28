@@ -132,6 +132,22 @@
           reason:"공고에 나열된 자격증 예시 중 '"+names.join(", ")+"'가 보유 자격증 입력과 일치합니다. 이 자격증 보유 우대조건만 본인 입력 기준으로 충족 표시하며, 실제 취득 증빙과 회사 인정 여부는 별도 확인이 필요합니다."};
       }
     }
+    // Preferred lists titled "자격증: A, B, C" ordinarily name eligible
+    // examples, not a requirement to hold all three. Keep comma-only
+    // *required* lists unresolved unless alternatives are explicit.
+    const listed=String(item.text).trim().match(/^(?:우대\s*)?(?:관련\s*)?자격증\s*[:：]\s*(.+)$/i);
+    if(item.kind==="preferred"&&listed&&/[,，]/.test(listed[1])&&!otherRequirements&&!allRequired){
+      const entries=listed[1].split(/[,，]/).map(x=>x.trim()).filter(Boolean);
+      const certShape=/(?:기사|기능사|기술사|관리사|마스터|심사원|SQLD|SQLP|ADsP|ADP|CPPG|CISA|CISSP|CCNA|DAP|AICE)/i;
+      if(entries.length>=2&&entries.every(x=>certShape.test(x)&&!/\b(?:및|모두|각각|필수)\b/.test(x))){
+        const matches=mentioned.filter(x=>owned.some(name=>normCert(name)===normCert(x.name)));
+        if(matches.length){
+          const names=matches.map(x=>x.name);
+          return {status:"충족",names,
+            reason:"공고의 우대 자격증 목록 중 '"+names.join(", ")+"'가 보유 자격증 입력과 정확히 일치합니다. 한 가지 이상 보유한 경우로 해석해 이 우대항목만 본인 입력 기준 충족 표시하며, 모든 자격증을 요구하는지와 실제 취득 증빙·회사 인정 여부는 별도 확인이 필요합니다."};
+        }
+      }
+    }
     const alternatives=/(?:또는|혹은|택\s*1|택일|중\s*(?:한|1)|[/|])/i.test(item.text);
     const conjunction=/(?:및|모두|둘\s*다|동시|전부)/i.test(item.text);
     if(mentioned.length>1&&alternatives===conjunction)return null;
@@ -154,11 +170,15 @@
   // "대졸 이상" requirement on a self-reported basis. Do not infer completion
   // from a school name, major, enrollment, expected graduation, or 2-year degree.
   function degreeSuggestion(item,profileEducation){
-    if(!item||typeof item.text!=="string"||typeof profileEducation!=="string")return null;
+    if(!item||typeof item.text!=="string")return null;
     const target=item.text.normalize("NFKC").replace(/\s+/g,"")
       .replace(/^[·ㆍ•*\-\d.)]+/,"").replace(/^(?:(?:최종)?학력)[:：]/,"")
       .replace(/[.!。]+$/,"");
-    if(!/^(?:대졸(?:이상|이상자)?|학사(?:학위)?(?:이상|이상자)?|4년제(?:대학(?:교)?)?졸업(?:이상|이상자)?)$/.test(target))return null;
+    // No academic threshold: this standalone eligibility item needs no CV
+    // evidence, even if the education field was not filled in.
+    if(/^(?:학력무관|학력제한없음)$/.test(target))
+      return {status:"충족",reason:"공고에 학력 제한이 없다고 명시되어 있어 학위 보유 여부와 관계없이 학력 조건을 충족으로 표시합니다. 이는 학력 조건에 한정되며 다른 필수·우대요건은 별도 확인이 필요합니다."};
+    if(typeof profileEducation!=="string"||!/^(?:대졸(?:이상|이상자)?|학사(?:학위)?(?:이상|이상자)?|4년제(?:대학(?:교)?)?졸업(?:이상|이상자)?)$/.test(target))return null;
     const education=profileEducation.normalize("NFKC").replace(/\s+/g,"");
     if(/재학|휴학|중퇴|자퇴|제적|수료|미졸업|비졸업|졸업예정|졸업유예|졸업전|졸업하지않|졸업못|학위미취득|학위취득예정|전문학사|전문대|2년제|3년제|고졸|고등학교/.test(education))return null;
     const bachelor=/(?:학사|4년제)/.test(education);
