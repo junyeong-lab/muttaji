@@ -1,0 +1,38 @@
+name: Reclassify captured 50 real posting sources against current parser
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/reclassify-cached-50.mjs'
+      - '.github/workflows/reclassify-cached-50.yml'
+      - 'assets/job-text-analyzer.js'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: semantic-audit-50-source-and-classifications
+          run-id: 40721100626
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: baseline
+      - run: node scripts/reclassify-cached-50.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semantic-current-50-classifications
+          path: |
+            real-50-semantic-current.json
+            real-50-semantic-current-index.json
+          retention-days: 7
