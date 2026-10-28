@@ -71,3 +71,20 @@ test("명시적인 우대 조항은 다른 제목 아래서도 우대하고, 취
  assert.deepEqual(texts(s,"preferred"),["정보처리기사"]);
  assert.equal(texts(s,"unresolved").some(x=>x.includes("보훈대상자")),true);
 });
+
+
+test("검증 절차 안내는 우대 요건이 아니며 서류전형 우대는 유지",()=>{
+ const s=["우대사항","- 글로벌 역량 보유자","- * AI 스피킹 테스트 및 면접 과정에서 역량 검증","- * 공인 외국어 성적표 제출 시 서류전형 우대"].join("\n");
+ assert.deepEqual(texts(s,"preferred"),["글로벌 역량 보유자","* 공인 외국어 성적표 제출 시 서류전형 우대"]);
+});
+test("조기 마감과 공통 영어 우대가 한 행에 있어도 둘을 분리한다",()=>{
+ const p=analyze(["우대사항","- Python","* 인원 충원 시 조기마감 / (공통)영어 능통자 우대"].join("\n"));
+ assert.equal(p.preferred.some(x=>x.text==="(공통)영어 능통자 우대"),true);
+ assert.equal(p.unresolved.some(x=>x.text==="인원 충원 시 조기마감"),true);
+ assert.equal(p.preferred.some(x=>x.text.includes("조기마감")),false);
+});
+test("지원 시 제출할 SQL 코드와 포트폴리오는 기술 요건으로 단정하지 않는다",()=>{
+ const s=["자격요건","- SQL 초급 이상","- SQL 코드(필수), 데이터 분석 포트폴리오 제출(사용언어 코드)"].join("\n");
+ assert.deepEqual(texts(s,"required"),["SQL 초급 이상"]);
+ assert.equal(texts(s,"unresolved").some(x=>x.text.includes("포트폴리오 제출")),true);
+});

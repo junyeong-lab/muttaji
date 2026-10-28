@@ -119,6 +119,8 @@
     if(/^(?:직무\s*개요|전문\s*지식|기타\s*사항)\s*[:：]?$/.test(v))return "unresolved";
 
     if(/^(?:상세\s*내용을\s*입력하세요|채용\s*제목을\s*입력해\s*주세요|필수\s*기재\s*사항(?:\s*[:：].*)?|서류\s*전형|최종\s*합격|면접\s*전형)\s*$/i.test(v))return "unresolved";
+    if(/^(?:AI\s*스피킹\s*테스트|인성\s*검사|역량\s*검사).*(?:과정에서\s*역량\s*검증|실시|진행|예정)\s*$/.test(v))return "unresolved";
+    if(/(?:SQL|Python|R)\s*코드\s*\(필수\).*포트폴리오\s*제출/.test(v))return "unresolved";
 
     if(/^※\s*.*(?:자격증\s*취득\s*기회|자격증\s*취득\s*비용|취득\s*기회와\s*비용).*(?:지원|가능)/.test(v))return "unresolved";
 
@@ -174,6 +176,14 @@
           }
         });
         return;
+      }
+
+      // Split a mixed deadline/preference note on its explicit delimiter.
+      var mixedDeadline=raw.match(/^[*-]?\s*(인원\s*충원\s*시\s*조기\s*마감)\s*\/\s*(\((?:공통|신입|경력)\)\s*.+우대)\s*$/);
+      if(mixedDeadline){
+        out.unresolved.push({text:mixedDeadline[1],line:ix+1,endLine:ix+1,source:original.trim(),kindHint:"접수 기간 정보"});
+        out.preferred.push({text:mixedDeadline[2],line:ix+1,endLine:ix+1,source:original.trim(),kindHint:"원문 한 행에 마감 안내와 함께 기재된 우대"});
+        out.totalItems+=2;prior=null;return;
       }
 
       var head=headingFor(raw);
