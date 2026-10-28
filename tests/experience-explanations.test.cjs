@@ -343,5 +343,5 @@ test("교육 문구와 협업이 함께 있어도 협업 근거를 교육·실�
     skills:"SKT ALEPH AI Agent 실무 교육과정"
   }}).explanations[0];
   assert.match(ai.inputEvidence[0].label,/교육·실습 입력/);
-  assert.match(ai.explanation,/연결된 교육·실습 이력/);
+  assert.match(ai.explanation,/교육 이력은 실제 AI 자동화 수행 경험을 증명하지/);
 });
