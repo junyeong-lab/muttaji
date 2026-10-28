@@ -46,6 +46,7 @@
     result={...data,sourceUrl:source};get("job-url-draft").value=data.text;
     get("job-url-source").textContent=(payload.mode==="mock"?"가상 예제 · 실제 사이트 수집 아님 · ":"")+(data.contentStatus==="partial"?"일부 정보만 추출 · ":"")+"수집 출처: "+source+" · 방식: "+data.method;
     if(Array.isArray(data.warnings)&&data.warnings.some(note=>typeof note==="string"&&note.startsWith("여러 모집 포지션")))get("job-url-source").textContent+=" · 여러 직무가 포함된 공고입니다. 지원할 직무의 조건만 남겨서 확인하세요.";
+    if(Array.isArray(data.warnings)&&data.warnings.some(note=>typeof note==="string"&&note.startsWith("공고 작성자가 상세내용을 입력하지 않은")))get("job-url-source").textContent+=" · 공고에 미작성 항목이 있어 자동 분류 결과를 완전한 조건으로 볼 수 없습니다.";
     get("job-url-evidence").replaceChildren();
     const labels={company:"기업명",department:"모집 부서",role:"모집 직무",responsibilities:"담당업무",required:"필수조건",preferred:"우대사항",location:"근무지",deadline:"모집기간·마감일",skills:"기술·지식"};
     for(const [key,label] of Object.entries(labels))for(const entry of (Array.isArray(data.fields?.[key])?data.fields[key]:[]).slice(0,20)){
