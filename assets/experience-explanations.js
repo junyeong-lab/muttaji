@@ -26,6 +26,9 @@
       meaning:"문서·보고서 작성 역량과 관련된 조건입니다.",connection:"입력한 문서·보고자료 작성 경험을 연결했습니다. 작성 역량의 우수성을 자동 판정하지 않습니다.",action:"공개 가능한 범위에서 문서의 목적, 본인이 작성한 부분, 활용 결과를 소개할 수 있습니다."},
     {id:"related-work",requirement:/유관\s*업무|관련\s*업무/,profile:/업무|수행|담당|운영|점검|기관평가|위협|보안|보고|프로젝트/,fields:["experience"],
       meaning:"관련 업무를 수행한 경험에 관한 조건입니다.",connection:"입력한 관련 업무 경험을 연결했습니다.",action:"본인이 맡은 업무와 결과를 공고의 업무에 맞춰 소개할 수 있습니다. 회사의 경력 인정 여부는 별개입니다."},
+    {id:"unrestricted-degree",requirement:/^(?:학력\s*[:：]\s*)?학력\s*무관\s*$/i,profile:/$^/,fields:[],
+      meaning:"학력 제한이 없는 채용 조건입니다.",connection:"공고에 학력무관이 명시돼 있어 별도의 최저 학력 요건은 없습니다. 다른 지원 조건은 별도 확인이 필요합니다.",
+      action:"학력 요건 때문에 지원이 제한되지는 않습니다. 경력·기술·자격증 등 다른 요건을 확인하세요."},
     {id:"degree",requirement:/학력|학사|대졸|졸업/,profile:/대학교|대학|학사|학위|졸업|재학|졸업예정/,fields:["education"],
       meaning:"졸업·졸업예정 여부와 학위 수준에 관한 조건입니다.",connection:"입력한 학력 정보를 연결했습니다. 학교·전공명만으로 졸업 여부나 학위를 확정하지 않습니다.",
       action:"지원서에 실제 졸업·재학·졸업예정 상태와 해당 학위를 구분해 기재할 수 있습니다."},
@@ -126,6 +129,10 @@
       let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
       if(genericCertificate&&evidence.length)
         nextAction="자격증의 정확한 이름과 취득 사실을 확인하고, 지원 직무 관련성과 채용사 인정 여부를 원문 또는 채용 담당자에게 확인하세요.";
+      if(topic.id==="unrestricted-degree"){
+        explanation=topic.connection;
+        nextAction=topic.action;
+      }
       if(assessment?.status==="미충족"||assessment?.status==="부분 충족")nextAction+=" 보완하고 싶은 부분은 작은 학습·실습 과제로 나누어 시작할 수 있습니다.";
       // A degree is explicitly reported only when the education field states
       // completion. "졸업예정", attendance, or a school name alone never does.
