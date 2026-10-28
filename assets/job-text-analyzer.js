@@ -43,12 +43,12 @@
       return {group:"unresolved",value:"",label:normalized};
     if(/^(?:지원\s*대상|지원\s*대상자)$/i.test(normalized))
       return {group:"required",value:"",label:normalized};
-    if(/^우대\s*(?:사항|조건|요건)\s*\((?:경력|신입|공통)\)$/i.test(normalized))
+    if(/^우대\s*(?:사항|조건|요건)\s*\((?:경력|신입|공통)\)?$/i.test(normalized))
       return {group:"preferred",value:"",label:normalized};
     if(/^(?:채용\s*부문|모집\s*부문|포지션)$/i.test(normalized))
       return {group:"role",value:"",label:normalized};
     // Clear prior required/preferred/duty buckets at non-eligibility sections.
-    if(/^(?:근무\s*환경|근무\s*일시|근무\s*형태|근무\s*시간|근\s*무\s*지|오시는\s*길|근무\s*안내[·\s]*복지|세부\s*사항|채용\s*절차|절차\s*안내|제출\s*서류|전형\s*안내|팀\s*소개|지원\s*방법\s*및\s*전형\s*절차는|신입\s*사원\s*성장\s*지원|CELA만의\s*특별한\s*문화|풍부한\s*복리\s*후생|(?:업무|복지)\s*환경|함께\s*일할\s*팀|팀과\s*일하는\s*방식|기술\s*환경|인턴십\s*기간(?:\s*급여)?는|인턴십\s*근무\s*환경은|정규직\s*전환\s*시\s*더\s*많은\s*복지가\s*기다리고\s*있습니다|회사에\s*대해\s*더\s*알고\s*싶으시다면.+|[\[\(]?\s*(?:제출\s*서류|기술\s*환경)\s*[\]\)]?)$/i.test(normalized))
+    if(/^(?:근무\s*환경|근무\s*일시|근무\s*형태|근무\s*시간|근\s*무\s*지|오시는\s*길|근무\s*안내[·\s]*복지|세부\s*사항|채용\s*절차|절차\s*안내|제출\s*서류|전형\s*안내|팀\s*소개|지원\s*방법\s*및\s*전형\s*절차는|신입\s*사원\s*성장\s*지원|CELA만의\s*특별한\s*문화|풍부한\s*복리\s*후생|(?:업무|복지)\s*환경|함께\s*일할\s*팀|팀과\s*일하는\s*방식|기술\s*환경|인턴십\s*기간(?:\s*급여)?(?:은|는)|인턴십\s*근무\s*환경은|정규직\s*전환\s*시\s*더\s*많은\s*복지가\s*기다리고\s*있습니다|회사에\s*대해\s*더\s*알고\s*싶으시다면.+|[\[\(]?\s*(?:제출\s*서류|기술\s*환경)\s*[\]\)]?)$/i.test(normalized))
       return {group:"unresolved",value:"",label:normalized};
 
     // Public Korean posting sections: never carry a prior required/preferred
@@ -116,6 +116,9 @@
     if(/^(?:직무\s*개요|전문\s*지식|기타\s*사항)\s*[:：]?$/.test(v))return "unresolved";
 
     if(/^(?:상세\s*내용을\s*입력하세요|채용\s*제목을\s*입력해\s*주세요|필수\s*기재\s*사항(?:\s*[:：].*)?|서류\s*전형|최종\s*합격|면접\s*전형)\s*$/i.test(v))return "unresolved";
+
+    if(/^※\s*.*(?:자격증\s*취득\s*기회|자격증\s*취득\s*비용|취득\s*기회와\s*비용).*(?:지원|가능)/.test(v))return "unresolved";
+
     if(/^※\s*(?:상세\s*공고|지원\s*방법|자세한\s*사항)/.test(v))return "unresolved";
     if(/^\d{1,2}$/.test(v))return "unresolved";
     if(/^.{2,80}\s+(?:0+|[1-9]\d{0,2}|○+)\s*명$/.test(v))return "unresolved";
@@ -242,6 +245,12 @@
       if(!head&&kind==="required"&&cleaned.length<=90&&/\S.{2,}\s+우대\s*$/.test(cleaned))kind="preferred";
 
       if(!head&&kind==="required"&&/(?:채용\s*시\s*우대(?:함|합니다)?|우대(?:함|합니다|대상)?|서류\s*전형\s*시\s*가점\s*부여|가점\s*부여)\s*$/.test(cleaned))kind="preferred";
+
+      // A negative condition must never be treated as a positive requirement.
+      if(!head&&kind==="required"&&/필수(?:\s*조건)?(?:는|가)?\s*아닙니다/.test(cleaned))kind="unresolved";
+      // A single explicit preferential clause may appear outside the preference section.
+      if(!head&&kind==="unresolved"&&/(?:우대(?:함|합니다|대상)?|가점\s*부여)\s*[.!]?$/.test(cleaned)&&!/우대하지\s*않/.test(cleaned))kind="preferred";
+
       // Employment, application and welfare labels are not qualifications.
       if(!head&&/^(?:근무\s*(?:형태|일시|요일|시간|지|지역|조건)|채용\s*형태|제출\s*서류|접수\s*(?:방법|기간)|전형\s*절차|지원\s*방법|지원\s*서류)\s*[:：]/.test(cleaned)){
         kind="unresolved";section="unresolved";skillContext=false;prior=null;
@@ -250,7 +259,7 @@
       // Even inside a section, an explicitly contradictory label is never silently trusted.
       if (!head && /(?:필수.*우대|우대.*필수)/i.test(cleaned)) kind="unresolved";
       else if(!head&&/^※\s*(?:기술|관리).{0,60}포지션.{0,40}채용/.test(raw))kind="unresolved";
-      else if (!head && kind==="unresolved") kind=directGroup(cleaned)||"unresolved";
+      else if (!head && kind==="unresolved"&&!nonRequirement) kind=directGroup(cleaned)||"unresolved";
       // A short typo/variant that starts like a section title should remain
       // independently reviewable, not be merged into the preceding bullet.
       // Do NOT silently assume it is a valid heading or a preferred criterion.
@@ -280,6 +289,11 @@
         return;
       }
       var item={text:cleaned,line:ix+1,endLine:ix+1,source:original.trim(),sectionLine:sectionLine};
+
+      // Distinguish grouping captions from standalone qualification criteria.
+      if((kind==="required"||kind==="preferred")&&/^(?:\[(?:공통|경력|신입)\]|아래\s*역량을\s*보유하신\s*분)$/.test(cleaned))
+        item.sectionHeading=true;
+
       if((kind==="required"||kind==="preferred")&&/^(?:관리진단|기술진단)\s*컨설팅\s*\([^)]*\)$/.test(cleaned))item.sectionHeading=true;
 
       if(kind==="unresolved"&&skillContext)item.kindHint="원문 스킬 참고 정보 · 필수·우대 여부 미확정";

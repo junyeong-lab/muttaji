@@ -1,7 +1,7 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict");
 const {analyze}=require("./load-browser-module.cjs")("../assets/job-text-analyzer.js");
-const texts=(s,k)=>analyze(s).constructor===Object?analyze(s)[k].filter(x=>!x.sectionHeading).map(x=>x.text):[];
+const texts=(s,k)=>analyze(s)[k].filter(x=>!x.sectionHeading).map(x=>x.text);
 test("지원 대상: 학사와 경력은 필수, 우대사항과 사이트 안내는 우대에서 분리",()=>{
  const s=["채용 안내","지원 대상","- 학사 졸업자","- IT 경력 2년 이상","우대 사항","- SQLD 자격증","회사에 대해 더 알고 싶으시다면 홈페이지에서 확인하세요.","example.org"].join("\n");
  assert.deepEqual(texts(s,"required"),["학사 졸업자","IT 경력 2년 이상"]);
@@ -41,4 +41,32 @@ test("공고 템플릿의 상세내용 입력 안내는 우대조건이 아니�
  const s=["자격요건","- 학력무관","우대사항","- 상세내용을 입력하세요","- 정보보안기사"].join("\n");
  assert.deepEqual(texts(s,"required"),["학력무관"]);
  assert.deepEqual(texts(s,"preferred"),["정보보안기사"]);
+});
+
+test("우대사항 (경력) 표제는 해당 경력 우대 목록을 분리",()=>{
+ const s=["지원자격","- SQL 운영 경험","우대사항 (경력)","- PostgreSQL 운영 경험","- 팀 협업 경험"].join("\n");
+ assert.deepEqual(texts(s,"required"),["SQL 운영 경험"]);
+ assert.deepEqual(texts(s,"preferred"),["PostgreSQL 운영 경험","팀 협업 경험"]);
+});
+test("인턴십 기간은 복지·급여 구역으로 전환되고 이전 우대 목록에 남지 않는다",()=>{
+ const s=["우대 요건","- SQLD 보유","보안 솔루션 엔지니어에 지원하려면","- 학력요건 충족","인턴십 기간은","3개월 운영","인턴십 기간 급여는","월급 지급","인턴십 근무 환경은","간식 제공"].join("\n");
+ assert.deepEqual(texts(s,"preferred"),["SQLD 보유"]);
+ assert.equal(texts(s,"required").some(x=>x.includes("학력요건")),true);
+});
+test("필수 기재사항은 제출서류 메타데이터로 분류하며 우대를 받지 않는다",()=>{
+ const s=["제출서류","- 이력서","- 필수 기재사항","지원 분야를 적어주세요","자격요건","- 경력 2년"].join("\n");
+ assert.deepEqual(texts(s,"required"),["경력 2년"]);
+});
+test("경력별 우대 그룹 표제는 별도 요건 카운트에 포함하지 않는다",()=>{
+ const s=["자격요건","- 대졸 이상","우대사항","[공통]","- SQLD","[경력]","- 클라우드 구축 경험","[신입]","- 보안 교육 수료"].join("\n");
+ assert.deepEqual(texts(s,"preferred"),["SQLD","클라우드 구축 경험","보안 교육 수료"]);
+});
+test("필수가 아닙니다 문장은 필수 항목으로 주장하지 않고 확인 필요로 보존",()=>{
+ const s=["자격요건","- Python 필수","SQL 실무 경험은 필수가 아닙니다. 문제 해결 능력을 갖추신 분"].join("\n");
+ assert.deepEqual(texts(s,"required"),["Python 필수"]);
+ assert.equal(texts(s,"unresolved").some(x=>x.includes("필수가 아닙니다")),true);
+});
+test("명시적인 우대 조항은 다른 제목 아래서도 우대하고, 취득비 지원은 자격조건으로 세지 않는다",()=>{
+ const s=["공통 사항","- 국가보훈대상자는 관련법에 의거 우대합니다","자격요건","- 보안 운영 경험","우대사항","- 정보처리기사","※ 필요시 자격증 취득 기회와 비용 지원 가능"].join("\n");
+ assert.deepEqual(texts(s,"preferred"),["국가보훈대상자는 관련법에 의거 우대합니다","정보처리기사"]);
 });
