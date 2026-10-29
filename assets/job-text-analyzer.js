@@ -16,7 +16,7 @@
     { group: "unresolved", label: /^(?:근무\s*조건|근무\s*환경|근\s*무\s*지|근무\s*(?:일시|형태|시간)|근무\s*지역|복리\s*후생|풍부한\s*복리후생|제출\s*서류|절차\s*안내|채용\s*절차|채용\s*부문|모집부문상세내용|세부\s*사항|오시는\s*길|신입사원\s*성장\s*지원|CELA만의\s*특별한\s*문화|접수\s*(?:방법|기간)|모집\s*기간(?:\s*및\s*마감일)?|마감일|기타\s*사항|기타|회사\s*소개|전형\s*절차|유의\s*사항|공통\s*사항|지원\s*방법)$/i }
   ];
   // Korean screenshots frequently use U+318D 'ㆍ' instead of the middle dot '·'.
-  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■□◇▶▷▸▹●○◯]|[oO](?=\s)|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
+  var BULLET = /^\s*(?:[-*•·ㆍ∙▪◦◆■□◇▶▷▸▹●○◯]|[oOㅇ](?=\s|[\u0027’])|(?:\d{1,2}[.)])|(?:[가-하][.)]))\s*/;
   function withoutBullet(s) {
     return s.replace(BULLET, "").trim();
   }
@@ -123,6 +123,8 @@
   }
   function nonRequirementKind(value){
     var v=withoutBullet(String(value||"")).trim();
+    // Recruiting invitations are not a candidate skill or eligibility criterion.
+    if(/(?:많은\s*지원\s*바랍니다|많은\s*관심과\s*지원\s*부탁드립니다|지원\s*부탁드립니다)\s*[.!！]?$/.test(v))return "unresolved";
     if(/^(?:직무\s*개요|전문\s*지식|기타\s*사항)\s*[:：]?$/.test(v))return "unresolved";
 
     if(/^(?:상세\s*내용을\s*입력하세요|채용\s*제목을\s*입력해\s*주세요|필수\s*기재\s*사항(?:\s*[:：].*)?|서류\s*전형|최종\s*합격|면접\s*전형)\s*$/i.test(v))return "unresolved";
@@ -284,7 +286,8 @@
       // independently reviewable, not be merged into the preceding bullet.
       // Do NOT silently assume it is a valid heading or a preferred criterion.
       var suspectedHeading=!head&&!hasBullet&&
-        /^(?:우대|필수|자격|지원)[가-힣\s]{0,8}$/.test(cleaned)&&cleaned.length<=15;
+        /^(?:우대|필수|자격|지원)[가-힣\s]{0,8}$/.test(cleaned)&&cleaned.length<=15&&
+        !/(?:자격증|보유|소지|경험|가능|졸업|이수|능력|담당|\s분$|\s자$)/.test(cleaned);
       if(suspectedHeading)prior=null;
       // OCR often wraps a long bullet over two or more physical lines.
       // Join ONLY immediately adjacent, unbulleted continuation lines of an
@@ -303,7 +306,8 @@
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
           (cleaned.length<=16 || certExample ||
            (/\bETL\/ELT\)\s*$/.test(prior.item.text)&&/^프로세스(?:에|를|의|\s)/.test(cleaned)) ||
-           /(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text))) {
+           /(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text) ||
+           (/대한\s*기술적$/.test(prior.item.text)&&/^보호조치\s/.test(cleaned)))) {
         prior.item.text += /[\/／]$/.test(prior.item.text) ? cleaned : " "+cleaned;
         prior.item.source += "\n"+original.trim();
         prior.item.endLine=ix+1;

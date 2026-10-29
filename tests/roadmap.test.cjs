@@ -324,3 +324,27 @@ test("실공고 준비 로드맵은 도구 및 업무에 맞는 검증 과제를
   assert.match(steps.join(" "),expected,text);
  }
 });
+
+test("실공고 경력 무관/신입 지원 가능은 경력 연수 준비 과제가 아니다",()=>{
+ for(const text of ["경력 무관 (신입 지원 가능)","경력 : 경력 무관 (신입 지원 가능)","신입 / 경력 (연수 무관)","신입"]){
+  const item={kind:"required",text,status:"확인 필요"};
+  const steps=preparationSteps(item);
+  assert.equal(steps.length,3,text);
+  assert.match(steps.join(" "),/경력 기간 제한|신입 지원 가능/,text);
+  assert.doesNotMatch(steps.join(" "),/부족한 실무 경력|경력 기간을 채우|요구 경력의 종류/,text);
+ }
+});
+test("실공고 무학력 제한은 학위를 새로 취득하라고 안내하지 않는다",()=>{
+ for(const text of ["학력무관","학력 무관","학력 : 학력무관","최종학력 : 학력무관"]){
+  const steps=preparationSteps({kind:"required",text,status:"확인 필요"});
+  assert.equal(steps.length,3,text);
+  assert.match(steps.join(" "),/학력 제한이 없|학력 제한을 두지/,text);
+  assert.doesNotMatch(steps.join(" "),/학사 학위를 취득하세요/,text);
+ }
+});
+test("명시된 경력 3년과 경력자 전용 요구는 기존 경력 판단 안내를 유지한다",()=>{
+ for(const text of ["정보보호 경력 3년 이상","경력 : 경력(5년이상)"]){
+  const steps=preparationSteps({kind:"required",text,status:"확인 필요"});
+  assert.match(steps.join(" "),/수행 기간|실무 분야/,text);
+ }
+});

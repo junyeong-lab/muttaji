@@ -11,12 +11,26 @@
   // Keep all four states visible in user-requested order.
   const states=["확인 필요","미충족","부분 충족","충족"];
   const order={"확인 필요":0,"미충족":1,"부분 충족":2,"충족":3};
+  // Purely explicit unconditional eligibility statements. Do not treat mixed
+  // work-experience conditions as unrestricted.
+  function noExperienceThreshold(input){
+    const value=String(input||"").normalize("NFKC").replace(/\s+/g," ").trim();
+    return /^(?:경력\s*[:：]?\s*)?(?:경력\s*)?무관(?:\s*\(\s*신입\s*지원\s*가능\s*\))?$/.test(value)||
+      /^신입\s*[/·]\s*경력\s*\(\s*연수\s*무관\s*\)$/.test(value)||
+      /^(?:신입|신입\s*지원\s*가능)$/.test(value);
+  }
+  function noDegreeThreshold(input){
+    return /^(?:최종\s*)?학력\s*[:：]?\s*(?:학력\s*)?무관$/.test(
+      String(input||"").normalize("NFKC").replace(/\s+/g," ").trim());
+  }
   function nextAction(item){
     if(item.status==="확인 필요")
       return "공고 원문과 본인의 실제 이력·증빙을 대조하고, 내 역량 화면에서 상태를 직접 확정하세요.";
     if(item.status==="부분 충족")
       return "이미 갖춘 부분과 부족한 조건을 구분하세요. 부족한 부분에 대한 학습·경험 또는 추가 확인 계획을 정리하세요.";
     const text=item.text;
+    if(noExperienceThreshold(text))return "공고에 경력 기간 제한이 없다는 뜻입니다. 경력을 새로 채워야 하는 필수요건으로 해석하지 말고 신입 지원 가능 여부와 별도 조건을 확인하세요.";
+    if(noDegreeThreshold(text))return "공고에 학력 제한이 없다고 명시되어 있습니다. 다른 필수·우대조건은 별도로 확인하세요.";
     if(/경력|실무\s*경험|\d+\s*년\s*이상/.test(text))
       return "요구 경력의 종류·기간을 확인하세요. 부족한 실무 경력을 자격증이나 프로젝트로 대체할 수 있다고 단정하지 말고 채용 기준을 확인하세요.";
     if(/학력|전공|졸업|학사|석사/.test(text))
@@ -30,8 +44,20 @@
     if(!item||item.status==="충족")return [];
     const text=String(item.text||"").normalize("NFKC");
     let guide;
-    // Work-experience duration and educational credentials must not be replaced by lab work.
-    if(/L7|제로데이|제로\s*데이|\bIR\b/i.test(text)&&/분석|위협|사고|대응/.test(text)){
+    // Explicitly open-to-beginners/any-degree listings are not missing experience or degrees.
+    if(noExperienceThreshold(text)){
+      guide={
+        scope:"이 공고는 해당 항목에 경력 기간 제한을 두지 않았습니다. 신입 지원 가능 여부와 다른 직무별·기술별 조건을 분리해 확인하세요.",
+        evidence:"경력증명서나 연차를 새로 만들어야 하는 조건이 아닙니다. 실제 지원 유형과 별도로 요구하는 자격증·기술 조건만 확인하세요.",
+        prepare:"해당 조건만을 이유로 경력 연수를 채우라는 준비 과제를 만들지 마세요. 지원서의 실제 경력과 실습 이력을 구분해 기재하고 다른 조건을 점검하세요."
+      };
+    }else if(noDegreeThreshold(text)){
+      guide={
+        scope:"공고에 학력 제한이 없다고 명시되어 있습니다. 특정 학위를 별도로 취득해야 한다는 요건이 아닙니다.",
+        evidence:"본인의 실제 학력을 그대로 기재하고 학력과 무관한 자격증·기술·경력 조건은 별도로 확인하세요.",
+        prepare:"이 조건 때문에 학위를 취득하라고 권하지 말고, 공고의 다른 지원 자격과 필요 증빙을 확인하세요."
+      };
+    }else if(/L7|제로데이|제로\s*데이|\bIR\b/i.test(text)&&/분석|위협|사고|대응/.test(text)){
       guide={
         scope:"L7 위협 분석, 제로데이 취약점 정보 분석, 침해사고 대응(IR)을 별개의 수행 업무로 구분해 확인하세요.",
         evidence:"직접 분석한 위협 자료와 실제 사고 조사·대응에 참여한 기록을 구분하고 본인의 역할을 확인하세요.",
