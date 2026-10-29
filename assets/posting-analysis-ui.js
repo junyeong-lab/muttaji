@@ -14,10 +14,10 @@
   // Re-analysis or a manual correction revokes previously displayed verdicts.
   // Keep profile fields intact; do not silently leave stale comparison/roadmap on screen.
   const priorApproved=window.MuttajiReviewedPosting?.provenance==="ai-user-approved";
-  const panel=get("requirements-check"),wasVisible=panel&&!panel.hidden;
+  const panel=get("requirements-check");
   if(window.MuttajiReviewedPosting)window.MuttajiReviewedPosting=null;
   if(panel)panel.hidden=true;
-  if(priorApproved||wasVisible)window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
+  if(priorApproved)window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
   confirm.checked=false;approve.disabled=true;gate("draft");summary("검토안 · 미승인");
  }
  function invalidate(){generation++;controller?.abort();controller=null;busy=false;run.disabled=!ready;reviewer.invalidate();results.replaceChildren();confirm.checked=false;approve.disabled=true;consent.checked=false;gate("pending");get("posting-ai-review").hidden=true;if(window.MuttajiReviewedPosting?.provenance==="ai-user-approved")window.MuttajiReviewedPosting=null;const panel=get("requirements-check");if(panel)panel.hidden=true;window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));say("원문이 변경되어 이전 AI 분석과 승인이 무효화되었습니다.");}
