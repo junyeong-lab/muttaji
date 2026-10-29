@@ -96,7 +96,9 @@
     // Full-line marker "우대 사항" is a section boundary, not a
     // requirement item. This must reset the active section for all next rows.
     if (direct) return { group: direct, value: "", label: t.replace(/[:：]\s*$/, "").trim() };
-    // A populated location label is source evidence, not an empty section heading.\n    // Keep "근무지:" and the following wrapped address in the original item.\n    if(/^근무\\s*(?:지|지역|장소|주소)\\s*[:：]\\s*\\S/.test(t))return null;\n    var m = t.match(/^([^:：]{1,38})\s*[:：]\s*(.*)$/);
+    // A populated location label is source evidence, not an empty heading.
+    if(/^근무\s*(?:지|지역|장소|주소)\s*[:：]\s*\S/.test(t))return null;
+    var m=t.match(/^([^:：]{1,38})\s*[:：]\s*(.*)$/);
     if (m) {
       var group = groupForLabel(m[1]);
       if (group) return { group: group, value: m[2].trim(), label: m[1].trim() };
