@@ -451,3 +451,26 @@ test("실공고 37352299: 줄바꿈 보안 보호조치와 관련 자격증은 �
  assert.equal(cert.line,13);
  assert.equal(cert.endLine,14);
 });
+
+test("실공고 50172985: 홍보용 '많은 지원 바랍니다' 문장을 필수요건으로 판단하지 않는다",()=>{
+ const source=[
+  "지원자격",
+  "- SQL 및 RDBMS 실무 경험",
+  "- 데이터 이행, DW/OLAP 구축 경험을 바탕으로 함께 성장할 분들의 많은 지원 바랍니다.",
+  "우대사항",
+  "- Power BI 활용 경험"
+ ].join("\n");
+ const out=analyze(source);
+ assert.deepEqual(out.required.map(x=>x.text),["SQL 및 RDBMS 실무 경험"]);
+ assert.deepEqual(out.preferred.map(x=>x.text),["Power BI 활용 경험"]);
+ assert.equal(out.unresolved.some(x=>/많은 지원 바랍니다/.test(x.text)),true);
+});
+test("실공고 54832907: 사람인 원문 자모 'ㅇ' 표기를 조건에 섞지 않는다",()=>{
+ const source=["자격요건","ㅇ'27년 1월 입사 가능자(석사 이하)","ㅇ Network에 대한 높은 관심","ㅇ 새로운 업무에 대한 도전과 열정"].join("\n");
+ const out=analyze(source);
+ assert.equal(out.required.length,3);
+ assert.equal(out.required[0].text,"'27년 1월 입사 가능자(석사 이하)");
+ assert.equal(out.required[1].text,"Network에 대한 높은 관심");
+ assert.equal(out.required[2].text,"새로운 업무에 대한 도전과 열정");
+ assert.equal(out.required[0].source,"ㅇ'27년 1월 입사 가능자(석사 이하)");
+});
