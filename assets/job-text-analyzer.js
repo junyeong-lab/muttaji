@@ -284,7 +284,8 @@
       // independently reviewable, not be merged into the preceding bullet.
       // Do NOT silently assume it is a valid heading or a preferred criterion.
       var suspectedHeading=!head&&!hasBullet&&
-        /^(?:우대|필수|자격|지원)[가-힣\s]{0,8}$/.test(cleaned)&&cleaned.length<=15;
+        /^(?:우대|필수|자격|지원)[가-힣\s]{0,8}$/.test(cleaned)&&cleaned.length<=15&&
+        !/(?:자격증|보유|소지|경험|가능|졸업|이수|능력|담당|\s분$|\s자$)/.test(cleaned);
       if(suspectedHeading)prior=null;
       // OCR often wraps a long bullet over two or more physical lines.
       // Join ONLY immediately adjacent, unbulleted continuation lines of an
@@ -300,7 +301,6 @@
         prior.item.endLine=ix+1;
         return;
       }
-      if(cleaned==="자격증을 보유한 분" && typeof console!=="undefined") console.log("WRAP_TRACE",JSON.stringify({head:!!head,hasBullet,kind,priorKind:prior&&prior.kind,priorBullet:prior&&prior.bullet,priorText:prior&&prior.item.text,previousMatch:prior&&/(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text)}));
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
           (cleaned.length<=16 || certExample ||
            (/\bETL\/ELT\)\s*$/.test(prior.item.text)&&/^프로세스(?:에|를|의|\s)/.test(cleaned)) ||
