@@ -348,3 +348,58 @@ test("명시된 경력 3년과 경력자 전용 요구는 기존 경력 판단 �
   assert.match(steps.join(" "),/수행 기간|실무 분야/,text);
  }
 });
+
+test("처브라이프 6개 우대조건: 영어 이메일·MS Office·자격증 안내를 구분",()=>{
+  const descriptions=[
+    "해외 본사와 영어로 이메일 커뮤니케이션 (비즈니스 레벨 수준)",
+    "IT 보안업무 관련 경력자 우대",
+    "CISSP, CISA 등 IT 보안관련 자격증 자격증 소지자 우대",
+    "IT 보안/네트워크/시스템 운영 관련 전공자 우대",
+    "다양한 이해관계자와 원활한 의사소통 능력",
+    "MS office 활용능력(Excel, Powerpoint)"
+  ];
+  const items=descriptions.map((text,i)=>({kind:"preferred",text,status:"확인 필요",line:i+21}));
+  const plan=buildRoadmap(items);
+  assert.equal(plan.total,6);
+  assert.equal(plan.requiredOpen,0);
+  assert.equal(plan.totals["확인 필요"],6);
+  const steps=plan.tasks.map(task=>task.steps.join(" "));
+  for(const text of steps)assert.ok(text.length>45);
+  assert.match(steps[0],/영문 이메일|영문 업무 이메일/);
+  assert.match(steps[0],/취약점 조치 현황/);
+  assert.doesNotMatch(steps[0],/가상의 기술 이슈를 선정해 상황·원인·대안/);
+  assert.match(steps[1],/명시된 경우/);
+  assert.match(steps[1],/임의로 연수를 만들지/);
+  assert.match(steps[2],/CISSP·CISA/);
+  assert.match(steps[2],/채용 담당자에게 확인/);
+  assert.doesNotMatch(steps[2],/미보유 자격은 공식 시행기관/);
+  assert.match(steps[4],/이해관계자|문서·협업 능력/);
+  assert.doesNotMatch(steps[4],/영문 이메일/);
+  assert.match(steps[5],/Excel/);
+  assert.match(steps[5],/PowerPoint/);
+  assert.match(steps[5],/정렬·필터/);
+  assert.doesNotMatch(steps[5],/가상의 기술 이슈를 선정해 상황·원인·대안/);
+});
+test("필수조건 0개인 로드맵에서 모두 충족이라고 잘못 안내하지 않음",()=>{
+  class Element{
+    constructor(){this.children=[];this.hidden=false;this.textContent="";this.attributes={};}
+    appendChild(n){this.children.push(n);return n;}
+    replaceChildren(...nodes){this.children=[...nodes];}
+    setAttribute(k,v){this.attributes[k]=v;}
+  }
+  const ids=["roadmap-empty","roadmap-results","roadmap-summary","roadmap-list","roadmap-notice"];
+  const elements=Object.fromEntries(ids.map(id=>[id,new Element()]));
+  const events={},win={addEventListener:(name,fn)=>{events[name]=fn;}};
+  const doc={getElementById:id=>elements[id],createElement:()=>new Element(),createElementNS:()=>new Element()};
+  const src=fs.readFileSync(path.join(__dirname,"../assets/roadmap.js"),"utf8");
+  vm.runInNewContext(src,{window:win,document:doc,globalThis:win,console});
+  events["muttaji:comparison-changed"]({detail:{items:[
+    {kind:"preferred",text:"MS office 활용능력(Excel, Powerpoint)",status:"확인 필요"}
+  ]}});
+  assert.match(elements["roadmap-notice"].textContent,/분류된 필수조건이 없습니다/);
+  assert.doesNotMatch(elements["roadmap-notice"].textContent,/모두 사용자가 충족/);
+  events["muttaji:comparison-changed"]({detail:{items:[
+    {kind:"required",text:"정보처리기사",status:"충족"}
+  ]}});
+  assert.match(elements["roadmap-notice"].textContent,/모두 사용자가 충족/);
+});
