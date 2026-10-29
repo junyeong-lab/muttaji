@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff7df">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="뭐따지? 채용공고 분석, 내 역량 비교, 자격증 추천과 취업 준비 로드맵을 제공하는 취업 준비 가이드.">
   <title>뭐따지? | 채용공고·역량 비교 취업 준비 가이드</title>
   <style>
@@ -140,6 +141,7 @@
       <button type="button" class="nav" data-go="certifications">자격증</button>
     </nav>
   </header>
+  <div class="wrap" role="note" aria-label="테스트 사이트 안내" style="margin:16px auto 0;padding:15px 20px;border:2px solid #e4b547;background:#fff0bd;border-radius:14px;line-height:1.7"><strong>GitHub Pages 테스트 버전 · 운영 사이트가 아닙니다.</strong> 여기서는 채용공고 텍스트 분석, 분류 수정, 내 역량 비교와 로드맵을 점검할 수 있습니다. URL 자동 가져오기는 지원하지 않으며 AI 모델은 호출하지 않습니다. <a href="https://project-muttaji.vercel.app/" target="_blank" rel="noopener noreferrer">운영 사이트 보기</a></div>
   <main class="wrap">
     <section id="home" class="panel" aria-labelledby="home-title">
       <div class="hero">
@@ -167,28 +169,10 @@
     </section>
     <section id="analyze" class="panel" hidden aria-labelledby="analyze-title">
       <div class="section-top"><div><span class="heading-kicker">01 · 채용공고 분석</span><h1 class="page-title" id="analyze-title">어떤 공고가 궁금하세요?</h1><p class="page-intro">채용공고를 텍스트로 분석하고 담당업무·필수조건·우대사항을 직접 확인·수정한 뒤 내 역량 비교와 로드맵으로 연결하세요.</p></div><span class="pill">텍스트 분석 · 직접 확인</span></div>
-      <section class="sheet url-import" aria-labelledby="job-url-title">
-        <span class="heading-kicker">공개 채용공고 URL 가져오기</span>
-        <h2 id="job-url-title" class="feature-title">채용공고 링크로 본문 가져오기</h2>
-        <p class="subtext">공개 HTML을 가져온 뒤 직접 확인·수정합니다. 로그인·CAPTCHA·접근 제한은 우회하지 않으며, 실패하면 기존 텍스트 붙여넣기를 사용할 수 있습니다.</p>
-        <label class="label" for="job-url">채용공고 URL (https://)</label>
-        <input id="job-url" aria-describedby="job-url-image-note" type="url" maxlength="2048" placeholder="https://채용사이트/공고" autocomplete="off" spellcheck="false">
-        <p id="job-url-image-note" class="subtext">이미지로만 된 공고는 링크에서 문자를 가져오지 못할 수 있습니다. Windows PowerToys의 텍스트 추출기(Win + Shift + T)로 화면의 글자를 복사해 아래 입력창에 붙여넣어 주세요.</p>
-        <label class="label" for="job-url-access" style="margin-top:15px">URL 수집 접근 코드</label>
-        <input id="job-url-access" type="password" autocomplete="off" placeholder="서버에서 승인한 접근 코드">
-        <div class="action-controls"><button type="button" class="secondary" id="job-url-fetch">본문 가져오기</button><button type="button" class="outline" id="job-url-demo">가상 예제 링크 넣기</button></div>
-        <p id="job-url-status" class="result-summary" role="status" aria-live="polite">URL 가져오기 기능을 준비하고 있습니다.</p>
-        <div id="job-url-review" hidden>
-          <h3>추출 결과 확인·수정</h3>
-          <p id="job-url-source" class="subtext"></p>
-          <details><summary>수집 당시 정보와 근거 보기</summary><dl id="job-url-evidence"></dl></details>
-          <label class="label" for="job-url-draft">가져온 공고 본문</label>
-          <textarea id="job-url-draft" maxlength="20000" rows="12"></textarea>
-          <label class="subtext"><input type="checkbox" id="job-url-confirm"> 원문과 추출 내용을 확인했습니다. 수정한 본문을 입력창에 적용합니다.</label>
-          <p class="subtext">적용하면 아래 입력창의 기존 내용을 바꿉니다. 적용 취소로 이전 내용으로 되돌릴 수 있습니다. 근거 목록은 수집 당시 원문이며 수정한 내용의 출처를 자동 보증하지 않습니다.</p>
-          <div class="action-controls"><button type="button" class="primary" id="job-url-apply" disabled>확인한 본문을 입력창에 적용</button><button type="button" class="outline" id="job-url-undo" disabled>적용 취소</button></div>
-          <p class="subtext">적용 후 아래 텍스트 분석 버튼을 누르고 분류 결과를 직접 확인·수정해 주세요.</p>
-        </div>
+      <section class="sheet" aria-labelledby="static-posting-title">
+        <span class="heading-kicker">테스트 환경 안내</span>
+        <h2 id="static-posting-title" class="feature-title">채용공고 원문을 아래에 붙여넣어 주세요</h2>
+        <p class="subtext">이 테스트 페이지에서는 서버가 필요한 URL 자동 가져오기를 사용할 수 없습니다. 채용공고 사이트에서 본문을 복사하거나 PowerToys로 텍스트를 추출해 아래에 붙여넣고 분석할 수 있습니다.</p>
       </section>
       <div class="split">
         <form id="job-form" class="sheet">
@@ -546,7 +530,5 @@
   <script src="./assets/requirement-comparison.js"></script>
   <script src="./assets/roadmap.js"></script>
   <script src="./assets/certification-recommendations.js"></script>
-  <script src="./assets/session-client.js"></script>
-  <script src="./assets/job-url-ui.js"></script>
 </body>
 </html>
