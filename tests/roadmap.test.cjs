@@ -313,7 +313,7 @@ test("실공고 준비 로드맵은 도구 및 업무에 맞는 검증 과제를
  const fixtures=[
   ["Zabbix Prometheus Grafana 모니터링 도구 사용 경험",/대시보드|메트릭/],
   ["Docker 컨테이너 배포 경험",/Dockerfile|컨테이너/],
-  ["PostgreSQL 데이터베이스 운영 및 DB 설계",/테이블|백업/],
+  ["PostgreSQL 데이터베이스 운영 및 DB 설계",/데이터베이스|JOIN|권한/],
   ["React TypeScript 프론트 개발 경험",/기능|테스트/],
   ["유관 부서와 협업하여 기술 문서 작성",/협의|보고자료/],
   ["Airflow ETL 파이프라인 구축",/데이터|정제/]
