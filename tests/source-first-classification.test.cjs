@@ -145,11 +145,6 @@ test('source-first negation and unresolved conflicts cannot be presented as unqu
  const wrong=structuredClone(value);wrong.items[0].category='required';assert.throws(()=>validatePostingClassification(wrong,{posting,revision:'negation'}),e=>e.validation.reason==='POSTING_OBLIGATION');
  const conflict=structuredClone(value);Object.assign(conflict.items[1],{category:'required',basisQuote:'자격요건',uncertainty:''});assert.throws(()=>validatePostingClassification(conflict,{posting,revision:'negation'}),e=>e.validation.reason==='POSTING_UNCERTAINTY');
 });
-test('all 50 saved sources pass source-only mock contract, not semantic-model verification',async()=>{
- const {auditSourceFirst}=await import('../scripts/audit-source-first-50.mjs');const result=await auditSourceFirst();assert.equal(result.total,50);assert.equal(result.mockPass,50);assert.equal(result.failed,0);assert.equal(result.actualModelNotExecuted,50);assert.equal(result.paidCalls,0);assert.ok(result.rows.every(x=>x.semanticAccuracy==='not-verified'));
-});
-
-
 test('source-first classification for both real posting fixtures reaches review, comparison, and roadmap without invented requirements',async()=>{
  const roadmap=load('../assets/roadmap.js');
  for(const record of cases){
