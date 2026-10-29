@@ -58,11 +58,43 @@ test('AI blank-only reference ranges are ignored without hiding any nonempty pos
 
 test('wrong citations, positions, incomplete coverage and preference upgrades fail closed',async()=>{
  const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
- for(const [reason,mutate] of [['POSTING_QUOTE',v=>v.items[0].quote='없는 기업'],['POSTING_POSITION',v=>v.items[0].line=0],['POSTING_COVERAGE',v=>v.items.pop()],['POSTING_COVERAGE',v=>v.complete=false],['POSTING_OBLIGATION',v=>v.items.find(x=>x.category==='preferred').category='required'],['POSTING_SCOPE_QUOTE',v=>v.items[0].roleQuote='없는 직무']]){
+ for(const [reason,mutate] of [['POSTING_QUOTE',v=>v.items[0].quote='없는 기업'],['POSTING_POSITION',v=>v.items[0].line=0],['POSTING_COVERAGE',v=>v.items.pop()],['POSTING_COVERAGE',v=>v.complete=false],['POSTING_OBLIGATION',v=>v.items.find(x=>x.category==='preferred').category='required']]){
   const value=structuredClone(cases[0].expected);mutate(value);assert.throws(()=>validatePostingClassification(value,request(cases[0])),e=>e.code==='INVALID_AGENT_OUTPUT'&&e.validation.reason===reason);
  }
  const bad=structuredClone(cases[0].expected);bad.items[2].category='required';bad.items[2].basisQuote='자격요건';assert.throws(()=>validatePostingClassification(bad,request(cases[0])),e=>e.validation.reason==='POSTING_OBLIGATION');
 });
+test('unverifiable AI scope anchor becomes a visible review item, without accepting a fabricated condition',async()=>{
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ const record=cases[0],value=structuredClone(record.expected);
+ value.items[0].roleQuote='가짜 직무 명칭';
+ const preference=value.items.find(x=>x.category==='preferred');
+ preference.basisQuote='실제 공고에 없는 필수 자격';
+ const output=validatePostingClassification(value,request(record));
+ const company=output.items.find(x=>x.id===value.items[0].id);
+ const downgraded=output.items.find(x=>x.id===preference.id);
+ assert.equal(company.roleQuote,'');
+ assert.match(company.uncertainty,/원문에 없는 적용 근거/);
+ assert.equal(downgraded.category,'unresolved');
+ assert.equal(downgraded.basisQuote,'');
+ assert.match(downgraded.uncertainty,/확인 필요/);
+ assert.equal(output.approvalRequired,true);
+ const state=review.create();state.receive(record.posting,output);
+ assert.equal(state.snapshot().approved,null);
+ const approved=state.approve(record.posting,true);
+ assert.equal(approved.result.preferred.length,5);
+ assert.ok(approved.result.unresolved.some(x=>x.source===preference.quote));
+});
+test('source anchor positioned after the quoted qualification cannot certify eligibility',async()=>{
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ const posting='자격요건\\n정보보안기사 필수\\n근무조건\\n서울 근무';
+ const actual=posting.replaceAll('\\n','\n');
+ const item={id:'scope-later',category:'required',quote:'정보보안기사 필수',line:2,endLine:2,reason:'필수 자격',basisQuote:'자격요건',roleQuote:'서울 근무',applicantType:'unclear',applicantQuote:'',relation:'single',uncertainty:''};
+ const value={schemaVersion:1,revision:'late-scope',mode:'posting-classification',complete:true,items:[item],referenceRanges:[{line:1,endLine:1,reason:'제목'},{line:3,endLine:4,reason:'근무지'}]};
+ const result=validatePostingClassification(value,{posting:actual,revision:'late-scope'});
+ assert.equal(result.items.find(x=>x.id==='scope-later').category,'unresolved');
+ assert.equal(result.items.find(x=>x.id==='scope-later').roleQuote,'');
+});
+
 test('draft cannot enter comparison; explicit approval passes only selected required/preferred',async()=>{
  const state=review.create(),data=await validated(),record=cases[0];state.receive(record.posting,data);assert.equal(state.snapshot().approved,null);assert.throws(()=>state.approve(record.posting,false));
  const id=data.items.find(x=>x.category==='preferred').id;state.edit(id,{include:false});const approved=state.approve(record.posting,true);assert.equal(approved.result.required.length,0);assert.equal(approved.result.preferred.length,5);assert.equal(approved.provenance,'ai-user-approved');
