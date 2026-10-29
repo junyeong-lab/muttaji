@@ -99,9 +99,27 @@
         evidence:"직접 구축한 제품명과 환경, 설정 및 장애 증상·원인·조치·검증 결과를 정리하세요. XDR 프로젝트를 다른 제품의 운영 경력으로 간주하지 마세요.",
         prepare:"승인된 실습에서 제품 설정·로그를 점검하고 모의 장애의 증상→원인→복구 확인을 문서화하세요. 실습을 실무와 구분하세요."
       };
+    }else if(/(?:영어|영문|English)/i.test(text)&&/(?:이메일|e-?mail)/i.test(text)){
+      guide={
+        scope:"해외 본사와 주고받는 영문 이메일의 비즈니스 수준(요청·조치 현황·기한·회신)을 확인하세요. 일반적인 국내 협업이나 한국어 보고와 구분하세요.",
+        evidence:"실제로 작성·회신한 영문 업무 이메일 또는 관련 능력을 확인할 수 있는 자료가 있는지 점검하세요. 민감정보를 제거하고 한국어 보고자료만으로 영어 이메일 역량을 단정하지 마세요.",
+        prepare:"가상의 취약점 조치 현황을 해외 본사에 보고하는 영문 이메일을 작성하세요. 조치 상태·담당자·기한·추가 요청사항을 포함하고 표현을 교정한 내역을 남기세요. 모의 메일을 실제 업무 경력으로 기재하지 마세요."
+      };
+    }else if(/(?:MS[\s-]*Office|Microsoft\s*Office|Excel|엑셀|PowerPoint|파워포인트|PPT)/i.test(text)){
+      guide={
+        scope:"공고에 명시된 Excel·PowerPoint 등 사무 도구의 활용 범위를 확인하세요. 특정 고급 함수나 자격증을 명시하지 않았다면 필수로 가정하지 마세요.",
+        evidence:"실제 Excel 표·함수·차트 및 PowerPoint 보고 슬라이드를 직접 만든 경험과 예시 자료를 구분해 확인하세요. 민감정보는 제거하세요.",
+        prepare:"비식별 샘플 데이터로 Excel 표의 정렬·필터·간단한 수식·차트를 만들고, 결과를 PowerPoint 3장으로 요약해 보세요. 파일과 사용 기능을 함께 기록하세요."
+      };
+    }else if(/(?:CISSP\s*[,，]\s*CISA|CISA\s*[,，]\s*CISSP)\s*등\s*(?:IT\s*)?보안\s*관련\s*자격증/i.test(text)){
+      guide={
+        scope:"공고에 직접 예시된 CISSP·CISA와 '등 IT 보안관련 자격증'의 적용 범위를 구분하세요.",
+        evidence:"보유 자격증명과 실제 취득 증빙을 확인하세요. 정보보안기사 등 다른 보안 자격증의 관련성은 안내할 수 있지만 채용사 인정 여부는 확인이 필요합니다.",
+        prepare:"직접 예시되지 않은 보안 자격증도 우대하는지 채용 담당자에게 확인하세요. 인정 여부가 불명확하다는 이유만으로 CISSP·CISA를 새로 취득하라고 권하지 마세요."
+      };
     }else if(/경력|실무\s*(?:경험|경력)|\d+\s*년\s*이상/.test(text)){
       guide={
-        scope:"공고가 요구하는 실무 분야, 담당업무와 경력 기간을 구분해 확인하세요.",
+        scope:"공고가 요구하는 실무 분야·담당업무와 경력 기간(명시된 경우)을 구분해 확인하세요. 기간이 적히지 않았다면 임의로 연수를 만들지 마세요.",
         evidence:"실제 업무별 수행 기간과 본인 역할을 정리하고 경력증명·업무 기록처럼 확인 가능한 근거가 있는지 점검하세요.",
         prepare:"관련 실습이나 프로젝트는 별도로 정리하되, 실습·자격증이 실무 경력을 대체한다고 가정하지 마세요. 인정 기준은 채용 담당자에게 확인하세요."
       };
@@ -455,7 +473,11 @@
         section.appendChild(cards);
         list.appendChild(section);
       });
-      notice.textContent=(plan.requiredOpen
+      const requiredTotal=plan.tasks.filter(item=>item.kind==="required").length+
+        plan.completed.filter(item=>item.kind==="required").length;
+      notice.textContent=(requiredTotal===0
+        ?"이번 공고에서 분류된 필수조건이 없습니다."
+        :plan.requiredOpen
         ?"현재 아직 확인하거나 보완할 필수조건 "+plan.requiredOpen+"개가 있습니다."
         :"현재 필수조건은 모두 사용자가 충족으로 표시했습니다.")+
         " 확인 필요 → 미충족 → 부분 충족 → 충족 순서로 표시합니다. 모든 상태는 본인 입력 기준이며, 공식 자격 검증·대체 경력 인정·합격 확률을 판단하지 않습니다.";
