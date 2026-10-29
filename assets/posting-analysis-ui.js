@@ -23,7 +23,7 @@
   for(const item of draft.items){
    const card=el(item.category==="reference"?"details":"article");card.className="sheet";
    card.append(el(item.category==="reference"?"summary":"h3",labels[item.category]+" · 원문 "+item.line+(item.endLine===item.line?"":"~"+item.endLine)+"행"));
-   card.append(el("p","AI 최초 제안: "+(labels[item.aiCategory]||"사용자 추가")+" · "+item.reason),el("p",item.uncertainty));
+   card.append(el("p",item.aiCategory?"AI 최초 제안: "+labels[item.aiCategory]+" · "+item.aiReason:"사용자가 원문에서 추가한 항목"),el("p",item.uncertainty));
    const quote=input("원문 인용 (수정 시 원문에 존재해야 함)",item.quote,"textarea"),category=el("select"),role=input("적용 직무의 원문 근거 (모르면 비워 두세요)",item.roleQuote),type=el("select"),scope=input("지원 유형의 원문 근거",item.applicantQuote),reason=input("분류 이유",item.reason,"textarea"),include=el("input");include.type="checkbox";include.checked=item.include!==false;
    for(const [key,label] of Object.entries(labels)){const option=el("option",label);option.value=key;category.append(option);}category.value=item.category;
    for(const [key,label] of Object.entries({unclear:"확인 필요",common:"공통",new:"신입",experienced:"경력"})){const option=el("option",label);option.value=key;type.append(option);}type.value=item.applicantType;

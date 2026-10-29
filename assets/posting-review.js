@@ -25,7 +25,7 @@
    receive(posting,data){
     if(!data||data.mode!=="posting-classification"||data.complete!==true||data.approvalRequired!==true||!Array.isArray(data.items)||!data.items.length)throw Error("전체 원문 분석을 완료한 응답이 아닙니다.");
     const previous=text;text=posting;
-    try{const ids=new Set();const items=data.items.map(x=>{if(ids.has(x.id))throw Error("중복 항목입니다.");ids.add(x.id);return check({...copy(x),aiCategory:x.category,aiRoleQuote:x.roleQuote,aiApplicantType:x.applicantType,include:true,edited:false});});if(coverage(items).length)throw Error("분석하지 않은 원문 행이 남아 있습니다.");draft={revision:data.revision,items};invalid.clear();}
+    try{const ids=new Set();const items=data.items.map(x=>{if(ids.has(x.id))throw Error("중복 항목입니다.");ids.add(x.id);return check({...copy(x),aiCategory:x.category,aiReason:x.reason,aiRoleQuote:x.roleQuote,aiApplicantType:x.applicantType,include:true,edited:false});});if(coverage(items).length)throw Error("분석하지 않은 원문 행이 남아 있습니다.");draft={revision:data.revision,items};invalid.clear();}
     catch(e){text=previous;throw e;}
     return copy(draft);
    },

@@ -46,6 +46,7 @@ test('draft cannot enter comparison; explicit approval passes only selected requ
 test('review edits classification and scope; invalid source edits cannot be approved',async()=>{
  const state=review.create(),data=await validated();state.receive(cases[0].posting,data);const p=data.items.find(x=>x.category==='preferred');
  state.edit(p.id,{category:'unresolved',roleQuote:'기술부 엔지니어',applicantType:'unclear'});assert.equal(state.approve(cases[0].posting,true).result.preferred.length,5);
+ state.edit(p.id,{reason:'사용자가 변경한 분류 이유'});const edited=state.snapshot().draft.items.find(x=>x.id===p.id);assert.equal(edited.aiReason,p.reason);assert.equal(edited.reason,'사용자가 변경한 분류 이유');
  assert.throws(()=>state.edit(p.id,{quote:'만들어낸 자격증 보유'}));assert.throws(()=>state.approve(cases[0].posting,true));
  state.edit(p.id,{quote:p.quote,category:'preferred'});assert.equal(state.approve(cases[0].posting,true).result.preferred.length,6);assert.throws(()=>state.approve(cases[0].posting+'\n변경',true));
 });
