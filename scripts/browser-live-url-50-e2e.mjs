@@ -1,3 +1,4 @@
+// Production 50-URL regression after a single bounded policy-safe HTML transport retry was added.
 // Final production browser regression after general-rule fixes to section labels, continuation lines, and eligibility roadmap.
 // Verify semantic parser corrections against current 50 real URLs in the deployed browser.
 // Verify the final 25 JobKorea + 25 Saramin corpus after live-checked network source replacement.
