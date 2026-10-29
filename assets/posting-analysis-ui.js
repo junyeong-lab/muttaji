@@ -10,7 +10,16 @@
  let ready=false,publicMode=false,busy=false,generation=0,controller=null;
  const gate=state=>{window.MuttajiPostingReviewGate={requiresApproval:true,status:state,text:job.value.trim()};};gate("pending");
  function summary(prefix){const draft=reviewer.snapshot().draft;if(!draft)return;get("posting-ai-summary").textContent=prefix+" — "+Object.keys(labels).map(k=>labels[k]+" "+draft.items.filter(x=>x.category===k).length+"개").join(" · ")+". 참고 정보에도 누락된 조건이 없는지 검토해 주세요.";}
- function unconfirm(){confirm.checked=false;approve.disabled=true;gate("draft");summary("검토안 · 미승인");}
+ function unconfirm(){
+  // Re-analysis or a manual correction revokes previously displayed verdicts.
+  // Keep profile fields intact; do not silently leave stale comparison/roadmap on screen.
+  const priorApproved=window.MuttajiReviewedPosting?.provenance==="ai-user-approved";
+  const panel=get("requirements-check"),wasVisible=panel&&!panel.hidden;
+  if(window.MuttajiReviewedPosting)window.MuttajiReviewedPosting=null;
+  if(panel)panel.hidden=true;
+  if(priorApproved||wasVisible)window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
+  confirm.checked=false;approve.disabled=true;gate("draft");summary("검토안 · 미승인");
+ }
  function invalidate(){generation++;controller?.abort();controller=null;busy=false;run.disabled=!ready;reviewer.invalidate();results.replaceChildren();confirm.checked=false;approve.disabled=true;consent.checked=false;gate("pending");get("posting-ai-review").hidden=true;if(window.MuttajiReviewedPosting?.provenance==="ai-user-approved")window.MuttajiReviewedPosting=null;const panel=get("requirements-check");if(panel)panel.hidden=true;window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));say("원문이 변경되어 이전 AI 분석과 승인이 무효화되었습니다.");}
  job.addEventListener("input",invalidate);job.addEventListener("change",invalidate);
  window.addEventListener("muttaji:rule-reviewed",()=>{generation++;controller?.abort();controller=null;busy=false;run.disabled=!ready;window.MuttajiPostingReviewGate={requiresApproval:false,status:"rule-fallback",text:job.value.trim()};reviewer.invalidate();results.replaceChildren();get("posting-ai-review").hidden=true;confirm.checked=false;approve.disabled=true;say("규칙 기반 대체 결과를 선택했습니다. AI 확정 결과가 아닙니다.");});
