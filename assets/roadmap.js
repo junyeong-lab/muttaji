@@ -24,8 +24,9 @@
       String(input||"").normalize("NFKC").replace(/\s+/g," ").trim());
   }
   function nextAction(item){
-    if(item.status==="확인 필요"){
-      const text=String(item.text||"");
+    const text=String(item.text||"");
+    // Tailored guidance must follow the requirement, not the selected state.
+    if(item.status!=="충족"){
       if(/시큐아이|지니언스|소만사|\bSECUI\b|\bGENIANS\b|\bSOMANSA\b/i.test(text))
         return "시큐아이·지니언스·소만사 중 실제로 다룬 제품 및 담당 업무를 확인하세요. 보안교육이나 일반 점검은 제품 경력의 근거가 아닙니다.";
       if(/\bNAC\b|네트워크\s*접근\s*제어/i.test(text))
@@ -38,11 +39,11 @@
         return "보유한 IT 관련 자격증과 전문 지식을 먼저 정리하세요. 해당 우대조건의 인정 범위는 회사에 따라 다를 수 있습니다.";
       if(/정보통신공학과|컴퓨터공학과|IT\s*관련\s*학과/i.test(text))
         return "공고에 나열된 전공과 본인의 전공을 별도로 비교하세요. 공학사라는 이유로 IT 관련 학과로 자동 인정하지 않습니다.";
-      return "공고 원문과 본인의 실제 이력·증빙을 대조하고, 내 역량 화면에서 상태를 직접 확정하세요.";
     }
+    if(item.status==="확인 필요")
+      return "공고 원문과 본인의 실제 이력·증빙을 대조하고, 내 역량 화면에서 상태를 직접 확정하세요.";
     if(item.status==="부분 충족")
       return "이미 갖춘 부분과 부족한 조건을 구분하세요. 부족한 부분에 대한 학습·경험 또는 추가 확인 계획을 정리하세요.";
-    const text=item.text;
     if(noExperienceThreshold(text))return "공고에 경력 기간 제한이 없다는 뜻입니다. 경력을 새로 채워야 하는 필수요건으로 해석하지 말고 신입 지원 가능 여부와 별도 조건을 확인하세요.";
     if(noDegreeThreshold(text))return "공고에 학력 제한이 없다고 명시되어 있습니다. 다른 필수·우대조건은 별도로 확인하세요.";
     if(/경력|실무\s*경험|\d+\s*년\s*이상/.test(text))

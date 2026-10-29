@@ -114,3 +114,44 @@ test("roadmap state and task ordering retain user decisions after specialized gu
   assert.equal(plan.totals["충족"],1);
   assert.equal(plan.groups[0].items.length,3);
 });
+
+test("six actual posting categories remain tailored when states are changed by the user",()=>{
+  const lineNumbers=[21,23,24,25,26,27];
+  const words=[/WAF|웹방화벽/,/NAC/,/시큐아이|지니언스|소만사/,/IT|자격증/,/전공|학과/,/성장|능동|주도/];
+  for(const status of ["확인 필요","미충족","부분 충족"]){
+    const plan=buildRoadmap(requirements.map((req,i)=>({...req,line:lineNumbers[i],status})));
+    assert.equal(plan.total,6);
+    assert.equal(plan.requiredOpen,0);
+    assert.equal(plan.totals[status],6);
+    plan.tasks.forEach((task,i)=>{
+      assert.equal(task.kind,"preferred");
+      assert.equal(task.status,status);
+      assert.equal(task.line,lineNumbers[i]);
+      assert.equal(task.steps.length,3);
+      assert.match(task.action,words[i]);
+      assert.match(task.steps.join(" "),words[i]);
+    });
+  }
+});
+test("certificate evidence is bound only to the current user's profile",()=>{
+  for(const [certs,expected] of [
+    ["",[]],
+    ["CCNA\n리눅스마스터 2급",["CCNA","리눅스마스터 2급"]],
+    ["SQLD",["SQLD"]],
+    ["정보처리기사\nSQLD\n네트워크관리사 2급",["정보처리기사","SQLD","네트워크관리사 2급"]]
+  ]){
+    const result=analyze({...profile,certs});
+    assert.deepEqual(result[3].inputEvidence.map(item=>item.quote),expected);
+    assert.equal(Object.hasOwn(result[3],"status"),false);
+    assert.equal(result[0].inputEvidence.length,0);
+    assert.equal(result[2].inputEvidence.length,0);
+    const guide=preparationSteps({...requirements[3],status:"확인 필요"}).join(" ");
+    assert.doesNotMatch(guide,/정보처리기사|SQLD|네트워크관리사 2급|CCNA|리눅스마스터 2급/);
+  }
+});
+test("Pages index references the refreshed roadmap asset URL",()=>{
+  const fs=require("node:fs");
+  const path=require("node:path");
+  const html=fs.readFileSync(path.join(__dirname,"../index.html"),"utf8");
+  assert.ok(html.includes("assets/roadmap.js?v=20261029-posting50188423-roadmap2"));
+});
