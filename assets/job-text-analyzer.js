@@ -50,6 +50,9 @@
       return {group:"preferred",value:"",label:normalized};
     if(/^(?:채용\s*부문|모집\s*부문|포지션)$/i.test(normalized))
       return {group:"role",value:"",label:normalized};
+    // "모집인원" is a table header, never an eligibility criterion.
+    if(/^(?:모집\s*인원|채용\s*인원)$/.test(normalized))
+      return {group:"unresolved",value:"",label:normalized};
     // Clear prior required/preferred/duty buckets at non-eligibility sections.
     if(/^(?:근무\s*환경|근무\s*일시|근무\s*형태|근무\s*시간|근\s*무\s*지|오시는\s*길|근무\s*안내[·\s]*복지|세부\s*사항|채용\s*절차|절차\s*안내|제출\s*서류|전형\s*안내|팀\s*소개|지원\s*방법\s*및\s*전형\s*절차는|신입\s*사원\s*성장\s*지원|CELA만의\s*특별한\s*문화|풍부한\s*복리\s*후생|(?:업무|복지)\s*환경|함께\s*일할\s*팀|팀과\s*일하는\s*방식|기술\s*환경|인턴십\s*기간(?:\s*급여)?(?:은|는)|인턴십\s*근무\s*환경은|정규직\s*전환\s*시\s*더\s*많은\s*복지가\s*기다리고\s*있습니다|회사에\s*대해\s*더\s*알고\s*싶으시다면.+|[\[\(]?\s*(?:제출\s*서류|기술\s*환경)\s*[\]\)]?)$/i.test(normalized))
       return {group:"unresolved",value:"",label:normalized};
@@ -156,19 +159,34 @@
     const isDuties=s=>/^(?:담당\s*업무|주요\s*업무|업무\s*내용)$/.test(s);
     const isQualifications=s=>/^(?:자격\s*요건|자격\s*조건|지원\s*자격)$/.test(s);
     const isCount=s=>/^(?:모집\s*인원|채용\s*인원)$/.test(s);
+    const isPreferred=s=>/^(?:우대\s*(?:사항|조건|요건))$/.test(s);
+    // A copied table may contain blank cells, duplicated headers, or omitted
+    // column titles. Do not require three *adjacent* header strings.
     for(let i=0;i<heads.length;i++){
       if(!isCount(heads[i]))continue;
-      const prev=[];
-      for(let j=Math.max(0,i-12);j<i;j++)if(heads[j])prev.push(j);
-      if(prev.length<3)continue;
-      const last=prev.slice(-3);
-      if(!isRole(heads[last[0]])||!isDuties(heads[last[1]])||!isQualifications(heads[last[2]]))continue;
-      const next=lines.findIndex((line,j)=>j>i&&j<=i+28&&
-        /^(?:우대\s*(?:사항|조건|요건))$/.test(norm(line)));
+      const windowStart=Math.max(0,i-22);
+      const before=heads.slice(windowStart,i);
+      const reqRel=before.findLastIndex(isQualifications);
+      const dutyRel=before.findLastIndex(isDuties);
+      const roleRel=before.findLastIndex(isRole);
+      const req=reqRel<0?-1:windowStart+reqRel;
+      const duty=dutyRel<0?-1:windowStart+dutyRel;
+      const role=roleRel<0?-1:windowStart+roleRel;
+      // The explicit "모집분야 및 자격요건" title is sufficient when a
+      // standalone "모집분야" header was lost in OCR. Both the duty and
+      // qualification headings must still be present and in column order.
+      const combinedRole=before.some(s=>/^(?:모집\s*분야\s*(?:및|\/)\s*자격\s*요건|모집\s*분야\s*및\s*자격\s*조건)$/.test(s));
+      if(req<0||duty<0||duty>=req||req>=i||(!combinedRole&&(role<0||role>=duty)))continue;
+      const next=heads.findIndex((value,j)=>j>i&&j<=i+35&&isPreferred(value));
       if(next<0)continue;
       const first=lines.findIndex((line,j)=>j>i&&j<next&&line.trim());
-      if(first<0||!organizationCandidate(withoutBullet(lines[first])))continue;
-      return {headers:new Set([...last,i]),bodyStart:i+1,bodyEnd:next};
+      if(first<0)continue;
+      // Avoid converting an ordinary sequential job description to a table:
+      // the first cell must be a plausible department, not a qualification.
+      const candidate=withoutBullet(lines[first]);
+      if(!organizationCandidate(candidate)&&!tableJobTitle(candidate))continue;
+      return {headers:new Set([role,duty,req,i].filter(k=>k>=0)),
+        bodyStart:i+1,bodyEnd:next,headerLine:i+1};
     }
     return null;
   }
@@ -189,6 +207,8 @@
     if (lines.length > 400) throw new RangeError("최대 400줄까지 분석할 수 있습니다.");
     var prior=null;
     const flatTable=flattenedColumnTable(lines);
+    // Used only for explaining why the parser classified a source as a table.
+    out.tableLayoutDetected=!!flatTable;
     let flatRoleSeen=false;
     lines.forEach(function(original, ix) {
       var raw=original.trim();
