@@ -133,7 +133,14 @@
     // criterion, not any other education, career or technical condition.
     const namedExampleList=/(?:예\s*[:：]|예시|예를\s*들어|[,，][^.!?\n]{0,200}등(?:\s|$|[)\].,]))/i.test(item.text);
     const certificateListContext=/(?:자격증|자격\s*(?:소지|보유)|인증심사원|심사원)/.test(item.text);
-    const otherRequirements=/(?:경력|실무\s*경험|학력|전공|졸업|학위|\d+\s*년\s*이상|업무\s*경험|(?:네트워크|보안|IT)\s*이해|\bTOEIC\b|외국어)/i.test(item.text);
+    // In a strictly labeled certificate list, "정보통신기술자 경력수첩"
+    // names a credential; the word "경력" inside that name does NOT add
+    // an independent work-experience requirement.
+    const prefixedCertificateList=/^(?:우대\s*)?(?:관련\s*)?자격증\s*[:：]/i.test(item.text.trim());
+    const careerCheckText=prefixedCertificateList
+      ? item.text.replace(/정보통신기술자\s*경력\s*수첩/g,"")
+      : item.text;
+    const otherRequirements=/(?:경력|실무\s*경험|학력|전공|졸업|학위|\d+\s*년\s*이상|업무\s*경험|(?:네트워크|보안|IT)\s*이해|\bTOEIC\b|외국어)/i.test(careerCheckText);
     const allRequired=/(?:및|모두|전부|각각|동시|둘\s*다|\ball\b)/i.test(item.text);
     if(namedExampleList&&certificateListContext&&!otherRequirements&&!allRequired){
       const matches=mentioned.filter(x=>owned.some(name=>normCert(name)===normCert(x.name)));
@@ -149,7 +156,7 @@
     const listed=String(item.text).trim().match(/^(?:우대\s*)?(?:관련\s*)?자격증\s*[:：]\s*(.+)$/i);
     if(item.kind==="preferred"&&listed&&/[,，]/.test(listed[1])&&!otherRequirements&&!allRequired){
       const entries=listed[1].split(/[,，]/).map(x=>x.trim()).filter(Boolean);
-      const certShape=/(?:기사|기능사|기술사|관리사|마스터|심사원|SQLD|SQLP|ADsP|ADP|CPPG|CISA|CISSP|CCNA|DAP|AICE)/i;
+      const certShape=/(?:기사|기능사|기술사|관리사|마스터|심사원|경력\s*수첩|SQLD|SQLP|ADsP|ADP|CPPG|CISA|CISSP|CCNA|DAP|AICE)/i;
       if(entries.length>=2&&entries.every(x=>certShape.test(x)&&!/\b(?:및|모두|각각|필수)\b/.test(x))){
         const matches=mentioned.filter(x=>owned.some(name=>normCert(name)===normCert(x.name)));
         if(matches.length){
