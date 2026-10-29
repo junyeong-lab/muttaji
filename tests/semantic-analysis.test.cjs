@@ -106,13 +106,14 @@ test('invented probabilities, guaranteed durations and labs replacing tenure are
  const quote='상용 운영 경력 3년 이상';
  for(const action of ['합격 확률은 90%입니다.','3주 만에 취득할 수 있습니다.','실습으로 경력 기간을 충족합니다.'])await assert.rejects(run(quote,quote,[unit(quote)],{item:{actions:[action]}}),e=>e.validation.reason==='SEMANTIC_UNSUPPORTED_CLAIM');
 });
-test('fixed 50 sources preserve existing 458 conditions; offline audit reports its skipped case honestly',async()=>{
+test('fixed 50 sources use latest 455 parser conditions; offline audit reports its skipped case honestly',async()=>{
  const {audit}=await import('../scripts/audit-agent-semantics-50.mjs');
  const manifest=require('./fixtures/real-postings-smoke.json');
  assert.equal(corpus.length,50);assert.equal(new Set(corpus.map(x=>x.id)).size,50);
  assert.ok(manifest.every(x=>corpus.some(r=>r.url===x.url)));
  const result=await audit();assert.equal(result.externalCalls,0);assert.equal(result.liveNotExecuted,50);assert.equal(result.failed,0);assert.equal(result.contractPass,49);
- assert.equal(result.rows.reduce((n,r)=>n+r.ordinaryRequirements,0),458);
+ // The latest main parser now yields 455 instead of the historical 458 archived by Codex.
+ assert.equal(result.rows.reduce((n,r)=>n+r.ordinaryRequirements,0),455);
  assert.deepEqual(result.rows.filter(r=>r.status==='not-run-item-limit').map(r=>r.id),['50032590']);
  await assert.rejects(audit({live:true}),/LIVE_REQUIRES_APPROVED_RUNTIME/);
 });
