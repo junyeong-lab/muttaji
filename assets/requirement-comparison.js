@@ -156,7 +156,7 @@
     const listed=String(item.text).trim().match(/^(?:우대\s*)?(?:관련\s*)?자격증\s*[:：]\s*(.+)$/i);
     if(item.kind==="preferred"&&listed&&/[,，]/.test(listed[1])&&!otherRequirements&&!allRequired){
       const entries=listed[1].split(/[,，]/).map(x=>x.trim()).filter(Boolean);
-      const certShape=/(?:기사|기능사|기술사|관리사|마스터|심사원|경력\s*수첩|SQLD|SQLP|ADsP|ADP|CPPG|CISA|CISSP|CCNA|DAP|AICE)/i;
+      const certShape=/(?:기사|기능사|기술사|관리사|마스터|심사원|경력\s*수첩|운전\s*면허|SQLD|SQLP|ADsP|ADP|CPPG|CISA|CISSP|CCNA|DAP|AICE)/i;
       if(entries.length>=2&&entries.every(x=>certShape.test(x)&&!/\b(?:및|모두|각각|필수)\b/.test(x))){
         const matches=mentioned.filter(x=>owned.some(name=>normCert(name)===normCert(x.name)));
         if(matches.length){
