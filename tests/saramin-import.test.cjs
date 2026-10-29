@@ -16,3 +16,43 @@ test('Saramin canonical still respects robots and rejects ambiguous identities',
  assert.equal(requests,0);
  await assert.rejects(importer('https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=123'));assert.equal(requests,1);
 });
+
+
+test('public Saramin HTML retries one transient broken connection after the robots policy check',async()=>{
+ const [{createImporter},{ImportError}]=await Promise.all([import('../lib/job-url/service.js'),import('../lib/job-url/errors.js')]);
+ let htmlRequests=0,robotsRequests=0;
+ const importer=createImporter({resolver:dns,transport:async(u,t,o)=>{
+  if(o.kind==='robots'){robotsRequests++;return {status:404};}
+  htmlRequests++;
+  if(htmlRequests===1)throw new ImportError('FETCH_FAILED');
+  return {status:200,headers:{},body:html};
+ }});
+ const result=await importer('https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=123');
+ assert.equal(result.contentStatus,'body');
+ assert.equal(robotsRequests,1);
+ assert.equal(htmlRequests,2);
+});
+test('do not retry robots failure, remote blocking, or repeated transport error',async()=>{
+ const [{createImporter},{ImportError}]=await Promise.all([import('../lib/job-url/service.js'),import('../lib/job-url/errors.js')]);
+ let robotsCalls=0,htmlCalls=0;
+ const blocked=createImporter({resolver:dns,transport:async(u,t,o)=>{
+  if(o.kind==='robots'){robotsCalls++;return {status:404};}
+  htmlCalls++;return {status:429,headers:{},body:''};
+ }});
+ await assert.rejects(blocked('https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=123'),{code:'REMOTE_BLOCKED'});
+ assert.equal(htmlCalls,1);
+ assert.equal(robotsCalls,1);
+ let failures=0;
+ const errors=createImporter({resolver:dns,transport:async(u,t,o)=>{
+  if(o.kind==='robots')return {status:404};
+  failures++;throw new ImportError('FETCH_FAILED');
+ }});
+ await assert.rejects(errors('https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=123'),{code:'FETCH_FAILED'});
+ assert.equal(failures,2);
+ let policyAttempts=0;
+ const unavailable=createImporter({resolver:dns,transport:async(u,t,o)=>{
+  policyAttempts++;throw new ImportError('FETCH_FAILED');
+ }});
+ await assert.rejects(unavailable('https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=123'),{code:'FETCH_FAILED'});
+ assert.equal(policyAttempts,1);
+});
