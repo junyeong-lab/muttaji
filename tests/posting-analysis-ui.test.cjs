@@ -65,6 +65,16 @@ test('failure preserves old approved source and user comparison state, with no r
  const old={text:record.posting,provenance:'ai-user-approved',result:{required:[],preferred:[]},userState:'existing'};win.MuttajiReviewedPosting=old;win.MuttajiPostingReviewGate={requiresApproval:true,status:'approved',text:record.posting};
  nodes['posting-ai-consent'].checked=true;await nodes['posting-ai-run'].emit('click');assert.equal(win.MuttajiReviewedPosting,old);assert.equal(win.MuttajiPostingReviewGate.status,'approved');assert.equal(events.length,0);assert.equal(calls.length,2);assert.match(nodes['posting-ai-status'].textContent,/36/);assert.match(nodes['posting-ai-status'].textContent,/원문 누락/);
 });
+test('provider JSON and output-limit failures show distinct user-readable reasons without retry',async()=>{
+ for(const [error,expected] of [['PROVIDER_OUTPUT_INVALID','JSON 구조'],['PROVIDER_OUTPUT_LIMIT','토큰 한도'],['PROVIDER_NO_OUTPUT','결과를 반환하지']]){
+  const {nodes,calls}=await setup({failure:{error}});
+  nodes['posting-ai-consent'].checked=true;
+  await nodes['posting-ai-run'].emit('click');
+  assert.match(nodes['posting-ai-status'].textContent,new RegExp(expected));
+  assert.equal(calls.length,2);
+ }
+});
+
 test('source change invalidates approvals and suppresses late AI response',async()=>{
  let finish;const {nodes,win,events}=await setup({deferred:new Promise(r=>finish=r)});
  win.MuttajiReviewedPosting={provenance:'ai-user-approved'};nodes['posting-ai-consent'].checked=true;const pending=nodes['posting-ai-run'].emit('click');await new Promise(setImmediate);
