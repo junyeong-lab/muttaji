@@ -429,7 +429,7 @@
         var classified=["responsibilities","required","preferred"].reduce(function(n,k){return n+result[k].filter(function(x){return !x.sectionHeading}).length},0);
         jobResultSummary.textContent="원문 "+result.sourceLines+"개 행 중 담당업무·필수·우대 항목 "+classified+"개를 분류했습니다. 명시적인 스킬 항목은 기타로 구분하며 필수·우대 요건으로 자동 판정하지 않습니다. 미분류·기타 "+result.unresolved.filter(function(x){return !x.sectionHeading}).length+"개. 항목의 분류와 적용 범위를 아래에서 변경할 수 있습니다."+" 모든 항목은 원문 확인이 필요합니다.";
         jobResultSummary.textContent+=" · 분류기: 표형 공고 개선 2차 적용"+
-          (result.tableLayoutDetected?" · 표 구조 인식됨":/모집\\s*인원|자격\\s*요건/.test(jobText.value)?" · 표 구조 확인 필요":"");
+          (result.tableLayoutDetected?" · 표 구조 인식됨":/모집\s*인원|자격\s*요건/.test(jobText.value)?" · 표 구조 확인 필요":"");
         jobResult.hidden=false;
         window.dispatchEvent(new CustomEvent("muttaji:posting-reviewed"));
       }
