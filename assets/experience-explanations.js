@@ -12,6 +12,16 @@
   const fields=["goal-job","education","experience","certs","skills"];
   const labels={"goal-job":"목표 직무",education:"학력·전공",experience:"경력·프로젝트",certs:"보유 자격증",skills:"기술·지식"};
   const topics=[
+    {id:"english-business-email",requirement:/(?:영어|영문|English).{0,80}(?:이메일|메일|e-?mail)|(?:이메일|e-?mail).{0,80}(?:영어|영문|English)/i,
+      profile:/(?:영어|영문|English).{0,80}(?:이메일|메일|e-?mail)|(?:이메일|e-?mail).{0,80}(?:영어|영문|English)/i,fields:["experience","skills"],
+      meaning:"해외 본사와 비즈니스 수준으로 영문 이메일을 작성·회신하는 능력에 관한 조건입니다.",
+      connection:"영문 업무 이메일 작성·회신을 직접 언급한 사용자 입력을 연결했습니다. 일반 한국어 보고·협업 경험은 영문 이메일 능력의 직접 증빙이 아닙니다.",
+      action:"영문 이메일 작성·회신 경험이 있다면 민감정보를 제외하고 역할·전달 내용·회신 결과를 정리하세요. 없다면 가상 취약점 조치 보고 영문 이메일을 연습하고 실습으로 구분하세요."},
+    {id:"office-software",requirement:/(?:MS[\s-]*Office|Microsoft\s*Office|Excel|엑셀|PowerPoint|파워포인트|PPT)/i,
+      profile:/(?:MS[\s-]*Office|Microsoft\s*Office|Excel|엑셀|PowerPoint|파워포인트|PPT)/i,fields:["experience","skills"],
+      meaning:"Excel·PowerPoint와 같은 사무 프로그램을 실제로 활용하는 능력에 관한 조건입니다.",
+      connection:"사무 프로그램명을 직접 명시한 입력을 연결했습니다. 일반 보고서 작성·협업 경험만으로 Excel·PowerPoint 사용 능력을 확정하지 않습니다.",
+      action:"직접 만든 Excel 표·함수·차트와 PowerPoint 발표 자료가 있다면 사용한 기능과 작성 범위를 구분해 정리하세요."},
     {id:"mobility",requirement:/출장|상주|비상주|교대\s*근무/,profile:/출장|상주|비상주|교대\s*근무/,fields:["experience","skills"],
       meaning:"공고에 적힌 근무 방식과 출장 업무에 대응하는 조건입니다.",connection:"입력한 업무 수행 가능 여부를 이 조건에 대한 설명으로 연결했습니다.",
       action:"입력한 근무·출장 가능 여부를 지원서의 근무 조건 항목에 활용할 수 있습니다."},
@@ -257,6 +267,10 @@
       }
       if(topic.id==="ai-usage"&&evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
         explanation+=" 교육 이력은 실제 AI 자동화 수행 경험을 증명하지 않습니다.";
+      if(topic.id==="english-business-email"&&!evidence.length)
+        explanation="입력에서 비즈니스 영문 업무 이메일 경험을 직접 확인하지 못했습니다. 일반 한국어 보고·협업 경험만으로 영어 이메일 능력을 판단하지 않습니다.";
+      if(topic.id==="office-software"&&!evidence.length)
+        explanation="입력에서 Excel·PowerPoint 등 사무 프로그램을 직접 사용한 근거를 확인하지 못했습니다. 일반 문서 작성 경험만으로 사용 능력을 단정하지 않습니다.";
       if(genericCertificate&&evidence.length)
         explanation="자격증 입력란의 보유 자격증을 참고 근거로 연결했습니다. 해당 자격이 공고에서 말하는 '관련 자격증'에 해당하는지는 채용사의 인정 기준을 확인해야 합니다.";
       if(broaderSecurityExamples&&evidence.some(ref=>ref.relatedOnly))
@@ -267,6 +281,8 @@
       let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
       if(genericCertificate&&evidence.length)
         nextAction="자격증의 정확한 이름과 취득 사실을 확인하고, 지원 직무 관련성과 채용사 인정 여부를 원문 또는 채용 담당자에게 확인하세요.";
+      if((topic.id==="english-business-email"||topic.id==="office-software")&&!evidence.length)
+        nextAction=topic.action;
       if(broaderSecurityExamples&&evidence.some(ref=>ref.relatedOnly))
         nextAction="보유 자격증명과 취득 사실을 확인하고, 공고에 직접 예시되지 않은 보안 자격증을 우대로 인정하는지 채용 담당자에게 확인하세요.";
       if(topic.id==="unrestricted-degree"){
