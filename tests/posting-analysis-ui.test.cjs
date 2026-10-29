@@ -30,6 +30,36 @@ test('source-first UI requires consent, sends no profile/parser-list, and does n
  assert.equal(win.MuttajiReviewedPosting.result.required.length,0);assert.equal(win.MuttajiReviewedPosting.result.preferred.length,6);assert.equal(win.MuttajiPostingReviewGate.status,'approved');
  assert.ok(events.some(x=>x.type==='muttaji:comparison-changed'&&x.detail.items===null));
 });
+test('approved classification edits invalidate visible comparison and previous approved result',async()=>{
+ const {nodes,win,events}=await setup();
+ nodes['posting-ai-consent'].checked=true;
+ await nodes['posting-ai-run'].emit('click');
+ nodes['posting-ai-confirm'].checked=true;await nodes['posting-ai-confirm'].emit('change');
+ await nodes['posting-ai-approve'].emit('click');
+ assert.equal(win.MuttajiPostingReviewGate.status,'approved');
+ assert.equal(win.MuttajiReviewedPosting.provenance,'ai-user-approved');
+ nodes['requirements-check'].hidden=false;const oldEvents=events.length;
+ const card=nodes['posting-ai-results'].children.find(x=>x.tag==='article');
+ const category=card.children.find(x=>x.tag==='label'&&x.textContent==='검토 후 분류').children[0];
+ category.value='unresolved';await category.emit('change');
+ assert.equal(win.MuttajiPostingReviewGate.status,'draft');
+ assert.equal(win.MuttajiReviewedPosting,null);
+ assert.equal(nodes['requirements-check'].hidden,true);
+ assert.ok(events.slice(oldEvents).some(x=>x.type==='muttaji:comparison-changed'&&x.detail.items===null));
+});
+test('successful reanalysis invalidates earlier review while failed reanalysis preserves it',async()=>{
+ const {nodes,win,events}=await setup();
+ nodes['posting-ai-consent'].checked=true;await nodes['posting-ai-run'].emit('click');
+ nodes['posting-ai-confirm'].checked=true;await nodes['posting-ai-confirm'].emit('change');
+ await nodes['posting-ai-approve'].emit('click');
+ nodes['requirements-check'].hidden=false;
+ await nodes['posting-ai-run'].emit('click');
+ assert.equal(win.MuttajiReviewedPosting,null);
+ assert.equal(win.MuttajiPostingReviewGate.status,'draft');
+ assert.equal(nodes['requirements-check'].hidden,true);
+ assert.ok(events.some(x=>x.type==='muttaji:comparison-changed'&&x.detail.items===null));
+});
+
 test('failure preserves old approved source and user comparison state, with no retry',async()=>{
  const {nodes,win,calls,events}=await setup({failure:{error:'INVALID_AGENT_OUTPUT',validation:{reason:'POSTING_COVERAGE',missingLines:[36]}}});
  const old={text:record.posting,provenance:'ai-user-approved',result:{required:[],preferred:[]},userState:'existing'};win.MuttajiReviewedPosting=old;win.MuttajiPostingReviewGate={requiresApproval:true,status:'approved',text:record.posting};
