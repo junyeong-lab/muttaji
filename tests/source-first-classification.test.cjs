@@ -24,6 +24,19 @@ test('raw task sends whole source without parser requirements or profile, throug
  const data=await classifyPosting({request:request(cases[0]),enabled:true,ownerApproved:true,adapter:{classify:async(input)=>{calls++;assert.equal(input.request.posting,cases[0].posting);assert.equal(input.requirements,undefined);assert.equal(input.request.profile,undefined);assert.match(input.instructions.join(' '),/untrusted/);return structuredClone(cases[0].expected);}}});
  assert.equal(calls,1);assert.equal(data.items.filter(x=>x.category==='preferred').length,6);
 });
+test('four-column table retains truly explicit requirements but rejects duty promotions',async()=>{
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ const posting='모집분야\\n담당업무\\n자격요건\\n모집인원\\n보안 엔지니어\\n방화벽 운영\\n정보보안기사 필수\\n1명'.replaceAll('\\n','\n');
+ const template=cases[0].expected.items[0];
+ const required={...template,id:'required-table',category:'required',quote:'정보보안기사 필수',line:7,endLine:7,reason:'명시적인 필수 자격증',basisQuote:'자격요건',roleQuote:'',applicantType:'unclear',applicantQuote:'',relation:'single',uncertainty:''};
+ const value={schemaVersion:1,revision:'four-column',mode:'posting-classification',complete:true,items:[required],referenceRanges:[{line:1,endLine:6,reason:'표 제목과 담당업무'},{line:8,endLine:8,reason:'모집인원'}]};
+ assert.equal(validatePostingClassification(value,{posting,revision:'four-column'}).items.filter(x=>x.category==='required').length,1);
+ const wrong=structuredClone(value);
+ wrong.items[0].quote='방화벽 운영';wrong.items[0].line=6;wrong.items[0].endLine=6;
+ wrong.referenceRanges=[{line:1,endLine:5,reason:'표 제목'},{line:7,endLine:8,reason:'그 외 정보'}];
+ assert.throws(()=>validatePostingClassification(wrong,{posting,revision:'four-column'}),e=>e.code==='INVALID_AGENT_OUTPUT'&&e.validation.reason==='POSTING_OBLIGATION');
+});
+
 test('explicit required condition survives source-first contract',async()=>{
  const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');const posting='자격요건\n정보보안기사 필수\n우대사항\nLinux 경험';
  const base=structuredClone(cases[0].expected);Object.assign(base,{revision:'explicit',items:[{...base.items[0],category:'required',quote:'정보보안기사 필수',line:2,endLine:2,basisQuote:'자격요건',roleQuote:''},{...base.items[1],category:'preferred',quote:'Linux 경험',line:4,endLine:4,basisQuote:'우대사항',roleQuote:''}],referenceRanges:[{line:1,endLine:1,reason:'제목'},{line:3,endLine:3,reason:'제목'}]});

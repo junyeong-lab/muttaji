@@ -10,7 +10,16 @@
  let ready=false,publicMode=false,busy=false,generation=0,controller=null;
  const gate=state=>{window.MuttajiPostingReviewGate={requiresApproval:true,status:state,text:job.value.trim()};};gate("pending");
  function summary(prefix){const draft=reviewer.snapshot().draft;if(!draft)return;get("posting-ai-summary").textContent=prefix+" — "+Object.keys(labels).map(k=>labels[k]+" "+draft.items.filter(x=>x.category===k).length+"개").join(" · ")+". 참고 정보에도 누락된 조건이 없는지 검토해 주세요.";}
- function unconfirm(){confirm.checked=false;approve.disabled=true;gate("draft");summary("검토안 · 미승인");}
+ function unconfirm(){
+  // Re-analysis or a manual correction revokes previously displayed verdicts.
+  // Keep profile fields intact; do not silently leave stale comparison/roadmap on screen.
+  const priorApproved=window.MuttajiReviewedPosting?.provenance==="ai-user-approved";
+  const panel=get("requirements-check");
+  if(window.MuttajiReviewedPosting)window.MuttajiReviewedPosting=null;
+  if(panel)panel.hidden=true;
+  if(priorApproved)window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));
+  confirm.checked=false;approve.disabled=true;gate("draft");summary("검토안 · 미승인");
+ }
  function invalidate(){generation++;controller?.abort();controller=null;busy=false;run.disabled=!ready;reviewer.invalidate();results.replaceChildren();confirm.checked=false;approve.disabled=true;consent.checked=false;gate("pending");get("posting-ai-review").hidden=true;if(window.MuttajiReviewedPosting?.provenance==="ai-user-approved")window.MuttajiReviewedPosting=null;const panel=get("requirements-check");if(panel)panel.hidden=true;window.dispatchEvent(new CustomEvent("muttaji:comparison-changed",{detail:{items:null}}));say("원문이 변경되어 이전 AI 분석과 승인이 무효화되었습니다.");}
  job.addEventListener("input",invalidate);job.addEventListener("change",invalidate);
  window.addEventListener("muttaji:rule-reviewed",()=>{generation++;controller?.abort();controller=null;busy=false;run.disabled=!ready;window.MuttajiPostingReviewGate={requiresApproval:false,status:"rule-fallback",text:job.value.trim()};reviewer.invalidate();results.replaceChildren();get("posting-ai-review").hidden=true;confirm.checked=false;approve.disabled=true;say("규칙 기반 대체 결과를 선택했습니다. AI 확정 결과가 아닙니다.");});
@@ -59,7 +68,7 @@
    const headers={"content-type":"application/json",...(publicMode?{"x-muttaji-csrf":await window.MuttajiSession.get()}:{"x-agent-access-code":get("posting-ai-access").value})};
    const response=await fetch("/api/model-analysis",{method:"POST",headers,signal:controller.signal,body:JSON.stringify({task:"classify-posting",request:{schemaVersion:1,revision,posting,source:imported?{type:"url",url:imported.sourceUrl,reviewed:true}:{type:"manual"},consent:{externalAi:true}}})});
    const payload=await response.json();if(current!==generation||posting!==job.value.trim())return;
-   if(!response.ok){const code=payload.error;const lines=payload.validation?.missingLines;const messages={BUDGET_EXHAUSTED:"AI 공유 예산 한도에 도달했습니다.",TOTAL_LIMIT_REACHED:"AI 공유 호출 한도에 도달했습니다.",RATE_LIMITED:"AI 요청 횟수가 제한되었습니다.",PROVIDER_OUTPUT_LIMIT:"출력 한도로 전체 분석을 완료하지 못했습니다.",ADAPTER_TIMEOUT:"분석 시간이 초과되었습니다.",PROVIDER_AUTH:"서버 AI 인증에 실패했습니다.",PROVIDER_QUOTA:"제공자의 크레딧 또는 한도 문제입니다.",SESSION_REQUIRED:"세션을 확인하지 못했습니다. 새로고침 후 다시 시도해 주세요.",ACCESS_DENIED:"테스트 접근 코드가 올바르지 않습니다."};throw Error((messages[code]||"AI 응답의 전체 범위·인용·분류 근거를 확인하지 못했습니다.")+(lines?.length?" 미완료 원문 행: "+lines.join(", "):"")+" 입력과 기존 사용자 결과는 유지합니다. 자동 재시도하지 않습니다.");}
+   if(!response.ok){const code=payload.error;const lines=payload.validation?.missingLines;const reason=payload.validation?.reason;const messages={BUDGET_EXHAUSTED:"AI 공유 예산 한도에 도달했습니다.",TOTAL_LIMIT_REACHED:"AI 공유 호출 한도에 도달했습니다.",RATE_LIMITED:"AI 요청 횟수가 제한되었습니다.",PROVIDER_OUTPUT_LIMIT:"출력 한도로 전체 분석을 완료하지 못했습니다.",ADAPTER_TIMEOUT:"분석 시간이 초과되었습니다.",PROVIDER_AUTH:"서버 AI 인증에 실패했습니다.",PROVIDER_QUOTA:"제공자의 크레딧 또는 한도 문제입니다.",SESSION_REQUIRED:"세션을 확인하지 못했습니다. 새로고침 후 다시 시도해 주세요.",ACCESS_DENIED:"테스트 접근 코드가 올바르지 않습니다."};throw Error((messages[code]||("AI 분석 응답 검증 실패"+(code==="INVALID_AGENT_OUTPUT"?" ("+({"POSTING_COVERAGE":"원문 누락","POSTING_QUOTE":"원문 인용 불일치","POSTING_POSITION":"줄번호 불일치","POSTING_OBLIGATION":"필수·우대 분류 근거 불일치","POSTING_APPLICANT_SCOPE":"지원 범위 불일치","POSTING_SCOPE_QUOTE":"적용 근거 불일치","POSTING_FORMAT":"응답 형식 오류","POSTING_ITEM_FORMAT":"항목 형식 오류"}[reason]||"기타 검증 오류")+")":"")))+(lines?.length?" 미완료 원문 행: "+lines.join(", "):"")+" 입력과 기존 사용자 결과는 유지합니다. 자동 재시도하지 않습니다.");}
    if(payload.data?.revision!==revision)throw Error("현재 입력과 분석 결과가 일치하지 않습니다.");
    reviewer.receive(posting,payload.data);unconfirm();render();say("AI 제안 · 미승인입니다. 참고 정보까지 검토하고 분류·적용 범위를 수정한 뒤 직접 확정해 주세요.");
   }catch(e){if(current===generation)say(e.name==="AbortError"?"분석을 중단했습니다. 입력과 기존 결과를 유지하며 자동 재시도하지 않습니다.":e.message);}
