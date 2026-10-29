@@ -12,6 +12,16 @@
   const fields=["goal-job","education","experience","certs","skills"];
   const labels={"goal-job":"목표 직무",education:"학력·전공",experience:"경력·프로젝트",certs:"보유 자격증",skills:"기술·지식"};
   const topics=[
+    {id:"english-business-email",requirement:/(?:영어|영문|English).{0,80}(?:이메일|메일|e-?mail)|(?:이메일|e-?mail).{0,80}(?:영어|영문|English)/i,
+      profile:/(?:영어|영문|English).{0,80}(?:이메일|메일|e-?mail)|(?:이메일|e-?mail).{0,80}(?:영어|영문|English)/i,fields:["experience","skills"],
+      meaning:"해외 본사와 비즈니스 수준으로 영문 이메일을 작성·회신하는 능력에 관한 조건입니다.",
+      connection:"영문 업무 이메일 작성·회신을 직접 언급한 사용자 입력을 연결했습니다. 일반 한국어 보고·협업 경험은 영문 이메일 능력의 직접 증빙이 아닙니다.",
+      action:"영문 이메일 작성·회신 경험이 있다면 민감정보를 제외하고 역할·전달 내용·회신 결과를 정리하세요. 없다면 가상 취약점 조치 보고 영문 이메일을 연습하고 실습으로 구분하세요."},
+    {id:"office-software",requirement:/(?:MS[\s-]*Office|Microsoft\s*Office|Excel|엑셀|PowerPoint|파워포인트|PPT)/i,
+      profile:/(?:MS[\s-]*Office|Microsoft\s*Office|Excel|엑셀|PowerPoint|파워포인트|PPT)/i,fields:["experience","skills"],
+      meaning:"Excel·PowerPoint와 같은 사무 프로그램을 실제로 활용하는 능력에 관한 조건입니다.",
+      connection:"사무 프로그램명을 직접 명시한 입력을 연결했습니다. 일반 보고서 작성·협업 경험만으로 Excel·PowerPoint 사용 능력을 확정하지 않습니다.",
+      action:"직접 만든 Excel 표·함수·차트와 PowerPoint 발표 자료가 있다면 사용한 기능과 작성 범위를 구분해 정리하세요."},
     {id:"mobility",requirement:/출장|상주|비상주|교대\s*근무/,profile:/출장|상주|비상주|교대\s*근무/,fields:["experience","skills"],
       meaning:"공고에 적힌 근무 방식과 출장 업무에 대응하는 조건입니다.",connection:"입력한 업무 수행 가능 여부를 이 조건에 대한 설명으로 연결했습니다.",
       action:"입력한 근무·출장 가능 여부를 지원서의 근무 조건 항목에 활용할 수 있습니다."},
@@ -213,20 +223,32 @@
       const genericCertificate=topic.id==="certificate"&&
         /^(?:(?:IT|보안|정보보안)\s*)?(?:관련\s*)?자격증\s*(?:보유자|소지자|보유|소지|우대)$/i
           .test(item.text.replace(/^[·ㆍ•*\-\s]+/,"").trim());
+      // Mixed named examples + "etc." can show RELATED credentials as evidence,
+      // never as automatically employer-recognized qualifications.
+      const broaderSecurityExamples=topic.id==="certificate"&&
+        /(?:CISSP|CISA)[^\n]{0,70}등[^\n]{0,70}(?:IT\s*)?보안\s*관련\s*자격증/i.test(item.text);
       const assessment=byId.get(item.id);
       const manual=readString(assessment?.explanation,12000);
       const evidence=manual.trim()?[{source:"assessment",field:item.id,label:"이 조건에 직접 입력한 근거",start:0,end:manual.length,quote:manual}]:[];
       if(topic.fields)for(const field of topic.fields){
         for(const ref of fragments[field]){
+          const relatedSecurityCertificate=broaderSecurityExamples&&
+            /(?:정보보안(?:산업)?기사|CompTIA\s*Security\+)/i.test(ref.quote)&&
+            !planned.test(ref.quote)&&!absent.test(ref.quote);
+          const directCertificate=topic.id==="certificate"&&
+            (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote)
+              :ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());}));
           const matches=topic.id==="certificate"
             ? (genericCertificate
               ? topic.profile.test(ref.quote)&&!/미보유|미취득|준비\s*중|취득\s*예정|보유하지\s*않|취득하지\s*않|없습니다/.test(ref.quote)
-              : (typeof certificateMatcher==="function"?certificateMatcher(item.text,ref.quote):ref.quote.split(/[,;\n]/).some(name=>{const n=name.trim();return n.length>=2&&item.text.toLowerCase().includes(n.toLowerCase());})))
+              : directCertificate||relatedSecurityCertificate)
             : topic.focused?!!profileLinkKind(topic,ref.quote,item.text):topic.profile.test(ref.quote);
           if(matches&&!evidence.some(existing=>existing.quote.includes(ref.quote))){
+            const relatedOnly=relatedSecurityCertificate&&!directCertificate;
             const linkKind=profileLinkKind(topic,ref.quote,item.text);
             const note=planned.test(ref.quote)?"계획·준비 입력":absent.test(ref.quote)?"미경험·미보유 입력":(topic.id==="collaboration-documentation"&&/협업|협의|조율|부서\s*간/i.test(ref.quote))?linkKind:learningEvidence.test(ref.quote)?"교육·실습 입력":linkKind;
-            evidence.push({...ref,label:note?ref.label+" · "+note:ref.label});
+            evidence.push({...ref,label:relatedOnly?ref.label+" · 관련 보안 자격증(채용사 인정 미확인)":note?ref.label+" · "+note:ref.label,
+              relatedOnly});
           }
           if(evidence.length>=3)break;
         }
@@ -245,14 +267,24 @@
       }
       if(topic.id==="ai-usage"&&evidence.some(ref=>ref.source==="profile"&&learningEvidence.test(ref.quote)))
         explanation+=" 교육 이력은 실제 AI 자동화 수행 경험을 증명하지 않습니다.";
+      if(topic.id==="english-business-email"&&!evidence.length)
+        explanation="입력에서 비즈니스 영문 업무 이메일 경험을 직접 확인하지 못했습니다. 일반 한국어 보고·협업 경험만으로 영어 이메일 능력을 판단하지 않습니다.";
+      if(topic.id==="office-software"&&!evidence.length)
+        explanation="입력에서 Excel·PowerPoint 등 사무 프로그램을 직접 사용한 근거를 확인하지 못했습니다. 일반 문서 작성 경험만으로 사용 능력을 단정하지 않습니다.";
       if(genericCertificate&&evidence.length)
         explanation="자격증 입력란의 보유 자격증을 참고 근거로 연결했습니다. 해당 자격이 공고에서 말하는 '관련 자격증'에 해당하는지는 채용사의 인정 기준을 확인해야 합니다.";
+      if(broaderSecurityExamples&&evidence.some(ref=>ref.relatedOnly))
+        explanation="보유 입력에 있는 보안 관련 자격증을 참고 근거로 연결했습니다. 공고에 직접 명시된 CISSP·CISA와는 구분하며, 채용사의 인정 여부를 확인해야 합니다. 관련성만으로 우대조건을 자동 충족 처리하지 않습니다.";
       if(topic.id==="related-work"&&/인턴|알바/.test(item.text)&&evidence.length)explanation+=" 인턴·알바 표기만으로 다른 고용 형태의 경험을 배제하지 않습니다.";
       if(hasAbsence)explanation+=" 경험이 없다고 적은 내용도 입력 그대로 함께 보여드립니다.";
       if(hasPlan)explanation+=" 예정·계획은 앞으로 준비할 내용으로 소개할 수 있습니다.";
       let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
       if(genericCertificate&&evidence.length)
         nextAction="자격증의 정확한 이름과 취득 사실을 확인하고, 지원 직무 관련성과 채용사 인정 여부를 원문 또는 채용 담당자에게 확인하세요.";
+      if((topic.id==="english-business-email"||topic.id==="office-software")&&!evidence.length)
+        nextAction=topic.action;
+      if(broaderSecurityExamples&&evidence.some(ref=>ref.relatedOnly))
+        nextAction="보유 자격증명과 취득 사실을 확인하고, 공고에 직접 예시되지 않은 보안 자격증을 우대로 인정하는지 채용 담당자에게 확인하세요.";
       if(topic.id==="unrestricted-degree"){
         explanation=topic.connection;
         nextAction=topic.action;

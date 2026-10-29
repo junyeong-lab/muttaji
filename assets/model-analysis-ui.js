@@ -24,13 +24,18 @@
  }).catch(()=>{ready=false;button.disabled=true;say("실제 AI 분석은 아직 비활성화 상태입니다. 기존 비교·설명은 계속 사용할 수 있습니다.");});
  button.addEventListener("click",async()=>{
   if(!ready||busy)return;
+  const gate=window.MuttajiPostingReviewGate;
+  if(gate?.requiresApproval===true&&(gate.status!=="approved"||gate.text!==get("job-text").value.trim())){say("먼저 공고 화면에서 AI 원문 분류를 검토하고 조건을 확정해 주세요.");return;}
   if(!consent.checked){say("전송 내용을 확인한 뒤 동의해 주세요.");return;}
   if(!publicMode&&!get("model-access").value){say("서버에서 설정한 테스트 접근 코드를 입력해 주세요. API 키는 입력하지 마세요.");return;}
   let request,requirements;
   try{
    const posting=get("job-text").value.trim();
    request=window.MuttajiAgentInput.prepare({posting,profile:Object.fromEntries(fields.map(id=>[id,get(id).value])),imported:window.MuttajiImportedPosting,consent:true,revision:"model-"+Date.now()});
-   requirements=window.MuttajiRequirements.requirements(posting,window.JobTextAnalyzer,window.MuttajiReviewedPosting).map(x=>({id:x.id,sourceQuote:posting.includes(x.source)?x.source:x.text}));
+   requirements=window.MuttajiRequirements.requirements(posting,window.JobTextAnalyzer,window.MuttajiReviewedPosting).map(x=>{
+    const sourceQuote=posting.includes(x.source)?x.source:x.text;
+    return {id:x.id,sourceQuote,...(sourceQuote.includes(x.text)?{conditionQuote:x.text}:{})};
+   });
    if(!requirements.length)throw Error("필수·우대 조건을 먼저 확인해 주세요.");
    if(requirements.length>20)throw Error("초기 AI 테스트는 요건 20개까지 지원합니다. 공고 범위를 줄여 주세요.");
   }catch(e){say("분석 입력을 확인해 주세요: "+e.message);return;}
@@ -43,8 +48,10 @@
    if(!response.ok&&payload.error==="INVALID_AGENT_OUTPUT"){
     const reasons={RESPONSE_FORMAT:"응답 형식이 계약과 다릅니다.",REVISION_MISMATCH:"현재 입력과 응답의 식별자가 다릅니다.",REQUIREMENT_COUNT:"일부 요건이 누락되거나 추가되었습니다.",REQUIREMENT_ID:"요건 식별자가 바뀌거나 중복되었습니다.",POSTING_QUOTE:"공고 인용이 해당 요건 원문과 일치하지 않습니다.",PROFILE_QUOTE:"경험 인용이 해당 입력란의 원문과 일치하지 않습니다.",STATUS_WITHOUT_EVIDENCE:"입력 근거 없이 확인 필요 이외의 상태를 제안했습니다.",SKILL_QUOTE:"기술 인용이 공고 원문과 일치하지 않습니다.",CERTIFICATE_ID:"자격증 제안이 제공된 DB 목록과 일치하지 않습니다.",CERTIFICATE_QUOTE:"자격증 추천 근거가 공고 원문과 일치하지 않습니다.",ITEM_FORMAT:"요건 설명의 형식이나 길이가 기준과 다릅니다.",PROFILE_FORMAT:"경험 근거의 형식이 기준과 다릅니다.",SKILL_FORMAT:"기술 목록 형식이 기준과 다릅니다.",ACTION_FORMAT:"준비 행동의 형식이나 길이가 기준과 다릅니다.",CERTIFICATE_FORMAT:"자격증 목록 형식이 기준과 다릅니다."};
     const detail=payload.validation;
+    const semanticReasons={SEMANTIC_FORMAT:"의미 분석 구조가 계약과 다릅니다.",SEMANTIC_QUOTE:"의미 단위 또는 불확실성의 원문 인용이 일치하지 않습니다.",SEMANTIC_COVERAGE:"의미 단위에서 원문 일부가 누락되거나 순서가 바뀌었습니다.",SEMANTIC_SCOPE_QUOTE:"직무·지원 유형의 적용 범위 근거를 확인하지 못했습니다.",SEMANTIC_APPLICANT_SCOPE:"신입·경력 적용 범위가 원문과 충돌합니다.",SEMANTIC_NEGATION:"필수가 아니라는 문장의 의미가 보존되지 않았습니다.",SEMANTIC_LOGIC:"AND·OR 연결 관계가 원문과 다릅니다.",SEMANTIC_UNSUPPORTED_CLAIM:"근거 없는 확률·보장 또는 실습의 경력 대체 주장이 포함되었습니다."};
+    semanticReasons.SEMANTIC_OBLIGATION="명시된 필수·우대 문구와 해석이 충돌합니다.";
     const position=Number.isInteger(detail?.itemIndex)?"응답 항목 "+(detail.itemIndex+1)+": ":"";
-    throw Error("AI 응답 검증 실패 · "+position+(reasons[detail?.reason]||"응답의 근거를 확인하지 못했습니다.")+" 결과는 반영하지 않았으며 자동 재시도하지 않습니다.");
+    throw Error("AI 응답 검증 실패 · "+position+(reasons[detail?.reason]||semanticReasons[detail?.reason]||"응답의 근거를 확인하지 못했습니다.")+" 결과는 반영하지 않았으며 자동 재시도하지 않습니다.");
    }
    if(!response.ok)throw Error(({BUDGET_EXHAUSTED:"서비스의 AI 예산 한도에 도달했습니다. 기존 비교는 계속 사용할 수 있습니다.",TOTAL_LIMIT_REACHED:"서비스의 AI 이용 한도에 도달했습니다.",RATE_LIMITED:"오늘의 AI 이용 한도에 도달했습니다.",NOT_INITIALIZED:"AI 이용 제한 저장소가 아직 준비되지 않았습니다.",QUOTA_UNAVAILABLE:"서버 이용 한도를 확인할 수 없어 분석을 중단했습니다.",SERVICE_DISABLED:"현재 AI 분석은 비활성화 상태입니다.",SESSION_REQUIRED:"새로고침 후 다시 이용해 주세요.",PROVIDER_AUTH:"OpenAI API 키 인증에 실패했습니다. 서버 키 설정을 확인해 주세요.",PROVIDER_QUOTA:"OpenAI API 크레딧 또는 사용 한도 문제입니다. 추가 결제 없이 계정 상태부터 확인해 주세요.",PROVIDER_MODEL_UNAVAILABLE:"설정한 모델에 접근할 수 없습니다. 모델 ID·계정 권한을 확인해야 합니다.",PROVIDER_RATE_LIMIT:"OpenAI 요청 제한에 도달했습니다. 자동 재시도하지 않습니다.",PROVIDER_BAD_REQUEST:"모델이 요청 형식 또는 옵션을 거부했습니다. 코드 점검이 필요합니다.",PROVIDER_OUTPUT_LIMIT:"AI 응답이 출력 한도에 도달해 완성되지 않았습니다. 자동 재시도하지 않습니다.",PROVIDER_OUTPUT_INVALID:"AI가 정해진 JSON 형식의 응답을 완성하지 못했습니다. 자동 재시도하지 않습니다.",PROVIDER_NO_OUTPUT:"AI가 분석 결과를 반환하지 않았습니다. 자동 재시도하지 않습니다.",PROVIDER_REQUEST_TOO_LARGE:"AI 전송 요청이 서버의 크기 한도를 초과했습니다. 공고나 역량 입력 분량을 줄여 주세요.",ADAPTER_FAILED:"AI 처리 중 분류되지 않은 오류가 발생했습니다. 자동 재시도하지 않습니다.",PROVIDER_UNAVAILABLE:"OpenAI 서버 오류입니다. 자동 재시도하지 않습니다.",AGENT_DISABLED:"서버 AI 설정이 비활성화되어 있습니다.",ACCESS_DENIED:"테스트 접근 코드가 올바르지 않습니다.",TEST_LIMIT_REACHED:"이번 서버의 테스트 횟수를 모두 사용했습니다.",INPUT_TOO_LARGE:"입력 분량을 줄여 주세요.",ADAPTER_TIMEOUT:"분석 시간이 초과되었습니다. 자동 재시도하지 않습니다.",INVALID_AGENT_OUTPUT:"응답의 근거를 확인하지 못해 표시하지 않았습니다."})[payload.error]||"분석을 완료하지 못했습니다. 기존 비교 기능은 계속 사용할 수 있습니다.");
    if(payload.data?.revision!==request.revision||!Array.isArray(payload.data.items))throw Error("분석 응답을 확인하지 못했습니다.");
@@ -52,6 +59,19 @@
     const card=el("article","");card.className="agent-result-card";
     card.append(el("h3",item.postingQuote),el("p",item.interpretation),el("p","AI 제안 상태: "+item.proposedStatus+" · 직접 선택한 상태에 반영하지 않습니다."),el("p",item.reason));
     card.append(el("h4","설명에 사용한 근거"),el("blockquote",item.postingQuote));
+    if(item.semanticAnalysis){
+     const semantic=item.semanticAnalysis;
+     const located=ref=>ref.length===1?"원문 "+ref[0].line+"행":"원문 위치 최대 "+ref.length+"곳 · 문맥 확인 필요";
+     card.append(el("p",located(semantic.locations)));
+     card.append(el("h4","조건의 의미와 적용 범위 · AI 보조 해석"));
+     const meanings={required:"필수",preferred:"우대",not_required:"필수 아님",unclear:"확인 필요"},relations={start:"",and:"AND · ",or:"OR · ",unclear:"관계 확인 필요 · "},types={common:"공통",new:"신입",experienced:"경력",unclear:"적용 유형 확인 필요"};
+     for(const unit of semantic.units){
+      card.append(el("p",relations[unit.relation]+meanings[unit.obligation]+" · "+types[unit.applicantType]+" · "+located(unit.locations)),el("blockquote",unit.quote));
+      if(unit.roleQuote)card.append(el("p","직무 범위 근거: "+unit.roleQuote+(unit.roleLocations?.length?" · "+located(unit.roleLocations):"")));
+      if(unit.applicantQuote)card.append(el("p","지원 유형 근거: "+unit.applicantQuote+(unit.applicantLocations?.length?" · "+located(unit.applicantLocations):"")));
+     }
+     for(const note of semantic.uncertainties)card.append(el("p","해석 확인 필요: "+note.reason),el("blockquote",note.quote));
+    }
     for(const ref of item.profileEvidence)card.append(el("blockquote",ref.quote));
     for(const [title,items] of [["보완·확인할 부분",item.missing],["다음 준비 행동",item.actions]]){if(!items.length)continue;card.append(el("h4",title));const ul=el("ul","");items.forEach(x=>ul.append(el("li",x)));card.append(ul);}
     if(Array.isArray(item.preparationSuggestions)&&item.preparationSuggestions.length){
@@ -62,7 +82,7 @@
     results.append(card);
    }
    const removed=(Array.isArray(payload.data.validationWarnings)?payload.data.validationWarnings:[]).filter(x=>x.code==="UNVERIFIED_SKILL_REMOVED").reduce((sum,x)=>sum+(Number.isInteger(x.count)&&x.count>0?x.count:0),0);
-   say((removed?"원문 근거를 확인하지 못한 부가 기술 항목 "+removed+"개를 제외했습니다. ":"")+"AI 보조 의견입니다. 공고와 입력 근거를 확인해 주세요. 기존 상태·로드맵은 변경하지 않았습니다.");
+   say((payload.data.semanticCoverage?.complete===false?"요청 항목 한도로 추가 의미 분석 대상 일부는 분석하지 못했습니다. ":"")+(removed?"원문 근거를 확인하지 못한 부가 기술 항목 "+removed+"개를 제외했습니다. ":"")+"AI 보조 의견입니다. 공고와 입력 근거를 확인해 주세요. 기존 상태·로드맵은 변경하지 않았습니다.");
   }catch(e){if(current===generation)say(e.name==="AbortError"?"분석을 중단했습니다. 자동 재시도하지 않습니다.":e.message);}
   finally{clearTimeout(timer);if(current===generation){busy=false;controller=null;button.disabled=!ready;}}
  });

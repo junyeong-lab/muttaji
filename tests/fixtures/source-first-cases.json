@@ -1,0 +1,444 @@
+{
+  "records": [
+    {
+      "id": "50188423",
+      "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50188423",
+      "posting": "기업명: ㈜씨큐윈\n\n모집 직무: IT 네트워크보안 엔지니어 신입 및 경력 모집\n\n근무지: 서울 성동구 아차산로17길 49 (성수동2가, 생각공장데시앙플렉스) 924호\n\n모집기간 및 마감일: 게시일: 2026-10-16\n\n모집기간 및 마감일: 마감일: 2026-11-15T23:59\n\n㈜씨큐윈에서 정규직 신입·경력 채용을 진행합니다. 근무지는 서울 성동구 아차산로17길 49 (성수동2가, 생각공장데시앙플렉스)이며, 자세한 조건은 공고를 통해 확인할 수 있습니다.\n\n기타\n기타 참고사항\nFULL_TIME\n\n㈜씨큐윈네트워크보안 엔지니어 신입 및 경력 모집\n`씨큐윈`은 보안솔루션을 제공하는 보안 IT회사입니다. 2013년\n설립하여 꾸준히 성장해 왔으며 NAC, 웹방화벽, IPS, 네트워크보안, DB접근제어, SSL\n가시성, 망연계 등등 다양한 보안솔루션들을 취급하고, 고객에게 필요한 솔루션을 제공하고 있습니다. 제조사는 아니지만 제조사에게\n힘이 되는 파트너로서 그 능력을 인정받고 있습니다. 고객에게 지속적인 양질의 서비스를 제공하여 인터넷 기반으로 온라인의 가상세계를\n더욱 풍요롭고 쾌적한 환경으로 창출하고 발전시키고자 합니다. 서울 성동구 성수동1가에 위치하고 있으며,\n네트워크/시스템/정보보안사업을 하고 있습니다. 저희와 함께 꿈을 향해 나아갈 인재를 찾습니다.\n모집분야 및\n자격요건\n모집분야 및 자격요건정보\n모집분야\n담당업무\n자격요건\n모집인원\n기술부 엔지니어\n- IT보안\n- 네트워크 보안\n- 개인정보보안 (웹방화벽 NAC/IPS/네트워크 보안)(유무선 네트워크 장비설치 및 유지보수)\n[우대사항]\n웹방화벽 구축/설계/유지보수 경험 (유관업무 경력자)\n보안제품, NAC 경력자\n시큐아이, 지니언스, 소만사 제품 경력자\nIT정보 관련 분야 전문 지식 및 자격증 보유자\n전공: 정보통신공학과, 컴퓨터공학과, IT관련학과\n스스로 성장하고자 하는 의지와 능동적인 성향을 지니신분\n0명\n근무형태\n- 신입 : 정규직 (수습기간 3개월)\n- 경력 : 정규직 (협의)\n복리후생\n연금·보험\n국민연금 , 고용보험, 산재보험, 건강보험, 퇴직연금\n휴무·휴가·행사\n주5일제, 연차제도, 반차제도, 워크샵/MT, 야유회\n사내제도·성장\n교육/세미나/스터디, 멘토링 제도\n보상·수당·지원\n장기근속 포상, 우수사원 포상제도, 자기개발 지원, 야간교통비 지급, 도서 구입비 지원\n전형절차\n-\n서류전형\n-\n1차면접임원면접\n-\n최종합격\n※ 면접일정은 추후 통보됩니다.\n유의사항\n- 허위사실이 발견될 경우 채용이 취소될 수 있습니다.",
+      "method": "jobkorea-public-detail",
+      "capturedAt": "2026-10-29T03:37:23.020Z",
+      "expected": {
+        "schemaVersion": 1,
+        "revision": "raw-50188423",
+        "mode": "posting-classification",
+        "complete": true,
+        "items": [
+          {
+            "id": "p0",
+            "category": "company",
+            "line": 1,
+            "endLine": 1,
+            "quote": "기업명: ㈜씨큐윈",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p1",
+            "category": "role",
+            "line": 31,
+            "endLine": 31,
+            "quote": "기술부 엔지니어",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p2",
+            "category": "responsibilities",
+            "line": 32,
+            "endLine": 32,
+            "quote": "- IT보안",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p3",
+            "category": "responsibilities",
+            "line": 33,
+            "endLine": 33,
+            "quote": "- 네트워크 보안",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p4",
+            "category": "responsibilities",
+            "line": 34,
+            "endLine": 34,
+            "quote": "- 개인정보보안 (웹방화벽 NAC/IPS/네트워크 보안)(유무선 네트워크 장비설치 및 유지보수)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p5",
+            "category": "preferred",
+            "line": 36,
+            "endLine": 36,
+            "quote": "웹방화벽 구축/설계/유지보수 경험 (유관업무 경력자)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "[우대사항]",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p6",
+            "category": "preferred",
+            "line": 37,
+            "endLine": 37,
+            "quote": "보안제품, NAC 경력자",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "[우대사항]",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p7",
+            "category": "preferred",
+            "line": 38,
+            "endLine": 38,
+            "quote": "시큐아이, 지니언스, 소만사 제품 경력자",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "[우대사항]",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p8",
+            "category": "preferred",
+            "line": 39,
+            "endLine": 39,
+            "quote": "IT정보 관련 분야 전문 지식 및 자격증 보유자",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "[우대사항]",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p9",
+            "category": "preferred",
+            "line": 40,
+            "endLine": 40,
+            "quote": "전공: 정보통신공학과, 컴퓨터공학과, IT관련학과",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "[우대사항]",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p10",
+            "category": "preferred",
+            "line": 41,
+            "endLine": 41,
+            "quote": "스스로 성장하고자 하는 의지와 능동적인 성향을 지니신분",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "[우대사항]",
+            "roleQuote": "기술부 엔지니어",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          }
+        ],
+        "referenceRanges": [
+          {
+            "line": 3,
+            "endLine": 30,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          },
+          {
+            "line": 35,
+            "endLine": 35,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          },
+          {
+            "line": 42,
+            "endLine": 64,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          }
+        ]
+      },
+      "expectationKind": "human-authored-contract-fixture-not-live-model"
+    },
+    {
+      "id": "50162090",
+      "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50162090",
+      "posting": "기업명: 인트로맨㈜\n\n모집 직무: [외국계보험사/경력직] 처브라이프 생명보험 IT 정보보안 업무지원 채용\n\n근무지: 서울 강남구 테헤란로 401 (삼성동, 남경센타) 처브라이프생명보험\n\n모집기간 및 마감일: 게시일: 2026-10-13\n\n모집기간 및 마감일: 마감일: 2026-11-12T23:59\n\n인트로맨㈜에서 계약직 경력 채용을 진행합니다. 근무지는 서울 강남구 테헤란로 401 (삼성동, 남경센타)이며, 자세한 조건은 공고를 통해 확인할 수 있습니다.\n\n기타\n기타 참고사항\nCONTRACTOR\nTEMPORARY\n\n[선릉/외국계보험사/본사]\n처브라이프 생명보험\nIT 정보보안 업무지원 채용\n저희 인트로맨(주)는 핵심인재 확보를 통하여, 구인을 원하는 회사에 우수한 인재를, 또한 직장을 원하는\n구직자에게 원하는 회사를 연결 될 수 있도록 교량의 역할을 하는 아웃소싱 전문기업입니다.\n포지션 및 자격요건\nIT 운영보안팀\nIT 정보보안 업무지원\n담당업무\n* 해외 본사의 IT 정보보안 요구사항 대응 및 영문 이메일 커뮤니케이션 (e.g. 취약점\n조치 현황 정기·수시 보고)\n* IT 정보보안 프로젝트 관리 (e.g. 계약, 일정, 외주업체 진행 현황 관리)\n* 금융보안원 취약점 조치 요구사항 접수·관리 (e.g. IT 시스템 담당자 및 외주업체 조치\n요청, 결과 보고)\n? BCP(비상계획) 및 재해복구 관련 업무 (e.g. 연간 재해복구 훈련 일정 관리)\n* 임직원 대상 IT 정보보안 온라인 교육 운영 (e.g. 교육 공지, 이수 현황 관리)\n* IT 보안관련 기타 업무\n우대사항\n* 해외 본사와 영어로 이메일 커뮤니케이션 (비즈니스 레벨 수준)\n* IT 보안업무 관련 경력자 우대\n* CISSP, CISA 등 IT 보안관련 자격증 자격증 소지자 우대\n* IT 보안/네트워크/시스템 운영 관련 전공자 우대\n* 다양한 이해관계자와 원활한 의사소통 능력\n* MS office 활용능력(Excel, Powerpoint)\n근무조건\nㆍ근무기간 : 입사일 ~ 12개월(업무성과에 따라 연장가능성 있음 / 수습기간 3개월(급여는 100% 지급))\nㆍ근무요일 : 평일 월 ~ 금\nㆍ근무시간 : 09:00 ~ 18:00 (점심시간 1시간)\nㆍ급여 : 경력에 따라 개별 협의\n접수방법\nㆍ접수기한: 채용시 마감\nㆍ면접일정: 서류합격자에 한해 추후 별도 공지\nㆍ담당자: XXX 대리 / XXXXXXXXXXXXXXXXXX\nㆍ접수방법: 이메일 지원, 온라인지원\nㆍ하단 자사양식 이력서 작성하시어 송부 부탁드립니다.\n입사지원 서류에 허위사실이 발견될 경우, 채용확정 이후라도 채용이 취소될 수 있습니다.\n본 고지는 [채용절차의 공정화에 관한 법률] 제 11조 제 6항에 따른 것입니다. 2.당사 채용에 응시한 구직자 증 최종합격이 되지 못한 구직자는 [채용절차의 공정화에 관한 법] 에 따라, 제출한 채용서류의 반환을 청구할 수 있음을 알려 드립니다. 다만, 홈페이지 또는 전자우편으로 제출된 경우나 구직자가 당사의 요구없이 자발적으로 제출한 경우에는 그러지 아니하며, 천재지변이나 그 밖 에 당사의 책임이 없는 사유로 채용서류가 멸실된 경우에는 반환한 것으로 봅니다. 3.위 2항 본문에 따라 채용서류 반환 청구를 하는 구직자는 채용서류 반환청구서 [채용절차의 공정화에 관한 법률 시행규칙 별지 제 3호 서식] 를 작성하여 당 사로 팩스(XXXXXXXXXXXX) 또는 이메일(XXXXXXXXXXXXXXXXXXXXXXXXXXX)로 제출하면, 제품이 확인된 날로부터 14일 이내에 지정한 주소지로 등기우면 을 통하여 받송해 드립니다. 이 경우 등기우면 요금은 수신자가 부담으로 하게 되오니 유념하시기 바랍니다. 당사는 위 2항 본문에 따른 구직자의 반한 청 구에 대비하여 채용 여부가 확정되 날로부터 30일간 구직자가 제출한 채용서류 원본을 보관하게 되며, 그때까지 채용서류의 반환을 청구하지 아니할 경우에 는 [개인정보 보호법] 에 따라 지체없이 채용서류 일체를 파기할 예정입니다.",
+      "method": "jobkorea-public-detail",
+      "capturedAt": "2026-10-29T03:37:24.122Z",
+      "expected": {
+        "schemaVersion": 1,
+        "revision": "raw-50162090",
+        "mode": "posting-classification",
+        "complete": true,
+        "items": [
+          {
+            "id": "p0",
+            "category": "company",
+            "line": 1,
+            "endLine": 1,
+            "quote": "기업명: 인트로맨㈜",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p1",
+            "category": "company",
+            "line": 19,
+            "endLine": 19,
+            "quote": "처브라이프 생명보험",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p2",
+            "category": "role",
+            "line": 24,
+            "endLine": 25,
+            "quote": "IT 운영보안팀\nIT 정보보안 업무지원",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p3",
+            "category": "responsibilities",
+            "line": 27,
+            "endLine": 28,
+            "quote": "* 해외 본사의 IT 정보보안 요구사항 대응 및 영문 이메일 커뮤니케이션 (e.g. 취약점\n조치 현황 정기·수시 보고)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p4",
+            "category": "responsibilities",
+            "line": 29,
+            "endLine": 29,
+            "quote": "* IT 정보보안 프로젝트 관리 (e.g. 계약, 일정, 외주업체 진행 현황 관리)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p5",
+            "category": "responsibilities",
+            "line": 30,
+            "endLine": 31,
+            "quote": "* 금융보안원 취약점 조치 요구사항 접수·관리 (e.g. IT 시스템 담당자 및 외주업체 조치\n요청, 결과 보고)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p6",
+            "category": "responsibilities",
+            "line": 32,
+            "endLine": 32,
+            "quote": "? BCP(비상계획) 및 재해복구 관련 업무 (e.g. 연간 재해복구 훈련 일정 관리)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p7",
+            "category": "responsibilities",
+            "line": 33,
+            "endLine": 33,
+            "quote": "* 임직원 대상 IT 정보보안 온라인 교육 운영 (e.g. 교육 공지, 이수 현황 관리)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p8",
+            "category": "responsibilities",
+            "line": 34,
+            "endLine": 34,
+            "quote": "* IT 보안관련 기타 업무",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p9",
+            "category": "preferred",
+            "line": 36,
+            "endLine": 36,
+            "quote": "* 해외 본사와 영어로 이메일 커뮤니케이션 (비즈니스 레벨 수준)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "우대사항",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p10",
+            "category": "preferred",
+            "line": 37,
+            "endLine": 37,
+            "quote": "* IT 보안업무 관련 경력자 우대",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "우대사항",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p11",
+            "category": "preferred",
+            "line": 38,
+            "endLine": 38,
+            "quote": "* CISSP, CISA 등 IT 보안관련 자격증 자격증 소지자 우대",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "우대사항",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": "열거하지 않은 자격증의 동등 인정 여부는 확인되지 않았습니다."
+          },
+          {
+            "id": "p12",
+            "category": "preferred",
+            "line": 39,
+            "endLine": 39,
+            "quote": "* IT 보안/네트워크/시스템 운영 관련 전공자 우대",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "우대사항",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p13",
+            "category": "preferred",
+            "line": 40,
+            "endLine": 40,
+            "quote": "* 다양한 이해관계자와 원활한 의사소통 능력",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "우대사항",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          },
+          {
+            "id": "p14",
+            "category": "preferred",
+            "line": 41,
+            "endLine": 41,
+            "quote": "* MS office 활용능력(Excel, Powerpoint)",
+            "reason": "실제 원문을 사람이 대조해 작성한 계약 검사용 모의 분류",
+            "basisQuote": "우대사항",
+            "roleQuote": "IT 운영보안팀",
+            "applicantType": "unclear",
+            "applicantQuote": "",
+            "relation": "single",
+            "uncertainty": ""
+          }
+        ],
+        "referenceRanges": [
+          {
+            "line": 3,
+            "endLine": 18,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          },
+          {
+            "line": 20,
+            "endLine": 23,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          },
+          {
+            "line": 26,
+            "endLine": 26,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          },
+          {
+            "line": 35,
+            "endLine": 35,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          },
+          {
+            "line": 42,
+            "endLine": 54,
+            "reason": "기업 소개·표의 제목·인원·근무조건·전형 등 원문 참고 범위. 조건 누락 여부는 사용자 검토 필요"
+          }
+        ]
+      },
+      "expectationKind": "human-authored-contract-fixture-not-live-model"
+    }
+  ]
+}

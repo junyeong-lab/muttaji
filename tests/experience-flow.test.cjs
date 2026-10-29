@@ -106,3 +106,16 @@ test("confirmed URL provenance follows comparison and roadmap, while unsafe or s
  win.MuttajiImportedPosting.sourceUrl="https://jobs.example.org/demo/security";win.MuttajiImportedPosting.text="old posting";
  elements["requirements-run"].emit("click");assert.equal(lastItems(events).some(x=>x.postingSource),false);
 });
+test("AI draft gate preserves prior decisions; only approved AI categories enter comparison and roadmap",async()=>{
+ const {elements,win,events}=setup();elements["requirements-run"].emit("click");
+ const old=JSON.stringify(lastItems(events)),cards=elements["requirements-list"].children.length;
+ win.MuttajiPostingReviewGate={requiresApproval:true,status:"draft",text:elements["job-text"].value.trim()};
+ elements["requirements-run"].emit("click");assert.equal(JSON.stringify(lastItems(events)),old);assert.equal(elements["requirements-list"].children.length,cards);
+ assert.match(elements["requirements-message"].textContent,/승인 전/);
+ const record=require('./fixtures/source-first-cases.json').records[0],{validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ const review=require('./load-browser-module.cjs')('../assets/posting-review.js').create();review.receive(record.posting,validatePostingClassification(record.expected,{posting:record.posting,revision:record.expected.revision}));
+ elements["job-text"].value=record.posting;win.MuttajiReviewedPosting=review.approve(record.posting,true);win.MuttajiPostingReviewGate={requiresApproval:true,status:"approved",text:record.posting};
+ win.JobTextAnalyzer.analyze=()=>{throw Error('approved AI path must not invoke rule parser');};
+ elements["requirements-run"].emit("click");const items=lastItems(events);assert.equal(items.length,6);assert.ok(items.every(x=>x.kind==='preferred'));
+ assert.equal(elements["roadmap-list"].querySelectorAll('article').length,6);assert.match(elements["requirements-message"].textContent,/사용자/);
+});

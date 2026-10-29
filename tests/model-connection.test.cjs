@@ -11,7 +11,8 @@ test('local model stays disabled without all explicit settings, even with old cr
 test('actual AI SDK processes schema output with a fake language model and no network',async()=>{
  const {MockLanguageModelV4}=await import('ai/test');const {createSdkAdapter}=await import('../lib/agent/adapters/ai-sdk.js');
  const {analyzePrepared}=await import('../lib/agent/provider-interface.js');
- const model=new MockLanguageModelV4({doGenerate:async()=>({content:[{type:'text',text:JSON.stringify(output())}],finishReason:{unified:'stop'},usage:{inputTokens:{total:10,noCache:10},outputTokens:{total:20,text:20}},warnings:[]})});
+ const semanticOutput=output();semanticOutput.items[0].semantics={units:[{quote:'보안 로그 분석 경험',obligation:'required',roleScope:'unclear',roleQuote:'',applicantType:'unclear',applicantQuote:'',relation:'start'}],uncertainties:[]};
+ const model=new MockLanguageModelV4({doGenerate:async()=>({content:[{type:'text',text:JSON.stringify(semanticOutput)}],finishReason:{unified:'stop'},usage:{inputTokens:{total:10,noCache:10},outputTokens:{total:20,text:20}},warnings:[]})});
  const result=await analyzePrepared({request:request(),requirements,catalog:[],adapter:createSdkAdapter({model}),enabled:true,ownerApproved:true});
  assert.equal(result.items[0].proposedStatus,'확인 필요');assert.equal(model.doGenerateCalls.length,1);
 });

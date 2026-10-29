@@ -474,3 +474,95 @@ test("실공고 54832907: 사람인 원문 자모 'ㅇ' 표기를 조건에 섞�
  assert.equal(out.required[2].text,"새로운 업무에 대한 도전과 열정");
  assert.equal(out.required[0].source,"ㅇ'27년 1월 입사 가능자(석사 이하)");
 });
+
+
+test("5번째 공고: 4열 OCR 헤더 뒤 업무를 필수조건으로 오분류하지 않음",()=>{
+  // 원문 OCR을 대표하는 줄 구조. 표의 각 열 머리글이 본문보다
+  // 앞에 나열되므로 자격요건 이후에도 담당업무가 이어질 수 있다.
+  const lines=[
+    "모집분야 및 자격요건", "", "", "",
+    "모집분야", "담당업무", "자격요건", "", "모집인원", "",
+    "기술부", "엔지니어", "",
+    "ㆍ IT보안",
+    "ㆍ 네트워크 보안",
+    "ㆍ 개인정보보안 (웹방화벽 NAC/IPS/네트워크 보안)",
+    "",
+    "(유무선 네트워크 장비설치 및 유지보수)",
+    "", "[우대사항]",
+    "ㆍ 웹방화벽 구축/설계/유지보수 경험 (유관업무 경력자)",
+    "",
+    "ㆍ 보안제품, NAC 경력자",
+    "ㆍ 시큐아이, 지니언스, 소만사 제품 경력자",
+    "ㆍ IT정보 관련 분야 전문 지식 및 자격증 보유자",
+    "ㆍ 전공: 정보통신공학과, 컴퓨터공학과, IT관련학과",
+    "ㆍ 스스로 성장하고자 하는 의지와 능동적인 성향을 지니신분",
+    "", "", "0명"
+  ];
+  const out=analyze(lines.join("\n"));
+  assert.deepEqual(out.required.map(x=>x.text),[]);
+  assert.deepEqual(out.role.map(x=>x.text),["기술부","엔지니어"]);
+  assert.ok(out.responsibilities.some(x=>x.text==="IT보안"));
+  assert.ok(out.responsibilities.some(x=>x.text==="네트워크 보안"));
+  assert.ok(out.responsibilities.some(x=>x.text.includes("개인정보보안")));
+  assert.ok(out.responsibilities.some(x=>x.text.includes("유무선 네트워크 장비")));
+  assert.equal(out.preferred.length,6);
+  assert.ok(out.unresolved.some(x=>x.text==="0명"));
+  for(const entry of [...out.required,...out.preferred])
+    assert.doesNotMatch(entry.text,/모집인원|^기술부$|^엔지니어$|^IT보안$|^네트워크 보안$/);
+});
+
+test("4열 표 형태가 아니면 실제 자격요건은 계속 필수조건",()=>{
+  const text=[
+    "모집분야","담당업무","자격요건",
+    "경력 3년 이상",
+    "모집인원","1명",
+    "우대사항","정보보안기사"
+  ].join("\n");
+  const out=analyze(text);
+  // 실제 자격요건 아래에 있는 경력 조건은 유지하되,
+  // 독립 모집인원 머리글 아래의 인원 수는 필수조건이 아니다.
+  assert.equal(out.required.some(x=>x.text==="경력 3년 이상"),true);
+  assert.equal(out.required.some(x=>x.text==="1명"),false);
+  const ordinary=analyze(["담당업무","ㆍ 로그 분석","자격요건","ㆍ 경력 3년 이상",
+    "우대사항","ㆍ CISSP"].join("\n"));
+  assert.deepEqual(ordinary.required.map(x=>x.text),["경력 3년 이상"]);
+  assert.deepEqual(ordinary.responsibilities.map(x=>x.text),["로그 분석"]);
+});
+
+
+test("5번째 공고: 헤더 사이 부가 문구나 누락된 모집분야 헤더에도 본문은 필수가 아님",()=>{
+  const variants=[
+    [
+      "모집분야 및 자격요건",
+      "모집분야","담당업무","자격요건","(경력자 우대)","모집인원",
+      "기술부","엔지니어",
+      "IT보안","네트워크 보안","개인정보보안",
+      "유무선 네트워크 장비설치 및 유지보수",
+      "[우대사항]","웹방화벽 구축/설계/유지보수 경험"
+    ],
+    [
+      "모집분야 및 자격요건","담당업무","자격요건",
+      "모집인원","기술부","엔지니어",
+      "IT보안","네트워크 보안","개인정보보안","유무선 네트워크 장비설치 및 유지보수",
+      "우대사항","웹방화벽 구축/설계/유지보수 경험"
+    ]
+  ];
+  for(const lines of variants){
+    const out=analyze(lines.join("\n"));
+    assert.equal(out.tableLayoutDetected,true,JSON.stringify(lines));
+    assert.deepEqual(out.required.map(x=>x.text),[],JSON.stringify(lines));
+    assert.deepEqual(out.role.map(x=>x.text),["기술부","엔지니어"]);
+    assert.ok(out.responsibilities.some(x=>x.text==="IT보안"));
+    assert.ok(out.responsibilities.some(x=>x.text==="네트워크 보안"));
+    assert.ok(out.preferred.some(x=>x.text.includes("웹방화벽")));
+    assert.equal([...out.required,...out.preferred].some(x=>x.text==="모집인원"),false);
+  }
+});
+test("자격요건 구간 다음 모집인원은 언제나 필수조건에서 제외",()=>{
+  const out=analyze(["자격요건","ㆍ 경력 3년 이상",
+    "모집인원","0명","우대사항","ㆍ SQLD"].join("\n"));
+  assert.deepEqual(out.required.map(x=>x.text),["경력 3년 이상"]);
+  assert.equal(out.unresolved.some(x=>x.text==="모집인원"),false);
+  assert.equal(out.unresolved.some(x=>x.text==="0명"),true);
+  assert.deepEqual(out.preferred.map(x=>x.text),["SQLD"]);
+});
