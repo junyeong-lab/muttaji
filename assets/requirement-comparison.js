@@ -102,6 +102,17 @@
   function credentialSuggestion(item,profileCertificates){
     if(!item||typeof item.text!=="string"||!String(profileCertificates||"").trim())return null;
     const owned=ownedCertificates(profileCertificates);
+    // For this narrowly worded preferred example list, only CISSP/CISA are
+    // explicitly named. "Etc." is NOT approval of other security certificates.
+    const namedSecurityExamples=/^(?:CISSP\\s*[,，]\\s*CISA|CISA\\s*[,，]\\s*CISSP)\\s*등\\s*(?:IT\\s*)?보안\\s*관련\\s*자격증(?:\\s*자격증)?\\s*소지자\\s*우대$/i;
+    if(item.kind==="preferred"&&namedSecurityExamples.test(item.text.trim())){
+      const named=owned.filter(name=>["cissp","cisa"].includes(normCert(name)));
+      if(named.length)return {status:"충족",names:named,
+        reason:"공고에 직접 명시된 '"+named.join(", ")+"' 자격증명이 보유 입력과 일치합니다. 이 우대항목만 본인 입력 기준으로 충족 표시하며, 실제 취득 증빙 및 회사 인정 여부는 별도 확인이 필요합니다."};
+      // Other reported security certificates remain review-only, never
+      // auto-fulfilled merely because the posting says "등".
+      return null;
+    }
     const mentioned=catalog.map(group=>{
       const match=group.slice().sort((a,b)=>b.length-a.length).find(term=>mentions(item.text,term));
       return match?{name:group[0],term:match}:null;
