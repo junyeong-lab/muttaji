@@ -63,7 +63,7 @@ test('successful reanalysis invalidates earlier review while failed reanalysis p
 test('failure preserves old approved source and user comparison state, with no retry',async()=>{
  const {nodes,win,calls,events}=await setup({failure:{error:'INVALID_AGENT_OUTPUT',validation:{reason:'POSTING_COVERAGE',missingLines:[36]}}});
  const old={text:record.posting,provenance:'ai-user-approved',result:{required:[],preferred:[]},userState:'existing'};win.MuttajiReviewedPosting=old;win.MuttajiPostingReviewGate={requiresApproval:true,status:'approved',text:record.posting};
- nodes['posting-ai-consent'].checked=true;await nodes['posting-ai-run'].emit('click');assert.equal(win.MuttajiReviewedPosting,old);assert.equal(win.MuttajiPostingReviewGate.status,'approved');assert.equal(events.length,0);assert.equal(calls.length,2);assert.match(nodes['posting-ai-status'].textContent,/36/);
+ nodes['posting-ai-consent'].checked=true;await nodes['posting-ai-run'].emit('click');assert.equal(win.MuttajiReviewedPosting,old);assert.equal(win.MuttajiPostingReviewGate.status,'approved');assert.equal(events.length,0);assert.equal(calls.length,2);assert.match(nodes['posting-ai-status'].textContent,/36/);assert.match(nodes['posting-ai-status'].textContent,/원문 누락/);
 });
 test('source change invalidates approvals and suppresses late AI response',async()=>{
  let finish;const {nodes,win,events}=await setup({deferred:new Promise(r=>finish=r)});
