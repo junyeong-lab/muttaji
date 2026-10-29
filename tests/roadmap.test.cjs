@@ -4,7 +4,7 @@ const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const path=require("node:path");
 const vm=require("node:vm");
-const {buildRoadmap}=require("./load-browser-module.cjs")("../assets/roadmap.js");
+const {buildRoadmap,preparationSteps}=require("./load-browser-module.cjs")("../assets/roadmap.js");
 
 const comparison=[
   {id:"r0",kind:"required",text:"정보처리기사 또는 정보보안기사",status:"충족",explanation:"정보처리기사 취득"},
@@ -297,5 +297,30 @@ test("복합 요건 전용 안내는 선택 상태에 따라 바뀌지만 자동
    assert.match(item.steps.join(" "),/n8n/);
    assert.doesNotMatch(item.steps[0],/프로그래밍 언어·도구/);
   }
+ }
+});
+
+
+test("실공고 준비 로드맵은 병역·운전면허 등 지원 조건에 코딩 실습을 권하지 않는다",()=>{
+ for(const text of ["해외여행에 결격 사유가 없는 분","병역필 또는 면제자","운전가능자(1종 보통)","입사 가능자"]){
+  const steps=preparationSteps({kind:"required",text,status:"확인 필요"});
+  assert.equal(steps.length,3);
+  assert.match(steps.join(" "),/증빙|채용 담당자|행정/);
+  assert.doesNotMatch(steps.join(" "),/코드 작성|가상머신|VLAN\/ACL/);
+ }
+});
+test("실공고 준비 로드맵은 도구 및 업무에 맞는 검증 과제를 권한다",()=>{
+ const fixtures=[
+  ["Zabbix Prometheus Grafana 모니터링 도구 사용 경험",/대시보드|메트릭/],
+  ["Docker 컨테이너 배포 경험",/Dockerfile|컨테이너/],
+  ["PostgreSQL 데이터베이스 운영 및 DB 설계",/테이블|백업/],
+  ["React TypeScript 프론트 개발 경험",/기능|테스트/],
+  ["유관 부서와 협업하여 기술 문서 작성",/협의|보고자료/],
+  ["Airflow ETL 파이프라인 구축",/데이터|정제/]
+ ];
+ for(const [text,expected] of fixtures){
+  const steps=preparationSteps({kind:"preferred",text,status:"확인 필요"});
+  assert.equal(steps.length,3);
+  assert.match(steps.join(" "),expected,text);
  }
 });
