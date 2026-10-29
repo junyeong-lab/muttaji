@@ -416,3 +416,38 @@ test("실공고 유형: 지원자격/채용부문/복수 경력 표제는 구분
  assert.deepEqual(out.preferred.map(x=>x.text),["정보처리기사 자격"]);
  assert.equal(out.required.some(x=>/분석$/.test(x.text)),false);
 });
+
+test("실공고 37352299: 줄바꿈 보안 보호조치와 관련 자격증은 개별 문장이 아닌 한 요건으로 보존",()=>{
+ const posting=[
+  "[지원 자격]",
+  "- 정보보호 관련 법제도에 높은 이해를",
+  "가지고 있는 분",
+  "- 정보보호 관리체계 구축, 인증을 위한 실무",
+  "경험을 보유한 분",
+  "- PC/Mobile 웹/앱 등에 대한 기술적",
+  "보호조치 검토 및 개선안 도출이 가능한 분",
+  "- 정보보호 정책수립 담당자로서 최소 3년",
+  "이상의 경험을 보유한 분",
+  "[우대 사항]",
+  "- 국내/외 정보보호 인증심사원 자격을",
+  "보유한 분",
+  "- CISA/CISSP/CPPG 등 정보보호 관련",
+  "자격증을 보유한 분",
+  "- 적극적이고 주도적인 성향을 가진 분",
+  "- 조직내 커뮤니케이션이 원활한 분",
+  "- 자기계발에 열정적인 분"
+ ].join("\n");
+ const out=analyze(posting);
+ assert.equal(out.required.length,4);
+ assert.equal(out.preferred.length,5);
+ const tech=out.required.find(x=>x.text.startsWith("PC/Mobile"));
+ assert.ok(tech);
+ assert.match(tech.text,/기술적 보호조치 검토/);
+ assert.equal(tech.line,6);
+ assert.equal(tech.endLine,7);
+ const cert=out.preferred.find(x=>x.text.startsWith("CISA/CISSP"));
+ assert.ok(cert);
+ assert.match(cert.text,/정보보호 관련 자격증을 보유한 분/);
+ assert.equal(cert.line,13);
+ assert.equal(cert.endLine,14);
+});
