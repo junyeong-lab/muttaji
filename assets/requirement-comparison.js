@@ -104,7 +104,7 @@
     const owned=ownedCertificates(profileCertificates);
     // For this narrowly worded preferred example list, only CISSP/CISA are
     // explicitly named. "Etc." is NOT approval of other security certificates.
-    const namedSecurityExamples=/^(?:CISSP\\s*[,，]\\s*CISA|CISA\\s*[,，]\\s*CISSP)\\s*등\\s*(?:IT\\s*)?보안\\s*관련\\s*자격증(?:\\s*자격증)?\\s*소지자\\s*우대$/i;
+    const namedSecurityExamples=/^(?:CISSP\s*[,，]\s*CISA|CISA\s*[,，]\s*CISSP)\s*등\s*(?:IT\s*)?보안\s*관련\s*자격증(?:\s*자격증)?\s*소지자\s*우대$/i;
     if(item.kind==="preferred"&&namedSecurityExamples.test(item.text.trim())){
       const named=owned.filter(name=>["cissp","cisa"].includes(normCert(name)));
       if(named.length)return {status:"충족",names:named,
