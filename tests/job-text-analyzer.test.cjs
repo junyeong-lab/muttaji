@@ -474,3 +474,55 @@ test("실공고 54832907: 사람인 원문 자모 'ㅇ' 표기를 조건에 섞�
  assert.equal(out.required[2].text,"새로운 업무에 대한 도전과 열정");
  assert.equal(out.required[0].source,"ㅇ'27년 1월 입사 가능자(석사 이하)");
 });
+
+
+test("5번째 공고: 4열 OCR 헤더 뒤 업무를 필수조건으로 오분류하지 않음",()=>{
+  // 원문 OCR을 대표하는 줄 구조. 표의 각 열 머리글이 본문보다
+  // 앞에 나열되므로 자격요건 이후에도 담당업무가 이어질 수 있다.
+  const lines=[
+    "모집분야 및 자격요건", "", "", "",
+    "모집분야", "담당업무", "자격요건", "", "모집인원", "",
+    "기술부", "엔지니어", "",
+    "ㆍ IT보안",
+    "ㆍ 네트워크 보안",
+    "ㆍ 개인정보보안 (웹방화벽 NAC/IPS/네트워크 보안)",
+    "",
+    "(유무선 네트워크 장비설치 및 유지보수)",
+    "", "[우대사항]",
+    "ㆍ 웹방화벽 구축/설계/유지보수 경험 (유관업무 경력자)",
+    "",
+    "ㆍ 보안제품, NAC 경력자",
+    "ㆍ 시큐아이, 지니언스, 소만사 제품 경력자",
+    "ㆍ IT정보 관련 분야 전문 지식 및 자격증 보유자",
+    "ㆍ 전공: 정보통신공학과, 컴퓨터공학과, IT관련학과",
+    "ㆍ 스스로 성장하고자 하는 의지와 능동적인 성향을 지니신분",
+    "", "", "0명"
+  ];
+  const out=analyze(lines.join("\n"));
+  assert.deepEqual(out.required.map(x=>x.text),[]);
+  assert.deepEqual(out.role.map(x=>x.text),["기술부","엔지니어"]);
+  assert.ok(out.responsibilities.some(x=>x.text==="IT보안"));
+  assert.ok(out.responsibilities.some(x=>x.text==="네트워크 보안"));
+  assert.ok(out.responsibilities.some(x=>x.text.includes("개인정보보안")));
+  assert.ok(out.responsibilities.some(x=>x.text.includes("유무선 네트워크 장비")));
+  assert.equal(out.preferred.length,6);
+  assert.ok(out.unresolved.some(x=>x.text==="0명"));
+  for(const entry of [...out.required,...out.preferred])
+    assert.doesNotMatch(entry.text,/모집인원|^기술부$|^엔지니어$|^IT보안$|^네트워크 보안$/);
+});
+
+test("4열 표 형태가 아니면 실제 자격요건은 계속 필수조건",()=>{
+  const text=[
+    "모집분야","담당업무","자격요건","모집인원",
+    "서버 관리",
+    "경력 3년 이상",
+    "우대사항","정보보안기사"
+  ].join("\n");
+  const out=analyze(text);
+  // 부서명 + 직무 + 독립 우대 구간이 없는 단순 텍스트는 OCR 표로 추정하지 않는다.
+  assert.equal(out.required.some(x=>x.text==="경력 3년 이상"),true);
+  const ordinary=analyze(["담당업무","ㆍ 로그 분석","자격요건","ㆍ 경력 3년 이상",
+    "우대사항","ㆍ CISSP"].join("\n"));
+  assert.deepEqual(ordinary.required.map(x=>x.text),["경력 3년 이상"]);
+  assert.deepEqual(ordinary.responsibilities.map(x=>x.text),["로그 분석"]);
+});
