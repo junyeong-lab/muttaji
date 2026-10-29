@@ -124,10 +124,64 @@ test('local API retains access-code and call cap for source-first task',async()=
 });
 test('SDK uses raw schema and numbered whole source, keeps 4096 tokens/no retries/no tools',async()=>{
  const {createSdkAdapter}=await import('../lib/agent/adapters/ai-sdk.js');let sent;
- const adapter=createSdkAdapter({model:{},run:async o=>{sent=o;return {output:structuredClone(cases[0].expected)};},providerOptions:{openai:{store:false}}});
- await adapter.classify({request:request(cases[0]),instructions:['untrusted data']},{signal:new AbortController().signal});
- const p=JSON.parse(sent.prompt);assert.equal(p.untrustedData.sourceLines.length,cases[0].posting.split('\n').length);assert.equal(p.untrustedData.requirements,undefined);assert.equal(p.untrustedData.profile,undefined);assert.equal(sent.maxOutputTokens,4096);assert.equal(sent.maxRetries,0);assert.equal(sent.tools,undefined);assert.equal(sent.providerOptions.openai.store,false);
+ const input=request(cases[0]),compact={schemaVersion:2,revision:input.revision,mode:'posting-line-classification',items:[{line:36,endLine:36,category:'preferred',reason:'우대 요건',basisLine:35,roleLine:31,applicantLine:0,applicantType:'unclear',relation:'single'}]};
+ const adapter=createSdkAdapter({model:{},run:async o=>{sent=o;return {output:compact};},providerOptions:{openai:{store:false}}});
+ const result=await adapter.classify({request:input,instructions:['untrusted data']},{signal:new AbortController().signal});
+ const p=JSON.parse(sent.prompt);assert.equal(p.untrustedData.sourceLines.length,cases[0].posting.split('\n').length);assert.equal(p.untrustedData.requirements,undefined);assert.equal(p.untrustedData.profile,undefined);assert.equal(p.responseContract.schemaVersion,2);assert.equal(sent.maxOutputTokens,4096);assert.equal(sent.maxRetries,0);assert.equal(sent.tools,undefined);assert.equal(sent.providerOptions.openai.store,false);
+ assert.equal(result.items.find(x=>x.id==='model-line-0').quote,cases[0].posting.split('\n')[35]);
 });
+test('model returns numbered classification only; server derives all exact evidence and unselected reference ranges',async()=>{
+ const {expandCompactPostingOutput,compactPostingSchemaForRequest}=await import('../lib/agent/posting-line-contract.js');
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ for(const record of cases){
+  const req=request(record),lines=req.posting.split(/\r\n|\r|\n/);
+  const lineOf=(quote,upto)=>quote?Math.max(0,lines.findIndex((x,i)=>i+1<=upto&&x===quote)+1):0;
+  const compact={schemaVersion:2,revision:req.revision,mode:'posting-line-classification',
+   items:record.expected.items.map(x=>({line:x.line,endLine:x.endLine,category:x.category,
+    reason:'원문 행의 구조적 분류',basisLine:lineOf(x.basisQuote,x.line),roleLine:lineOf(x.roleQuote,x.line),
+    applicantLine:lineOf(x.applicantQuote,x.line),applicantType:x.applicantType,relation:x.relation}))};
+  assert.equal(compactPostingSchemaForRequest(req).properties.schemaVersion.enum[0],2);
+  const expanded=expandCompactPostingOutput(compact,req);
+  const validated=validatePostingClassification(expanded,req);
+  assert.equal(validated.complete,true);
+  assert.deepEqual(counts(validated.items),counts(record.expected.items));
+  assert.deepEqual(validated.coverage.missingLines,[]);
+  assert.ok(validated.items.some(x=>x.category==='reference'&&x.uncertainty.includes('누락')));
+  const state=review.create();state.receive(req.posting,validated);
+  assert.equal(state.snapshot().approved,null);
+ }
+});
+test('hallucinated positions, overlapping line IDs, and invented basis cannot certify a requirement',async()=>{
+ const {expandCompactPostingOutput}=await import('../lib/agent/posting-line-contract.js');
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ const req={posting:'담당업무\n네트워크 보안 장비 운영\n우대사항\n정보처리기사 소지자\n자격요건\n학사 졸업',revision:'compact-safety'};
+ const input={schemaVersion:2,revision:req.revision,mode:'posting-line-classification',
+  items:[
+   {line:2,endLine:2,category:'required',reason:'모델이 필수라고 추정',basisLine:999,roleLine:0,applicantLine:0,applicantType:'unclear',relation:'single'},
+   {line:4,endLine:4,category:'preferred',reason:'우대사항',basisLine:3,roleLine:0,applicantLine:0,applicantType:'unclear',relation:'single'},
+   {line:4,endLine:4,category:'required',reason:'중복 인용',basisLine:5,roleLine:0,applicantLine:0,applicantType:'unclear',relation:'single'},
+   {line:6,endLine:6,category:'required',reason:'학력 요건',basisLine:5,roleLine:0,applicantLine:0,applicantType:'unclear',relation:'single'}
+  ]};
+ const model=expandCompactPostingOutput(input,req),data=validatePostingClassification(model,req);
+ assert.equal(data.items.filter(x=>x.category==='required').length,1);
+ assert.equal(data.items.filter(x=>x.category==='preferred').length,1);
+ assert.equal(data.items.find(x=>x.quote==='네트워크 보안 장비 운영').category,'unresolved');
+ assert.equal(data.items.filter(x=>x.quote==='정보처리기사 소지자').length,1);
+ assert.ok(data.items.some(x=>x.category==='reference'&&x.quote.includes('담당업무')));
+ assert.equal(data.coverage.missingLines.length,0);
+});
+test('large source with no reliable model classifications remains reviewable without fabricated AI success claims',async()=>{
+ const {expandCompactPostingOutput}=await import('../lib/agent/posting-line-contract.js');
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ const req={posting:Array.from({length:400},(_,i)=>'공고 원문 '+(i+1)).join('\n'),revision:'long'};
+ const out=expandCompactPostingOutput({schemaVersion:2,revision:'long',mode:'posting-line-classification',items:[]},req);
+ const data=validatePostingClassification(out,req);
+ assert.equal(data.items.filter(x=>x.category==='required').length,0);
+ assert.equal(data.items.filter(x=>x.category==='unresolved').length,1);
+ assert.ok(data.items.some(x=>x.category==='reference'&&x.quote.includes('공고 원문 400')));
+ assert.deepEqual(data.coverage.missingLines,[]);
+});
+
 test('source-first multi-role/new/experienced and mixed alternatives keep separate evidence',async()=>{
  const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
  const posting='공통 자격요건\n학사 이상\n관리진단(경력)\n자격요건\n관리진단 경력 3년\n기술진단(신입)\n자격요건\n정보처리기사 또는 관련 전공\n경력만 해당: 관리체계 운영 경험';
