@@ -24,6 +24,8 @@
  }).catch(()=>{ready=false;button.disabled=true;say("실제 AI 분석은 아직 비활성화 상태입니다. 기존 비교·설명은 계속 사용할 수 있습니다.");});
  button.addEventListener("click",async()=>{
   if(!ready||busy)return;
+  const gate=window.MuttajiPostingReviewGate;
+  if(gate?.requiresApproval===true&&(gate.status!=="approved"||gate.text!==get("job-text").value.trim())){say("먼저 공고 화면에서 AI 원문 분류를 검토하고 조건을 확정해 주세요.");return;}
   if(!consent.checked){say("전송 내용을 확인한 뒤 동의해 주세요.");return;}
   if(!publicMode&&!get("model-access").value){say("서버에서 설정한 테스트 접근 코드를 입력해 주세요. API 키는 입력하지 마세요.");return;}
   let request,requirements;

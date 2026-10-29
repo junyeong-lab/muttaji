@@ -16,7 +16,8 @@
     const result=reviewed && reviewed.text===posting.trim() &&
       reviewed.result && Array.isArray(reviewed.result.required) && Array.isArray(reviewed.result.preferred)
         ? reviewed.result : parser.analyze(posting);
-    return ["required","preferred"].flatMap(kind=>result[kind].filter(item=>!item.sectionHeading&&!(parser.nonRequirementKind&&parser.nonRequirementKind(item.text))).map((item,index)=>({
+    const approvedAI=reviewed?.text===posting.trim()&&reviewed?.provenance==="ai-user-approved"&&reviewed?.userApproved===true;
+    return ["required","preferred"].flatMap(kind=>result[kind].filter(item=>!item.sectionHeading&&(approvedAI||!(parser.nonRequirementKind&&parser.nonRequirementKind(item.text)))).map((item,index)=>({
       id:kind+"-"+index,kind,text:item.text,source:item.source,
       line:item.line,endLine:item.endLine||item.line
     })));
@@ -307,6 +308,10 @@
     }
     const button=document.getElementById("requirements-run");
     button.addEventListener("click",()=>{
+      const gate=window.MuttajiPostingReviewGate;
+      if(gate?.requiresApproval===true&&(gate.status!=="approved"||gate.text!==job.value.trim()||window.MuttajiReviewedPosting?.provenance!=="ai-user-approved")){
+        help.textContent="공고 화면에서 AI 분류와 적용 범위를 검토하고 조건을 확정해 주세요. AI 제안은 승인 전까지 비교·로드맵에 반영하지 않습니다.";help.hidden=false;return;
+      }
       list.replaceChildren();panel.hidden=true;emitComparison(null);
       const parser=window.JobTextAnalyzer;
       if(!parser){help.textContent="공고 분류기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.";help.hidden=false;return;}
@@ -352,6 +357,7 @@
         list.appendChild(card);
       });
       sourceText=job.value;sourceProfile=snapshot();help.hidden=true;
+      if(gate){help.hidden=false;help.textContent=gate.requiresApproval?"입력 출처: AI 원문 분류를 사용자가 검토·확정한 조건입니다. 아래 충족 상태는 기존 비교 규칙과 본인 선택으로 별도 결정합니다.":"입력 출처: 사용자가 선택한 규칙 기반 대체 분류입니다. AI 확정 결과가 아닙니다.";}
       panel.hidden=false;update();
       panel.scrollIntoView({behavior:"smooth",block:"start"});
     });
