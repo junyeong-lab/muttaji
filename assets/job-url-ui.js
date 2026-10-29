@@ -18,7 +18,7 @@
   const message=text=>{get("job-url-status").textContent=text;};
   const buttonState=()=>{get("job-url-apply").disabled=!result||!get("job-url-confirm").checked||!get("job-url-draft").value.trim();};
   function invalidate(){generation++;active?.abort();active=null;result=null;get("job-url-review").hidden=true;get("job-url-confirm").checked=false;get("job-url-fetch").disabled=!available;buttonState();}
-  get("job-url").addEventListener("input",()=>{invalidate();message(available?"링크 입력만으로 수집하거나 AI를 호출하지 않습니다.":"URL 수집은 현재 사용할 수 없습니다. 본문을 직접 붙여넣어 주세요.");});
+  get("job-url").addEventListener("input",()=>{invalidate();message(available?"링크 입력만으로 본문을 수집하지 않습니다.":"URL 수집은 현재 사용할 수 없습니다. 본문을 직접 붙여넣어 주세요.");});
   get("job-url-draft").addEventListener("input",()=>{get("job-url-confirm").checked=false;buttonState();});
   get("job-url-confirm").addEventListener("change",buttonState);
   get("job-url-demo").addEventListener("click",()=>{
@@ -30,7 +30,7 @@
    let url;try{url=httpsUrl(get("job-url").value);}catch(error){message(error.message);return;}
    if(!publicMode&&!get("job-url-access").value){message("URL 수집 접근 코드를 입력해 주세요. 로컬 예제는 ‘가상 예제 링크 넣기’를 사용할 수 있습니다.");return;}
    invalidate();const current=generation;const controller=new AbortController();active=controller;
-   get("job-url-fetch").disabled=true;message("공개 본문을 가져오고 있습니다. 사용자 프로필과 AI 분석은 전송하지 않습니다.");
+   get("job-url-fetch").disabled=true;message("공개 채용공고 본문을 가져오고 있습니다. 내 역량 정보는 전송하지 않습니다.");
    const timer=setTimeout(()=>controller.abort(),19000);
    try{
     const response=await win.fetch("/api/job-url-import",{method:"POST",headers:{"content-type":"application/json",...(publicMode?{"x-muttaji-csrf":csrfToken}:{"x-job-import-token":get("job-url-access").value})},body:JSON.stringify({url}),cache:"no-store",signal:controller.signal});
@@ -56,7 +56,7 @@
      get("job-url-evidence").appendChild(dt);get("job-url-evidence").appendChild(dd);
     }
     get("job-url-review").hidden=false;buttonState();
-    message((payload.mode==="mock"?"모의 수집 결과입니다. ":"")+(data.contentStatus==="partial"?"본문 요건이 충분히 추출되지 않았습니다. 원문을 직접 복사해 보완하거나 기존 붙여넣기를 사용하세요.":"추출 본문을 확인·수정한 뒤 체크하고 적용하세요.")+" AI 분석은 실행하지 않았습니다.");
+    message((payload.mode==="mock"?"모의 수집 결과입니다. ":"")+(data.contentStatus==="partial"?"본문 요건이 충분히 추출되지 않았습니다. 원문을 직접 복사해 보완하거나 기존 붙여넣기를 사용하세요.":"추출 본문을 확인·수정한 뒤 체크하고 적용하세요.")+"");
    }catch(error){if(current===generation)message(controller.signal.aborted?"본문 가져오기가 취소되거나 제한 시간을 넘었습니다. 직접 붙여넣기도 가능합니다.":error instanceof SyntaxError?"서버 응답을 읽지 못했습니다. 직접 붙여넣기를 사용해 주세요.":String(error.message||"본문 가져오기에 실패했습니다."));}
    finally{clearTimeout(timer);if(current===generation){active=null;get("job-url-fetch").disabled=!available;get("job-url-access").value="";}}
   });
@@ -67,7 +67,7 @@
    get("job-text").dispatchEvent(new win.Event("input",{bubbles:true}));
    win.MuttajiImportedPosting={text,originalText:result.text,sourceUrl:result.sourceUrl,method:result.method,reviewed:true,edited:text!==result.text.trim()};
    get("job-url-undo").disabled=false;
-   message("확인한 본문을 기존 입력창에 적용했습니다. ‘텍스트 1차 분석하기’를 누르면 기존 비교·자격증 추천·로드맵으로 이어집니다. AI는 별도 동의·서버 활성화 후에만 실행됩니다.");
+   message("확인한 본문을 기존 입력창에 적용했습니다. ‘텍스트 분석하기’를 누르면 내 역량 비교·자격증 정보·로드맵으로 이어집니다.");
   });
   get("job-text").addEventListener("input",()=>{
    if(get("job-text").value!==appliedText){win.MuttajiImportedPosting=null;get("job-url-undo").disabled=true;}
