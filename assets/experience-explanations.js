@@ -77,6 +77,24 @@
   // "security" words. A related input is evidence for discussion, never proof
   // that the named technology was operated or the qualification was met.
   const focusedTopics=[
+    {id:"named-vendor-products",requirement:/시큐아이|지니언스|소만사|\bSECUI\b|\bGENIANS\b|\bSOMANSA\b/i,
+      profile:/시큐아이|지니언스|소만사|\bSECUI\b|\bGENIANS\b|\bSOMANSA\b|\bGenian\b/i,
+      fields:["experience","skills"],
+      meaning:"공고에 명시된 제조사의 보안 제품을 직접 다룬 경력에 관한 우대조건입니다.",
+      connection:"공고에 명시된 제조사 제품을 다룬 업무 입력을 연결했습니다. 제품명 일치만으로 실제 수행 내용과 경력 인정 여부가 검증되지는 않습니다.",
+      action:"실제 다룬 제조사·제품명, 구축·운영·유지보수 역할과 수행 기간을 확인하세요. 해당 경험이 없다면 일반 보안교육이나 점검으로 대신할 수 없습니다."},
+    {id:"nac-product-work",requirement:/\bNAC\b|네트워크\s*접근\s*제어/i,
+      profile:/\bNAC\b|네트워크\s*접근\s*제어/i,
+      fields:["experience","skills"],
+      meaning:"NAC(네트워크 접근제어) 제품의 구축·운영 경험을 요구하는 조건입니다.",
+      connection:"NAC 제품과 직접 관련된 수행 업무를 입력한 경우에만 근거를 연결했습니다. 일반 보안점검이나 교육은 NAC 운영 경력이 아닙니다.",
+      action:"다룬 NAC 제품명, 정책 설정·운영·장애 대응 범위 및 수행 기간을 확인하세요."},
+    {id:"web-application-firewall-work",requirement:/웹\s*방화벽|\bWAF\b/i,
+      profile:/웹\s*방화벽|\bWAF\b/i,
+      fields:["experience","skills"],
+      meaning:"웹방화벽(WAF) 제품의 구축·설계·운영·유지보수 경험에 관한 우대조건입니다.",
+      connection:"웹방화벽에 대한 직접 수행 업무만 연결했습니다. XDR 프로젝트·일반 방화벽·보안교육은 웹방화벽 운영 경력과 다릅니다.",
+      action:"직접 다룬 WAF 제품명과 구축·설계·운영·유지보수 역할 및 수행 기간을 확인하세요."},
     {id:"security-operations",requirement:/보안\s*정책\s*변경|운영\s*절차\s*(?:수립|개선)/i,
       profile:/보안\s*정책\s*(?:변경|수립|개선|설정)|(?:보안\s*)?장애\s*(?:대응|처리|복구)|운영\s*절차\s*(?:수립|개선)|보안\s*프로세스\s*(?:수립|개선)/i,
       related:/보안\s*정책|운영\s*절차/i,
@@ -137,6 +155,18 @@
     {name:"서버접근제어",pattern:/서버\s*접근제어/}
   ];
   function profileLinkKind(topic,quote,requirementText=""){
+    // Manufacturer/product experience requires the same named technology and
+    // explicit hands-on work; cybersecurity-related vocabulary is not evidence.
+    if(["named-vendor-products","nac-product-work","web-application-firewall-work"].includes(topic.id)){
+      let sameName;
+      if(topic.id==="named-vendor-products"){
+        const vendors=[/시큐아이|\bSECUI\b/i,/지니언스|\bGENIANS\b|\bGenian\b/i,/소만사|\bSOMANSA\b/i];
+        sameName=vendors.some(pattern=>pattern.test(requirementText)&&pattern.test(quote));
+      }else sameName=topic.profile.test(quote);
+      if(!sameName||learningEvidence.test(quote)||planned.test(quote)||absent.test(quote))return null;
+      if(!/(?:경력|실무|구축|설계|운영|유지\s*보수|설정|관리|담당|기술\s*지원|장애\s*대응|적용|배포)/i.test(quote))return null;
+      return "요구 제품·제조사 및 직접 수행 업무 입력(실제 수행·기간 확인 필요)";
+    }
     if(!topic.focused){
       if(learningEvidence.test(quote))return "교육·실습 입력";
       return null;
@@ -220,9 +250,12 @@
       // A broad "related certificate holder" condition can show self-reported
       // credentials as context, but does not imply the employer accepts them.
       // Named credentials must still be exact-matched against the posting.
-      const genericCertificate=topic.id==="certificate"&&
+      const genericCertificate=topic.id==="certificate"&&(
         /^(?:(?:IT|보안|정보보안)\s*)?(?:관련\s*)?자격증\s*(?:보유자|소지자|보유|소지|우대)$/i
-          .test(item.text.replace(/^[·ㆍ•*\-\s]+/,"").trim());
+          .test(item.text.replace(/^[·ㆍ•*\-\s]+/,"").trim()) ||
+        /^(?:(?:IT|정보|보안|정보보안)\s*){1,3}관련\s*분야\s*전문\s*지식\s*및\s*자격증\s*(?:보유자|소지자|보유|소지)$/i
+          .test(item.text.replace(/^[·ㆍ•*\-\s]+/,"").trim())
+      );
       // Mixed named examples + "etc." can show RELATED credentials as evidence,
       // never as automatically employer-recognized qualifications.
       const broaderSecurityExamples=topic.id==="certificate"&&
@@ -259,6 +292,8 @@
       let explanation=evidence.length?topic.connection:"현재 입력에서 이 조건에 연결할 문구를 찾지 못했습니다. 선택한 상태는 그대로 유지합니다.";
       if(topic.id==="security"&&/\d+\s*년|경력|실무/.test(item.text)&&evidence.length)
         explanation+=" 관련 보안 업무 입력을 연결했을 뿐, 요구한 실무경력 기간이나 보안 솔루션 운영 경력을 확인·산정한 것은 아닙니다.";
+      if(["named-vendor-products","nac-product-work","web-application-firewall-work"].includes(topic.id)&&!evidence.length)
+        explanation="공고에 명시된 제품·제조사에 관한 직접 수행 경력을 입력에서 찾지 못했습니다. 일반 보안교육, 보안점검, 다른 솔루션 경험을 해당 제품 경력으로 연결하지 않습니다.";
       if(topic.focused&&evidence.length){
         if(evidence.some(ref=>ref.source==="profile"&&ref.label.includes("교육·실습 입력")))
           explanation+=" 연결된 교육·실습 이력은 업무 실적이나 실제 운영 경력의 증빙이 아닙니다.";
@@ -279,6 +314,7 @@
       if(hasAbsence)explanation+=" 경험이 없다고 적은 내용도 입력 그대로 함께 보여드립니다.";
       if(hasPlan)explanation+=" 예정·계획은 앞으로 준비할 내용으로 소개할 수 있습니다.";
       let nextAction=evidence.length?topic.action:"이 항목은 선택한 상태대로 로드맵에 남겨두고, 필요할 때 관련 경험을 더할 수 있습니다.";
+      if(["named-vendor-products","nac-product-work","web-application-firewall-work"].includes(topic.id))nextAction=topic.action;
       if(genericCertificate&&evidence.length)
         nextAction="자격증의 정확한 이름과 취득 사실을 확인하고, 지원 직무 관련성과 채용사 인정 여부를 원문 또는 채용 담당자에게 확인하세요.";
       if((topic.id==="english-business-email"||topic.id==="office-software")&&!evidence.length)
