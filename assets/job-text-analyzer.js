@@ -300,6 +300,7 @@
         prior.item.endLine=ix+1;
         return;
       }
+      if(cleaned==="자격증을 보유한 분" && typeof console!=="undefined") console.log("WRAP_TRACE",JSON.stringify({head:!!head,hasBullet,kind,priorKind:prior&&prior.kind,priorBullet:prior&&prior.bullet,priorText:prior&&prior.item.text,previousMatch:prior&&/(?:및|또는|관련|보안|정하는|\u002F|／|[,] )$/.test(prior.item.text)}));
       if (!head && !hasBullet && prior && prior.bullet && prior.kind===kind &&
           (cleaned.length<=16 || certExample ||
            (/\bETL\/ELT\)\s*$/.test(prior.item.text)&&/^프로세스(?:에|를|의|\s)/.test(cleaned)) ||
