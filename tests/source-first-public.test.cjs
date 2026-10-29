@@ -27,3 +27,23 @@ test('truncated raw classification fails as output limit without retry',async()=
  const model=new MockLanguageModelV4({doGenerate:async()=>({content:[{type:'text',text:'{"items":['}],finishReason:{unified:'length'},usage:{inputTokens:{total:10},outputTokens:{total:4096}},warnings:[]})});
  await assert.rejects(classifyPosting({request:body().request,adapter:createSdkAdapter({model}),enabled:true,ownerApproved:true}),{code:'PROVIDER_OUTPUT_LIMIT'});assert.equal(model.doGenerateCalls.length,1);
 });
+
+
+test('model diagnostics contain only allowlisted machine codes and counts, not source data',async()=>{
+ const {safeModelDiagnostic}=await import('../lib/public/handler.js');
+ const {AgentError}=await import('../lib/agent/contracts.js');
+ const problem=new AgentError('INVALID_AGENT_OUTPUT',502);
+ problem.validation={reason:'POSTING_COVERAGE',missingLines:[7,11,14],itemIndex:2,posting:'PRIVATE_POSTING',apiKey:'PRIVATE_KEY'};
+ assert.deepEqual(safeModelDiagnostic(problem),{code:'INVALID_AGENT_OUTPUT',reason:'POSTING_COVERAGE',itemIndex:2,missingLineCount:3});
+ assert.doesNotMatch(JSON.stringify(safeModelDiagnostic(problem)),/PRIVATE_POSTING|PRIVATE_KEY/);
+ assert.equal(safeModelDiagnostic(new Error('PRIVATE_PROVIDER_DETAIL')),null);
+ const other=new AgentError('PROVIDER_OUTPUT_INVALID',502);
+ assert.deepEqual(safeModelDiagnostic(other),{code:'PROVIDER_OUTPUT_INVALID'});
+});
+test('classification prompt checks nonoverlapping full source coverage before returning',async()=>{
+ const {POSTING_INSTRUCTIONS}=await import('../lib/agent/posting-schema.js');
+ const guidance=POSTING_INSTRUCTIONS.join(' ');
+ assert.match(guidance,/checking every numbered nonempty source line/);
+ assert.match(guidance,/must not overlap/);
+ assert.match(guidance,/Do not use references to conceal unexamined qualifications/);
+});
