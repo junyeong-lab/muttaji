@@ -118,3 +118,17 @@ test("필수 나열·모두 요구·경력 결합·다른 자격증은 자동 �
   ];
   entries.forEach(item=>assert.equal(credentialSuggestion(item,"정보처리기사"),null,item.text));
 });
+
+test("CISSP·CISA 등 IT 보안관련 자격증: 직접 명시한 자격만 자동 충족",()=>{
+  const item={kind:"preferred",text:"CISSP, CISA 등 IT 보안관련 자격증 자격증 소지자 우대"};
+  for(const named of ["CISSP","CISA"]){
+    const result=credentialSuggestion(item,named);
+    assert.equal(result?.status,"충족",named);
+    assert.deepEqual(result.names,[named]);
+    assert.match(result.reason,/직접 명시된/);
+  }
+  for(const related of ["정보보안기사","정보보안산업기사","CompTIA Security+","SQLD","정보처리기사"]){
+    assert.equal(credentialSuggestion(item,related),null,related+" should stay review-only");
+  }
+  assert.equal(credentialSuggestion({...item,text:item.text+" 및 경력 3년"},"CISSP"),null);
+});
