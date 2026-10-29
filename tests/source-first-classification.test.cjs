@@ -42,6 +42,20 @@ test('explicit required condition survives source-first contract',async()=>{
  const base=structuredClone(cases[0].expected);Object.assign(base,{revision:'explicit',items:[{...base.items[0],category:'required',quote:'정보보안기사 필수',line:2,endLine:2,basisQuote:'자격요건',roleQuote:''},{...base.items[1],category:'preferred',quote:'Linux 경험',line:4,endLine:4,basisQuote:'우대사항',roleQuote:''}],referenceRanges:[{line:1,endLine:1,reason:'제목'},{line:3,endLine:3,reason:'제목'}]});
  const data=validatePostingClassification(base,{posting,revision:'explicit'});assert.equal(data.items.filter(x=>x.category==='required').length,1);
 });
+test('AI blank-only reference ranges are ignored without hiding any nonempty posting line',async()=>{
+ const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
+ for(const record of cases){
+  const value=structuredClone(record.expected);
+  value.referenceRanges.unshift({line:2,endLine:2,reason:'빈 줄'});
+  const output=validatePostingClassification(value,request(record));
+  assert.equal(output.coverage.missingLines.length,0);
+  assert.equal(output.items.filter(item=>item.category==='reference').length,record.expected.referenceRanges.length);
+  const malformed=structuredClone(record.expected);
+  malformed.referenceRanges[0].reason='';
+  assert.throws(()=>validatePostingClassification(malformed,request(record)),error=>error.code==='INVALID_AGENT_OUTPUT'&&error.validation?.reason==='POSTING_REFERENCE');
+ }
+});
+
 test('wrong citations, positions, incomplete coverage and preference upgrades fail closed',async()=>{
  const {validatePostingClassification}=await import('../lib/agent/posting-classifier.js');
  for(const [reason,mutate] of [['POSTING_QUOTE',v=>v.items[0].quote='없는 기업'],['POSTING_POSITION',v=>v.items[0].line=0],['POSTING_COVERAGE',v=>v.items.pop()],['POSTING_COVERAGE',v=>v.complete=false],['POSTING_OBLIGATION',v=>v.items.find(x=>x.category==='preferred').category='required'],['POSTING_SCOPE_QUOTE',v=>v.items[0].roleQuote='없는 직무']]){
