@@ -7,8 +7,8 @@ const post=(headers,value=body())=>new Request('https://app.example/api/model-an
 test('raw classification passes real SDK/fake HTTP behind existing session, CSRF and shared reservation',async()=>{
  const {createPublicRuntime}=await import('../lib/public/runtime.js');let reserved=0,calls=0;
  const runtime=createPublicRuntime(env,{quota:{scope:'shared',reserve:async()=>{reserved++;return 'ALLOWED';}},fetchImpl:async(url,options)=>{
-  calls++;assert.equal(reserved,1);assert.equal(url,'https://api.openai.com/v1/responses');const sent=JSON.parse(options.body);assert.equal(sent.store,false);assert.equal(sent.max_output_tokens,4096);assert.equal(sent.text.format.schema.properties.mode.enum[0],'posting-classification');
-  return new Response(JSON.stringify({id:'fake',object:'response',created_at:1700000000,status:'completed',model:env.MUTTAJI_AI_MODEL,output:[{id:'fake-message',type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(record.expected),annotations:[]}]}],usage:{input_tokens:10,output_tokens:20,total_tokens:30}}),{headers:{'content-type':'application/json'}});
+  calls++;assert.equal(reserved,1);assert.equal(url,'https://api.openai.com/v1/responses');const sent=JSON.parse(options.body);assert.equal(sent.store,false);assert.equal(sent.max_output_tokens,4096);assert.equal(sent.text.format.schema.properties.mode.enum[0],'posting-line-classification');
+  return new Response(JSON.stringify({id:'fake',object:'response',created_at:1700000000,status:'completed',model:env.MUTTAJI_AI_MODEL,output:[{id:'fake-message',type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(require('./helpers/compact-output.cjs').toCompact(record.expected,body().request)),annotations:[]}]}],usage:{input_tokens:10,output_tokens:20,total_tokens:30}}),{headers:{'content-type':'application/json'}});
  }});
  assert.equal((await runtime.model(post({}))).status,403);assert.equal(reserved,0);
  const headers=await auth(runtime),noConsent=body();noConsent.request.consent.externalAi=false;
