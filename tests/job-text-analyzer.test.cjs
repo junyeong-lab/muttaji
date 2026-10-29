@@ -439,7 +439,7 @@ test("실공고 37352299: 줄바꿈 보안 보호조치와 관련 자격증은 �
  ].join("\n");
  const out=analyze(posting);
  assert.equal(out.required.length,4);
- assert.equal(out.preferred.length,5);
+ assert.equal(out.preferred.length,5,JSON.stringify(out.preferred.map(x=>({line:x.line,text:x.text}))));
  const tech=out.required.find(x=>x.text.startsWith("PC/Mobile"));
  assert.ok(tech);
  assert.match(tech.text,/기술적 보호조치 검토/);
