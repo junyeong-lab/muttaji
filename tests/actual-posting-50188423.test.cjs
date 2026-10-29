@@ -4,6 +4,7 @@ const assert=require("node:assert/strict");
 const load=require("./load-browser-module.cjs");
 const {buildAnalysis}=load("../assets/experience-explanations.js");
 const {certificateMatches,credentialSuggestion}=load("../assets/requirement-comparison.js");
+const {buildRoadmap,preparationSteps,nextAction}=load("../assets/roadmap.js");
 
 // Regression for the six extracted requirements supplied by the tester from a
 // real JobKorea posting (50188423). The text below is only the confirmed
@@ -60,4 +61,56 @@ test("education evidence is contextual: unrelated degree is not certified as mat
   assert.equal(result[4].topic,"education");
   assert.match(result[4].inputEvidence[0].quote,/기관공학전공/);
   assert.equal(Object.hasOwn(result[4],"status"),false);
+});
+
+test("the six user-supplied preferences produce six separate three-step roadmap tasks, with no required condition invented",()=>{
+  const assessed=requirements.map(item=>({...item,status:"확인 필요",explanation:""}));
+  const plan=buildRoadmap(assessed);
+  assert.equal(plan.total,6);
+  assert.equal(plan.tasks.length,6);
+  assert.equal(plan.requiredOpen,0);
+  assert.equal(plan.totals["확인 필요"],6);
+  assert.ok(plan.tasks.every(item=>item.kind==="preferred"&&item.steps.length===3));
+  assert.deepEqual(plan.tasks.map(item=>item.text),rows);
+});
+test("WAF, NAC, and named-vendor roadmap instructions are distinct and do not substitute unrelated experience",()=>{
+  const [waf,nac,vendor]=requirements.slice(0,3).map(item=>preparationSteps({...item,status:"확인 필요"}));
+  assert.match(waf.join(" "),/웹방화벽|WAF/);
+  assert.match(waf.join(" "),/XDR/);
+  assert.match(nac.join(" "),/NAC|접근제어/);
+  assert.match(nac.join(" "),/보안교육/);
+  assert.match(vendor.join(" "),/시큐아이·지니언스·소만사/);
+  assert.match(vendor.join(" "),/망 혼용 방지 교육/);
+  assert.notEqual(waf[0],nac[0]);
+  assert.notEqual(nac[0],vendor[0]);
+});
+test("broad IT credentials roadmap uses only user's actual evidence without hardcoded credential names",()=>{
+  const cert=preparationSteps({...requirements[3],status:"확인 필요"});
+  assert.match(cert.join(" "),/특정 자격증명을 지정하지 않습니다/);
+  assert.match(cert.join(" "),/내 역량에 실제로 입력한/);
+  assert.doesNotMatch(cert.join(" "),/정보처리기사·SQLD·네트워크관리사/);
+  assert.doesNotMatch(cert.join(" "),/새로 취득하라고 권/);
+});
+test("major preference never equates engineering degree to automatically qualifying as IT major",()=>{
+  const major=preparationSteps({...requirements[4],status:"확인 필요"});
+  assert.match(major.join(" "),/전공|학과/);
+  assert.match(major.join(" "),/자동 인정하지 않습니다/);
+  assert.doesNotMatch(major.join(" "),/전공.*충족/);
+});
+test("growth attitude preference does not invent years of experience, credentials or lab assignments",()=>{
+  const growth=preparationSteps({...requirements[5],status:"확인 필요"});
+  assert.match(growth.join(" "),/본인 주도|스스로|행동/);
+  assert.doesNotMatch(growth.join(" "),/업무별 수행 기간|경력증명|미보유 자격|검증 가능한 결과물을 확인하세요/);
+  assert.match(nextAction({...requirements[5],status:"확인 필요"}),/스스로|주도적/);
+});
+test("roadmap state and task ordering retain user decisions after specialized guidance",()=>{
+  const statuses=["부분 충족","확인 필요","충족","미충족","확인 필요","확인 필요"];
+  const items=requirements.map((item,i)=>({...item,status:statuses[i],explanation:"사용자 입력 근거"}));
+  const plan=buildRoadmap(items);
+  assert.equal(plan.total,6);
+  assert.equal(plan.tasks.length,5);
+  assert.equal(plan.completed.length,1);
+  assert.deepEqual(plan.groups.map(group=>group.status),["확인 필요","미충족","부분 충족","충족"]);
+  assert.equal(plan.totals["충족"],1);
+  assert.equal(plan.groups[0].items.length,3);
 });
