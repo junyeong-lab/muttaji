@@ -11,7 +11,7 @@ test("independent audit ledger: all 50 URLs unique and backed by matching stored
  assert.equal(urls.length,50);assert.equal(fixture.records.length,50);
  assert.equal(new Set(urls.map(row=>row.url)).size,50);
  assert.equal(byId.size,50);
- for(const row of urls){const id=(row.url.match(/(?:GI_Read\\/|rec_idx=)(\\d+)/)||[])[1];
+ for(const row of urls){const id=(row.url.match(/(?:GI_Read\/|rec_idx=)(\d+)/)||[])[1];
   assert.ok(id, row.url);assert.ok(byId.has(id),id);
   assert.equal(byId.get(id).url,row.url,id);
   assert.ok(byId.get(id).posting.length>100,id);
@@ -23,7 +23,7 @@ test("5th and 4th manually reviewed postings are separate from the historical 50
 });
 
 test("54452855 raw duties contain an explicit preferred-experience sentence requiring separate review",()=>{
- const lines=byId.get("54452855").posting.split("\\n");
+ const lines=byId.get("54452855").posting.split("\n");
  const duty=lines.findIndex(line=>line.includes("주요업무"));
  const eligibility=lines.findIndex(line=>line.includes("자격요건"));
  assert.ok(duty>=0&&eligibility>duty);
@@ -32,7 +32,7 @@ test("54452855 raw duties contain an explicit preferred-experience sentence requ
 
 test("53693158 raw duties contain priority hiring and preferred-skills text duplicated later",()=>{
  const text=byId.get("53693158").posting;
- assert.equal((text.match(/React 를 사용한 프론트엔드 애플리케이션 개발 \\(우대\\)/g)||[]).length,2);
+ assert.equal((text.match(/React 를 사용한 프론트엔드 애플리케이션 개발 \(우대\)/g)||[]).length,2);
  assert.ok(text.includes("MES s/w 개발 유경험자 우선 채용"));
 });
 
@@ -47,7 +47,7 @@ test("54699487 has two distinct job tracks with different experience thresholds"
 });
 
 test("50186173 source retains three separate category markers on one physical line",()=>{
- assert.ok(byId.get("50186173").posting.split("\\n").some(line=>line.includes("[담당업무]")&&line.includes("[자격요건]")&&line.includes("[우대사항]")));
+ assert.ok(byId.get("50186173").posting.split("\n").some(line=>line.includes("[담당업무]")&&line.includes("[자격요건]")&&line.includes("[우대사항]")));
 });
 
 test("50190160 explicitly states SQL experience is not mandatory",()=>{
