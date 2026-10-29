@@ -150,6 +150,34 @@ test("roadmap: generic certificate condition links owned credential without misr
  assert.equal(notOwned.inputEvidence.length,0);
 });
 
+test("CISSP·CISA 등 보안 자격증: 관련 자격은 설명하되 인정·충족을 추정하지 않는다",()=>{
+  const posting="우대사항\nㆍ CISSP, CISA 등 IT 보안관련 자격증 자격증 소지자 우대";
+  const requirement={id:"security-example",kind:"preferred",
+    text:"CISSP, CISA 등 IT 보안관련 자격증 자격증 소지자 우대",line:2};
+  const {certificateMatches,credentialSuggestion,assessment}=
+    require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
+  assert.equal(credentialSuggestion(requirement,"정보보안기사"),null);
+  const baseline=assessment(requirement,"확인 필요","");
+  const analyze=certs=>buildAnalysis({posting,requirements:[requirement],
+    profile:{certs},assessments:[baseline],certificateMatcher:certificateMatches}).explanations[0];
+  const related=analyze("정보보안기사");
+  assert.equal(related.topic,"certificate");
+  assert.equal(related.inputEvidence.length,1);
+  assert.match(related.inputEvidence[0].quote,/정보보안기사/);
+  assert.match(related.inputEvidence[0].label,/채용사 인정 미확인/);
+  assert.match(related.explanation,/CISSP·CISA와는 구분/);
+  assert.match(related.explanation,/자동 충족 처리하지 않습니다/);
+  assert.match(related.nextAction,/채용 담당자에게 확인/);
+  assert.equal(Object.hasOwn(related,"status"),false);
+  const named=analyze("CISA");
+  assert.match(named.inputEvidence[0].quote,/CISA/);
+  assert.equal(named.inputEvidence[0].relatedOnly,false);
+  assert.doesNotMatch(named.explanation,/CISSP·CISA와는 구분/);
+  for(const unrelated of ["SQLD","정보보안기사 취득 예정","정보보안기사 미보유"]){
+    assert.equal(analyze(unrelated).inputEvidence.length,0,unrelated);
+  }
+});
+
 test("학력무관은 졸업 증빙을 요구하는 조건처럼 설명하지 않는다",()=>{
   const posting="필수조건\nㆍ학력 : 학력무관";
   const reqs=requirements(posting,{analyze});
