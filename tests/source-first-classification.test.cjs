@@ -102,3 +102,27 @@ test('source-first negation and unresolved conflicts cannot be presented as unqu
 test('all 50 saved sources pass source-only mock contract, not semantic-model verification',async()=>{
  const {auditSourceFirst}=await import('../scripts/audit-source-first-50.mjs');const result=await auditSourceFirst();assert.equal(result.total,50);assert.equal(result.mockPass,50);assert.equal(result.failed,0);assert.equal(result.actualModelNotExecuted,50);assert.equal(result.paidCalls,0);assert.ok(result.rows.every(x=>x.semanticAccuracy==='not-verified'));
 });
+
+
+test('source-first classification for both real posting fixtures reaches review, comparison, and roadmap without invented requirements',async()=>{
+ const roadmap=load('../assets/roadmap.js');
+ for(const record of cases){
+  const data=await validated(record);
+  const state=review.create();state.receive(record.posting,data);
+  assert.equal(state.snapshot().approved,null,'draft must remain outside comparison');
+  const approved=state.approve(record.posting,true);
+  const items=comparison.requirements(record.posting,{analyze(){throw Error('parser must not override reviewed AI conditions');}},approved);
+  const expected=record.expected.items.filter(x=>x.category==='required'||x.category==='preferred').length;
+  assert.equal(items.length,expected);
+  const userChecked=items.map((item,i)=>({...item,status:i===0?'충족':i===1?'부분 충족':'확인 필요'}));
+  const plan=roadmap.buildRoadmap(userChecked);
+  assert.equal(plan.total,expected);
+  assert.equal(plan.requiredOpen,0,'no required criteria exist in either fixture');
+  assert.equal(plan.totals['충족'],1);
+  assert.equal(plan.totals['부분 충족'],1);
+  assert.equal(plan.tasks.length+plan.completed.length,expected);
+  assert.equal(plan.groups.length,4);
+  assert.ok(plan.tasks.every(item=>item.kind==='preferred'&&item.action&&item.steps.length>0));
+  assert.ok(plan.completed.every(item=>item.status==='충족'));
+ }
+});
