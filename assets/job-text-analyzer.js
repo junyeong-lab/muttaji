@@ -144,6 +144,37 @@
     if(v.length<=140&&/(?:채용|모집)(?:\s*(?:공고|신입|경력|신입[·/ㆍ]경력|\([^)]*\)))*$/.test(v))return "role";
     return null;
   }
+  // In some image-copied job tables, the FOUR column headers appear in
+  // sequence before every body cell (including role and duty cells). A plain
+  // text section parser must NOT carry "자격요건" through "모집인원".
+  // Recognize only this tight, explicit table signature; when cell boundaries
+  // cannot be proven, keep ambiguous qualifications for manual review.
+  function flattenedColumnTable(lines){
+    const norm=s=>normalizeHeader(withoutBullet(String(s||"")).replace(/[:：]\s*$/,""));
+    const heads=lines.map(norm);
+    const isRole=s=>/^모집\s*(?:분야|부문)$/.test(s);
+    const isDuties=s=>/^(?:담당\s*업무|주요\s*업무|업무\s*내용)$/.test(s);
+    const isQualifications=s=>/^(?:자격\s*요건|자격\s*조건|지원\s*자격)$/.test(s);
+    const isCount=s=>/^(?:모집\s*인원|채용\s*인원)$/.test(s);
+    for(let i=0;i<heads.length;i++){
+      if(!isCount(heads[i]))continue;
+      const prev=[];
+      for(let j=Math.max(0,i-12);j<i;j++)if(heads[j])prev.push(j);
+      if(prev.length<3)continue;
+      const last=prev.slice(-3);
+      if(!isRole(heads[last[0]])||!isDuties(heads[last[1]])||!isQualifications(heads[last[2]]))continue;
+      const next=lines.findIndex((line,j)=>j>i&&j<=i+28&&
+        /^(?:우대\s*(?:사항|조건|요건))$/.test(norm(line)));
+      if(next<0)continue;
+      const first=lines.findIndex((line,j)=>j>i&&j<next&&line.trim());
+      if(first<0||!organizationCandidate(withoutBullet(lines[first])))continue;
+      return {headers:new Set([...last,i]),bodyStart:i+1,bodyEnd:next};
+    }
+    return null;
+  }
+  function tableJobTitle(text){
+    return text.length<=45&&/^(?:[가-힣A-Za-z0-9·/() -]{0,34}\s*)?(?:엔지니어|개발자|컨설턴트|분석가|기획자|운영자|관리자|기술자)$/.test(text);
+  }
   function analyze(input) {
     if (typeof input !== "string") throw new TypeError("채용공고는 문자열이어야 합니다.");
     if (input.length > 20000) throw new RangeError("최대 20,000자까지 분석할 수 있습니다.");
@@ -157,11 +188,18 @@
     var lines=text.split("\n");
     if (lines.length > 400) throw new RangeError("최대 400줄까지 분석할 수 있습니다.");
     var prior=null;
+    const flatTable=flattenedColumnTable(lines);
+    let flatRoleSeen=false;
     lines.forEach(function(original, ix) {
       var raw=original.trim();
       // A blank line separates paragraphs even if the previous item was bulleted.
       if(!raw){prior=null;return;}
       out.sourceLines++;
+      // Four independent column titles are NOT sequential eligibility sections.
+      if(flatTable?.headers.has(ix)){
+        section="unresolved";sectionLine=ix+1;prior=null;skillContext=false;
+        return;
+      }
 
       // Public job boards sometimes flatten several [section] table cells into
       // one physical line. Split by explicit source markers without inventing
@@ -262,6 +300,22 @@
       if(isLocation){kind="unresolved";section="unresolved";skillContext=false;sectionLine=ix+1;roleHeaderLabel=null;prior=null;}
       var nonRequirement=nonRequirementKind(cleaned);
       if(nonRequirement){kind=nonRequirement;prior=null;}
+      const insideFlatBody=flatTable&&ix>=flatTable.bodyStart&&ix<flatTable.bodyEnd;
+      if(insideFlatBody&&!head){
+        // The role column starts with the department and job title. The
+        // subsequent flattened cells are duty candidates, not eligibility.
+        if(!nonRequirement&&(organizationCandidate(cleaned)||tableJobTitle(cleaned))){
+          kind="role";flatRoleSeen=true;candidate=organizationCandidate(cleaned);
+        }else if(nonRequirement){
+          kind="unresolved";
+        }else if(flatRoleSeen&&/^(?:자격\s*(?:요건|조건)|필수|지원\s*자격|경력\s*[:：]|\d+\s*년\s*이상)/.test(cleaned)){
+          kind="unresolved"; // Never silently invent required eligibility.
+        }else if(flatRoleSeen){
+          kind="responsibilities";
+        }else{
+          kind="unresolved";
+        }
+      }
       if(/^자격증\s*[:：]/.test(cleaned)&&/우대\s*$/.test(cleaned))kind="preferred";
       // A standalone explicit "... 우대" bullet is preferred even when it follows a compact required-qualifications table cell.
       if(!head&&kind==="required"&&cleaned.length<=90&&/\S.{2,}\s+우대\s*$/.test(cleaned))kind="preferred";
@@ -325,6 +379,8 @@
       if(candidate)item.kindHint="부서명 후보 · 직무명인지 확인 필요";
       if(suspectedHeading)item.kindHint="제목으로 보이는 문구 · 분류 및 아래 구간을 확인해 주세요";
       if(kind==="role"&&roleHeaderLabel&&/부서/.test(roleHeaderLabel))item.kindHint="모집 부서";
+      if(insideFlatBody&&kind==="responsibilities")
+        item.kindHint="여러 열 공고에서 추정한 담당업무 · 원문 확인 필요";
       if(kind==="responsibilities"&&workArea)item.kindHint=workArea+" 분야 업무";
       out[kind].push(item);
       out.totalItems++;
