@@ -373,3 +373,33 @@ test("교육 문구와 협업이 함께 있어도 협업 근거를 교육·실�
   assert.match(ai.inputEvidence[0].label,/교육·실습 입력/);
   assert.match(ai.explanation,/교육 이력은 실제 AI 자동화 수행 경험을 증명하지/);
 });
+
+test("영문 이메일과 Office 사용능력은 일반 한국어 보고·협업 근거로 연결하지 않음",()=>{
+  const listing=[
+    "우대사항",
+    "ㆍ 해외 본사와 영어로 이메일 커뮤니케이션 (비즈니스 레벨 수준)",
+    "ㆍ 다양한 이해관계자와 원활한 의사소통 능력",
+    "ㆍ MS office 활용능력(Excel, Powerpoint)"
+  ].join("\n");
+  const rs=[
+    {id:"email",kind:"preferred",text:"해외 본사와 영어로 이메일 커뮤니케이션 (비즈니스 레벨 수준)",line:2},
+    {id:"talk",kind:"preferred",text:"다양한 이해관계자와 원활한 의사소통 능력",line:3},
+    {id:"office",kind:"preferred",text:"MS office 활용능력(Excel, Powerpoint)",line:4}
+  ];
+  const run=skills=>buildAnalysis({posting:listing,requirements:rs,
+    profile:{experience:"- 주요 지휘관 보고용 월간 위협 분석 자료 작성",
+      skills:skills||"- 보안교육 및 부서 간 협업"}}).explanations;
+  const result=run();
+  assert.equal(result[0].topic,"english-business-email");
+  assert.equal(result[0].inputEvidence.length,0);
+  assert.match(result[0].explanation,/한국어 보고·협업/);
+  assert.equal(result[1].topic,"communication");
+  assert.match(result[1].inputEvidence[0].quote,/지휘관 보고용|보안교육/);
+  assert.equal(result[2].topic,"office-software");
+  assert.equal(result[2].inputEvidence.length,0);
+  assert.match(result[2].explanation,/Excel·PowerPoint/);
+  assert.ok(result.every(x=>!Object.hasOwn(x,"status")));
+  const explicit=run("영문 이메일 회신 업무를 수행함.\nExcel 표를 직접 작성함.");
+  assert.match(explicit[0].inputEvidence[0].quote,/영문 이메일/);
+  assert.match(explicit[2].inputEvidence[0].quote,/Excel 표/);
+});
