@@ -513,14 +513,16 @@ test("5번째 공고: 4열 OCR 헤더 뒤 업무를 필수조건으로 오분류
 
 test("4열 표 형태가 아니면 실제 자격요건은 계속 필수조건",()=>{
   const text=[
-    "모집분야","담당업무","자격요건","모집인원",
-    "서버 관리",
+    "모집분야","담당업무","자격요건",
     "경력 3년 이상",
+    "모집인원","1명",
     "우대사항","정보보안기사"
   ].join("\n");
   const out=analyze(text);
-  // 부서명 + 직무 + 독립 우대 구간이 없는 단순 텍스트는 OCR 표로 추정하지 않는다.
+  // 실제 자격요건 아래에 있는 경력 조건은 유지하되,
+  // 독립 모집인원 머리글 아래의 인원 수는 필수조건이 아니다.
   assert.equal(out.required.some(x=>x.text==="경력 3년 이상"),true);
+  assert.equal(out.required.some(x=>x.text==="1명"),false);
   const ordinary=analyze(["담당업무","ㆍ 로그 분석","자격요건","ㆍ 경력 3년 이상",
     "우대사항","ㆍ CISSP"].join("\n"));
   assert.deepEqual(ordinary.required.map(x=>x.text),["경력 3년 이상"]);
