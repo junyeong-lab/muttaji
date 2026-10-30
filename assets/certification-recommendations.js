@@ -54,6 +54,7 @@
     });
     return {matched,ambiguous};
   }
+  const isRecommendable=item=>item.recommendable!==false;
   const map=[
     [["개인정보","프라이버시"],["CPPG","ISMS-P 인증심사원"]],
     [["ISMS-P","인증심사","컴플라이언스"],["ISMS-P 인증심사원","CPPG"]],
@@ -119,6 +120,7 @@
       if(explicit)row.explicit=true;
     }
     catalog.forEach((item,i)=>{
+      if(!isRecommendable(item))return;
       const terms=[item.name,...String(item.aliases||"").split(";")].map(s=>s.trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
       const foundIn=txt=>terms.find(t=>mentions(txt,t));
       let term=foundIn(required);
@@ -133,7 +135,7 @@
       if(!keyword){keyword=words.find(w=>relevant(goal,w));origin="목표 직무";}
       if(!keyword)continue;
       names.forEach((name,k)=>{
-        const index=catalog.findIndex(item=>normalize(item.name)===normalize(name));
+        const index=catalog.findIndex(item=>isRecommendable(item)&&normalize(item.name)===normalize(name));
         if(index>=0)add(catalog[index],20-2*k+(origin==="공고"?8:0),origin+" 관련 기술·분야",keyword,false,index);
       });
     }

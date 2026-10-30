@@ -1,7 +1,7 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict"),db=require("../data/certifications.json");
 test("2026 IT 공고 표본 추가 항목: 기존 34개 보존 및 검토 상태 구분",()=>{
- assert.equal(db.count,67);
+ assert.equal(db.count,76);
  assert.deepEqual(db.certifications.map(x=>x.id),Array.from({length:db.count},(_,i)=>i+1));
  assert.equal(new Set(db.certifications.map(x=>x.name.normalize("NFKC").toLowerCase().replace(/\s+/g,""))).size,db.count);
  assert.equal(db.certifications.slice(0,34).filter(x=>x.verification_status==="verified").length,34);

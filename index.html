@@ -266,7 +266,7 @@
         <button type="button" class="secondary" id="cert-rec-run">관련 자격증 추천 보기</button>
         <p id="cert-rec-note" class="result-summary" role="status" aria-live="polite">채용공고 또는 목표 직무를 입력한 뒤 추천을 실행해 주세요.</p>
         <div class="cert-grid" id="cert-rec-results" aria-label="공고 관련 자격증 참고 후보"></div>
-        <div class="info">※ 공고에 자격증명이 명시된 경우와 관련 기술에서 찾은 참고 후보를 구분합니다. 취득·지원 자격·합격 가능성을 자동 판정하지 않습니다.</div>
+        <div class="info">※ 공고에 자격증명이 명시된 경우와 관련 기술에서 찾은 참고 후보를 구분합니다. 구 자격·종료 시험 및 세부 인증이 불분명한 검색용 기록은 취득 추천에서 제외합니다. 취득·지원 자격·합격 가능성을 자동 판정하지 않습니다.</div>
       </section>
       <div class="sheet">
         <div class="info"><b>🔎 검색 기능은 동작하지만, 아직 AI 자격증 추천은 아닙니다.</b><br>기존 항목의 검증 상태는 사용자 확인 기록이며, 새 항목은 <strong>공식정보 검토가 필요한 후보</strong>로 구분합니다. 최신 응시자격 및 변경 사항은 시행기관 사이트에서 다시 확인하세요. DB 검증과 개인의 자격증 보유 여부 또는 채용 요건 충족 판정은 별개입니다.</div>
@@ -508,7 +508,7 @@
         var field=certField.value;
         var matches=certifications.filter(function(item){
           if(field&&item.field!==field)return false;
-          var parts=[item.name,item.aliases,item.field,item.skills,item.job_roles,item.description,item.organization];
+          var parts=[item.name,item.aliases,item.search_aliases,item.field,item.skills,item.job_roles,item.description,item.organization];
           return !query||normal(parts.join(" ")).includes(query);
         });
         certResults.replaceChildren();
@@ -520,6 +520,8 @@
           var meta=el("div","cert-meta");
           meta.appendChild(el("span","",item.field||"분야 미확인"));
           meta.appendChild(el("span","",item.type||"분류 미확인"));
+          if(item.recommendable===false)meta.appendChild(el("span","",item.lifecycle_status==="historical"?"과거 자격·시험 · 취득 추천 제외":"세부 시험 확인 필요 · 취득 추천 제외"));
+          else if(item.lifecycle_status==="active")meta.appendChild(el("span","","현재 시행 인증 · 공식 페이지 참고"));
           card.appendChild(meta);
           if(item.description)card.appendChild(el("p","",item.description));
           if(item.organization)card.appendChild(el("p","","입력된 시행·발급기관: "+item.organization));
