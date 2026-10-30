@@ -1413,7 +1413,7 @@
     {
       "id": 60,
       "name": "PCCP",
-      "type": "민간자격",
+      "type": "등록 민간자격",
       "organization": "그렙(프로그래머스)",
       "field": "소프트웨어",
       "skills": "코딩 테스트; 프로그래밍; 알고리즘",
@@ -1434,12 +1434,12 @@
       "review_note": "공고에 명칭이 언급됐으나 자격요건·발급기관·시행 여부 등 정식 검증 전.",
       "classification_source": "사용자 제출: 자격증_공인구분_확인.xlsx",
       "classification_proposed": "구분 미확인",
-      "classification_status": "국가공인 여부 확인 필요",
-      "classification_evidence_level": "발급기관 공식 소개(민간자격시험 확인)",
-      "classification_source_url": "https://programmers.co.kr/pages/certi-level-check-event",
+      "classification_status": "유형 분류됨",
+      "classification_evidence_level": "운영기관 공식 안내(민간자격 등록일 확인)",
+      "classification_source_url": "https://programmers.co.kr/pages/pccp-launch-event",
       "classification_ansi_iso17024": "해당 없음",
       "classification_checked_at": "2026-10-30",
-      "classification_note": "프로그래머스가 시행하는 민간자격시험 · 국내 국가공인 여부는 별도 확인 필요"
+      "classification_note": "프로그래머스가 운영하는 민간자격시험 · 운영사 안내에 따르면 2022년 6월 13일 민간자격으로 등록"
     },
     {
       "id": 61,
@@ -1926,10 +1926,11 @@
       "date": "2026-10-30",
       "reason": "자격증 유형 분류와 ISO/IEC 17024 인정 여부는 별도이며 일괄 재확인 표시가 오해를 유발",
       "previous_additional_review": 26,
-      "type_classified_without_formal_accreditation_verification": 22,
+      "type_classified_without_formal_accreditation_verification": 23,
       "specific_credential_needed": 3,
-      "pccp_korean_accreditation_unknown": 1,
-      "important": "유형 분류됨은 공식 심사 또는 ISO/IEC 17024 인정 확인의 뜻이 아님"
+      "pccp_korean_accreditation_unknown": 0,
+      "important": "유형 분류됨은 공식 심사 또는 ISO/IEC 17024 인정 확인의 뜻이 아님",
+      "pccp_recorded_classification": "등록 민간자격 · 운영기관의 등록 공지 확인, 국가공인 여부 별도 단정 없음"
     }
   }
 }

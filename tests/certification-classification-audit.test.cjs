@@ -11,7 +11,7 @@ test("업로드 엑셀의 40개 자격 유형 반영·종료된 두 항목 복�
  assert.equal(byName("컴퓨터활용능력 1급").type,"국가기술자격");
  assert.equal(byName("AI활용능력 서비스기획 전문가").type,"등록 민간자격");
  assert.equal(byName("AI활용능력 프롬프트엔지니어 1급").type,"등록 민간자격");
- assert.equal(byName("PCCP").type,"민간자격");
+ assert.equal(byName("PCCP").type,"등록 민간자격");
 });
 test("ISO17024 인정 확인은 한국의 국가공인과 구분하고 출처를 남김",()=>{
  for(const name of ["CISA","CISM","CIPP/E","CCSP","CEH"]){
