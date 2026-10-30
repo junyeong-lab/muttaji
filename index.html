@@ -222,7 +222,10 @@
           <div class="group"><label class="label" for="certs">보유 자격증</label><textarea id="certs" placeholder="예: 정보처리기사, SQLD, 네트워크관리사 2급 (취득한 자격증만)"></textarea></div>
           <div class="group" hidden aria-hidden="true"><label class="label" for="skills">기술 및 지식</label><textarea id="skills" placeholder="예: 네트워크 설정, 로그 분석 등 확인된 역량"></textarea></div>
         </div>
-        <button type="submit" class="primary">입력 내용 저장 <span aria-hidden="true">→</span></button>
+        <div class="actions" aria-label="내 자격증 입력 후 작업">
+          <button type="submit" class="primary">입력 내용 저장 <span aria-hidden="true">→</span></button>
+          <button type="button" class="secondary" data-go="certifications">관련 자격증 추천 보기 <span aria-hidden="true">→</span></button>
+        </div>
         <small class="subtext">보유 자격증과 목표 직무는 이 브라우저에만 자동 저장됩니다. 공용 PC에서는 아래 삭제 버튼을 사용하세요.</small>
         <button type="button" class="outline" id="profile-clear">이 브라우저에 저장된 정보 삭제</button>
         <div id="profile-message" class="message" role="status" aria-live="polite"></div>
