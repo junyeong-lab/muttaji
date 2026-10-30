@@ -3,15 +3,15 @@ const test=require("node:test"),assert=require("node:assert/strict"),fs=require(
 const db=require("../data/certifications.json");
 const ui=fs.readFileSync(path.join(__dirname,"../index.html"),"utf8");
 const {credentialSuggestion}=require("./load-browser-module.cjs")("../assets/requirement-comparison.js");
-test("34개 선택 목록과 아이디·중복 없음",()=>{
-assert.equal(db.count,34);assert.equal(db.certifications.length,34);
-assert.deepEqual(db.certifications.map(x=>x.id),Array.from({length:34},(_,i)=>i+1));
+test("등록 자격증의 아이디·중복 없음",()=>{
+assert.equal(db.count,67);assert.equal(db.certifications.length,67);
+assert.deepEqual(db.certifications.map(x=>x.id),Array.from({length:67},(_,i)=>i+1));
 assert.equal(new Set(db.certifications.map(x=>x.name.normalize("NFKC").toLowerCase())).size,34);
-assert.deepEqual(db.certifications.slice(-4).map(x=>x.name),["DAP","DAsP","산업보안관리사","AICE associate"]);
+assert.deepEqual(db.certifications.slice(30,34).map(x=>x.name),["DAP","DAsP","산업보안관리사","AICE associate"]);
 });
-test("사용자가 공식 검증 완료라고 확인한 34개로 상태 갱신",()=>{
+test("기존 34개 사용자 확인 상태와 새 항목 검토 필요 상태 구분",()=>{
 assert.equal(db.verification_confirmed_by,"user");
-assert.ok(db.certifications.every(x=>x.verification_status==="verified"));
+assert.ok(db.certifications.slice(0,34).every(x=>x.verification_status==="verified") && db.certifications.slice(34).every(x=>x.verification_status==="needs_official_review"));
 assert.ok(ui.includes("data.certifications.length!==data.count"));
 assert.ok(!ui.includes("data.certifications.length!==23"));
 });
@@ -36,7 +36,7 @@ test("사용자 제공 설명 5개를 정확히 반영하고 다른 자격증 �
   assert.equal(item.verification_status,"verified");
   assert.doesNotMatch(item.description,/첨부 CSV|서비스용 요약/);
  }
- assert.equal(db.count,34);
+ assert.equal(db.count,67);
 });
 
 test("사용자 제공 신규 자격증 설명 2개 반영",()=>{
@@ -50,7 +50,7 @@ test("사용자 제공 신규 자격증 설명 2개 반영",()=>{
   assert.equal(record.description,description);
   assert.equal(record.verification_status,"verified");
  }
- assert.equal(db.certifications.length,34);
+ assert.equal(db.certifications.length,67);
 });
 
 test("PC정비사 1급/2급 설명은 입력받은 각각의 내용으로 유지",()=>{
@@ -64,7 +64,7 @@ test("PC정비사 1급/2급 설명은 입력받은 각각의 내용으로 유지
   assert.equal(record.description,description);
   assert.equal(record.verification_status,"verified");
  }
- assert.equal(db.certifications.length,34);
+ assert.equal(db.certifications.length,67);
 });
 
 test("AICE associate 설명은 사용자 수정 내용대로 유지",()=>{
@@ -72,5 +72,5 @@ test("AICE associate 설명은 사용자 수정 내용대로 유지",()=>{
  assert.ok(aice);
  assert.equal(aice.description,"KT가 개발하고 한국경제신문이 공동 주관하는 국가공인 인공지능(AI) 실무 활용 능력 평가 자격");
  assert.equal(aice.type,"국가공인 민간자격");
- assert.equal(db.count,34);
+ assert.equal(db.count,67);
 });

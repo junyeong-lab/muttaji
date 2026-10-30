@@ -55,7 +55,7 @@
     }
     const skills=String(record.item.skills||"").split(";").map(s=>s.trim()).filter(Boolean).slice(0,2);
     const source=record.basis.startsWith("공고")?"채용공고":"목표 직무";
-    return source+"에 '"+record.keyword+"' 관련 표현이 있어, 34개 DB의 '"+
+    return source+"에 '"+record.keyword+"' 관련 표현이 있어, 등록된 DB의 '"+
       (record.item.field||"분야 미입력")+"' 분야로 연결했습니다."+
       (skills.length?" DB 수록 학습 내용: "+skills.join(", ")+".":"")+
       " 공고에 이 자격증 취득을 요구했다는 뜻은 아닙니다.";
