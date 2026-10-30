@@ -4,7 +4,7 @@ const assert=require("node:assert/strict");
 const db=require("../data/certifications.json");
 const {recommend,mentions}=require("./load-browser-module.cjs")("../assets/certification-recommendations.js");
 const r=v=>recommend(db.certifications,v);
-test("등록 DB에서 3개 이하 후보",()=>{assert.equal(db.count,76);const x=r({posting:"Wazuh SIEM 보안관제"});assert.ok(x.length&&x.length<=3);assert.ok(x.every(y=>db.certifications.some(c=>c.name===y.name)));});
+test("등록 DB에서 3개 이하 후보",()=>{assert.equal(db.count,74);const x=r({posting:"Wazuh SIEM 보안관제"});assert.ok(x.length&&x.length<=3);assert.ok(x.every(y=>db.certifications.some(c=>c.name===y.name)));});
 test("명시된 보유 자격증 우선",()=>{const x=r({posting:"필수 정보보안기사",required:["정보보안기사"],owned:"정보보안기사"});assert.equal(x[0].name,"정보보안기사");assert.equal(x[0].owned,true);assert.equal(x[0].explicit,true);});
 test("Azure에 AWS 전용 자격증 후보 없음",()=>{const x=r({posting:"Azure RBAC 운영"});assert.ok(x.some(y=>y.name.includes("Azure Fundamentals")));assert.ok(x.every(y=>!y.name.startsWith("AWS")));});
 test("개인정보보호 직무 CPPG, SQLD 직접 명시",()=>{assert.ok(r({goal:"개인정보보호 담당자"}).some(y=>y.name==="CPPG"));assert.ok(r({posting:"SQLD 보유",preferred:["SQLD"]}).some(y=>y.name==="SQLD"&&y.explicit));});
