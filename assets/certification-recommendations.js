@@ -146,11 +146,12 @@
     });
     const selected=[],selectedFamilies=new Set();
     for(const record of ranked){
+      // 직접 명시된 자격증은 모두 표시하고, 추론 후보만 기존 3개 제한 적용
+      if(!record.explicit&&selected.length>=3)break;
       const group=family(record.item.name);
       if(!record.explicit&&selectedFamilies.has(group))continue;
       selected.push(record);
       selectedFamilies.add(group);
-      if(selected.length===3)break;
     }
     return selected.map(x=>({name:x.item.name,field:x.item.field,
       basis:x.basis,keyword:x.keyword,explicit:x.explicit,owned:x.owned,

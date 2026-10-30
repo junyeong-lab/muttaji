@@ -84,3 +84,16 @@ test("중복 해석되는 축약형은 어느 자격증도 자동 보유 표시�
  assert.equal(parsed.matched.size,0);
  assert.equal(parsed.ambiguous.size,2);
 });
+
+test("4개 직접 명시 자격증은 모두 유지하고 관련 후보는 추가하지 않음",()=>{
+ const posting="[우대사항] 정보보호 관련 자격증 보유자(CPPG,\nCISA, CISSP, 정보보안기사 등) 개인정보보호 관리체계 운영";
+ const got=r({posting,preferred:["정보보호 관련 자격증 보유자(CPPG,","CISA, CISSP, 정보보안기사 등)"]});
+ assert.equal(got.length,4);
+ assert.deepEqual(new Set(got.map(x=>x.name)),new Set(["CPPG","CISA","CISSP","정보보안기사"]));
+ assert.ok(got.every(x=>x.explicit));
+});
+test("명시 자격증이 1개인 공고는 관련 후보 포함 총 3개 이내",()=>{
+ const got=r({posting:"개인정보보호 정보보안 담당 우대 CISA",preferred:["CISA"]});
+ assert.ok(got.some(x=>x.name==="CISA"&&x.explicit));
+ assert.ok(got.length<=3);
+});
