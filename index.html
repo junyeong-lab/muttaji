@@ -270,7 +270,7 @@
         <div class="info">※ 공고에 자격증명이 명시된 경우와 관련 기술에서 찾은 참고 후보를 구분합니다. 구 자격·종료 시험 및 세부 인증이 불분명한 검색용 기록은 취득 추천에서 제외합니다. 취득·지원 자격·합격 가능성을 자동 판정하지 않습니다.</div>
       </section>
       <div class="sheet">
-        <div class="info"><b>🔎 검색 기능은 동작하지만, 아직 AI 자격증 추천은 아닙니다.</b><br>기존 항목의 검증 상태는 사용자 확인 기록이며, 새 항목은 <strong>공식정보 검토가 필요한 후보</strong>로 구분합니다. 최신 응시자격 및 변경 사항은 시행기관 사이트에서 다시 확인하세요. DB 검증과 개인의 자격증 보유 여부 또는 채용 요건 충족 판정은 별개입니다.</div>
+        <div class="info">※ 자격증 추천 및 검색 결과는 참고용입니다. 최신 응시자격과 공인 여부는 발급·시행기관의 공식 안내를 확인해 주세요.</div>
         <div class="cert-tools">
           <div><label class="label" for="cert-search">자격증명 또는 관련 역량 검색</label><input id="cert-search" type="text" autocomplete="off" placeholder="예: CPPG, Linux, 개인정보보호, 네트워크"></div>
           <div><label class="label" for="cert-field">관련 분야 선택</label><select id="cert-field"><option value="">전체 분야</option></select></div>
@@ -513,7 +513,7 @@
           return !query||normal(parts.join(" ")).includes(query);
         });
         certResults.replaceChildren();
-        certCount.textContent="전체 "+certifications.length+"개 중 "+matches.length+"개 표시 · 공식자료 검증 사용자 확인 "+certifications.filter(function(c){return c.verification_status==="verified"}).length+"개";
+        certCount.textContent="전체 "+certifications.length+"개 중 "+matches.length+"개 표시";
         if(!matches.length){certResults.appendChild(el("div","cert-empty","검색 결과가 없습니다. 다른 키워드나 분야로 다시 찾아보세요."));return;}
         matches.forEach(function(item){
           var card=el("article","cert-card");
