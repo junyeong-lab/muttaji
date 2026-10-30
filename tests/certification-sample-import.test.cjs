@@ -9,7 +9,7 @@ test("2026 IT 공고 표본 추가 항목: 기존 34개 보존 및 검토 상태
  assert.ok(db.certifications.slice(34).every(x=>x.source_url.startsWith("https://")));
  assert.ok(db.certifications.some(x=>x.name==="CISA"&&x.posting_sample_count===25));
  assert.ok(db.certifications.some(x=>x.name==="CISM"&&x.posting_sample_count===7));
- assert.ok(db.certifications.some(x=>x.name==="Cisco CCNP"&&x.type.includes("자격군")));
+ assert.ok(db.certifications.some(x=>x.name==="Cisco CCNP"&&x.type==="국제·벤더 자격"&&x.description.includes("트랙")));
  assert.ok(db.certifications.some(x=>x.name==="AWS Certified CloudOps Engineer - Associate"&&x.posting_sample_count===0));
  assert.ok(!db.certifications.some(x=>x.name==="SIS 1급"||x.name==="전자계산기기사"||x.name==="정보보안기술사"));
  assert.equal(db.posting_sample.raw_distinct_labels,74);
