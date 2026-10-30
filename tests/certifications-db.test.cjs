@@ -6,7 +6,7 @@ const {credentialSuggestion}=require("./load-browser-module.cjs")("../assets/req
 test("등록 자격증의 아이디·중복 없음",()=>{
 assert.equal(db.count,67);assert.equal(db.certifications.length,67);
 assert.deepEqual(db.certifications.map(x=>x.id),Array.from({length:67},(_,i)=>i+1));
-assert.equal(new Set(db.certifications.map(x=>x.name.normalize("NFKC").toLowerCase())).size,34);
+assert.equal(new Set(db.certifications.map(x=>x.name.normalize("NFKC").toLowerCase())).size,67);
 assert.deepEqual(db.certifications.slice(30,34).map(x=>x.name),["DAP","DAsP","산업보안관리사","AICE associate"]);
 });
 test("기존 34개 사용자 확인 상태와 새 항목 검토 필요 상태 구분",()=>{
