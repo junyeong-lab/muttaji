@@ -15,6 +15,45 @@
     }
     return false;
   }
+  // 보유 여부는 입력된 자격증명만 매칭하며, 부분 문자열이나 등급 생략으로 추측하지 않습니다.
+  // 공식명·별칭에 공통 정규화를 적용하고, 등급이 있는 일부 자격군은
+  // "네트워크관리사 2급" → "네트워크 2급"처럼 고유하게 매칭되는 축약형만 허용합니다.
+  const ownedKey=t=>normalize(t).replace(/[\s.,·ㆍ•()[\]{}_\-/:：]+/g,"");
+  function ownershipIndex(catalog){
+    const index=new Map();
+    function add(raw,name){
+      const key=ownedKey(raw);
+      if(!key)return;
+      if(!index.has(key))index.set(key,new Set());
+      index.get(key).add(name);
+    }
+    catalog.forEach(item=>{
+      [item.name,...String(item.aliases||"").split(";")].forEach(t=>add(t,item.name));
+      const match=ownedKey(item.name).match(/^(.+?)(관리사|마스터)([12])급$/);
+      if(!match||match[1].length<3)return; // "PC 2급" 같은 지나친 축약 방지
+      const [,stem,suffix,level]=match;
+      add(stem+level+"급",item.name);
+      if(suffix==="관리사"){
+        add(stem+"관리"+level+"급",item.name);
+        add(stem+"관리자"+level+"급",item.name);
+      }
+    });
+    return index;
+  }
+  function matchOwned(catalog,text){
+    const index=ownershipIndex(catalog),matched=new Set(),ambiguous=new Set();
+    String(text||"").split(/[\n,;，/]+/).forEach(entry=>{
+      const cleaned=entry.trim()
+        .replace(/^[·ㆍ•*\-\d.)\s]+/,"")
+        .replace(/^(?:보유\s*자격증|자격증|보유)\s*[:：]\s*/,"")
+        .replace(/\s*\(?\s*(?:취득|보유)\s*\)?\s*$/,"");
+      const names=index.get(ownedKey(cleaned));
+      if(!names)return;
+      if(names.size===1)matched.add([...names][0]);
+      else names.forEach(name=>ambiguous.add(name));
+    });
+    return {matched,ambiguous};
+  }
   const map=[
     [["개인정보","프라이버시"],["CPPG","ISMS-P 인증심사원"]],
     [["ISMS-P","인증심사","컴플라이언스"],["ISMS-P 인증심사원","CPPG"]],
@@ -66,15 +105,13 @@
     if(!posting.trim()&&!goal.trim())return [];
     const asText=v=>(Array.isArray(v)?v:[]).map(x=>typeof x==="string"?x:x&&x.text||"").join("\n");
     const required=asText(c.required),preferred=asText(c.preferred);
-    const owned=String(c.owned||"").split(/[\n,;，]+/).map(x=>normalize(x.replace(/^[·ㆍ•*\-\d.)\s]+/,"")
-      .replace(/^(?:보유\s*자격증|자격증)\s*[:：]\s*/,""))).filter(Boolean);
+    const owned=matchOwned(catalog,c.owned);
     const scores=new Map();
     function add(item,value,basis,keyword,explicit,index){
       let row=scores.get(item.name);
       if(!row){
-        const aliases=[item.name,...String(item.aliases||"").split(";")];
         row={item,points:0,priority:0,basis:"",keyword:"",explicit:false,
-             owned:aliases.some(a=>owned.includes(normalize(a))),index};
+             owned:owned.matched.has(item.name),index};
         scores.set(item.name,row);
       }
       row.points+=value;
@@ -145,7 +182,14 @@
       note.textContent=results.length?"관련 자격증 참고 후보 "+results.length+"개 · 동일 계열 중복 최소화 · 규칙 기반, AI 판정 아님":
         "일치 후보가 없습니다. 구체적인 공고 기술명이나 목표 직무를 입력해 주세요.";
       results.forEach(r=>{
-        const card=el("article","cert-card");card.appendChild(el("h3","",r.name));
+        const card=el("article","cert-card"),head=el("div","cert-head");
+        head.appendChild(el("h3","",r.name));
+        if(r.owned){
+          const tag=el("span","cert-owned-badge","✓ 보유 중");
+          tag.setAttribute("aria-label","보유 자격증으로 입력됨 · 실제 취득 증빙 별도");
+          head.appendChild(tag);
+        }
+        card.appendChild(head);
         const badges=el("div","cert-meta");
         badges.appendChild(el("span","",r.explicit?"공고에 명칭 언급":"기술·분야 연관"));
         badges.appendChild(el("span","",r.possessionLabel));
@@ -168,5 +212,5 @@
     });
   }
   if(typeof window!=="undefined"&&typeof document!=="undefined")mount();
-  return {recommend,mentions};
+  return {recommend,mentions,matchOwned};
 });

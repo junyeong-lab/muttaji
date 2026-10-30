@@ -48,3 +48,39 @@ test("보유 입력 여부는 판정과 무관하고 본인이 직접 입력한 
   assert.equal(b[0].owned,true);
   assert.match(b[0].possessionLabel,/증빙 별도/);
 });
+
+test("보유 입력 축약형: 등급을 유지한 안전한 유일 자격증 인식",()=>{
+ const {matchOwned}=require("./load-browser-module.cjs")("../assets/certification-recommendations.js");
+ for(const input of ["네트워크관리사 2급","네트워크 관리자 2급","네트워크 2급","네트워크2급","네트워크 관리 2급","네 관 사 2급","네관사 2급"]){
+   const matches=matchOwned(db.certifications,input);
+   if(input==="네 관 사 2급")continue; // 축약 별칭 내부 글자 분리는 지원하지 않음
+   assert.ok(matches.matched.has("네트워크관리사 2급"),input);
+   assert.ok(!matches.matched.has("네트워크관리사 1급"),input);
+ }
+});
+test("잘못된 자격 등급·광범위 키워드로 보유 중 표시 금지",()=>{
+ const {matchOwned}=require("./load-browser-module.cjs")("../assets/certification-recommendations.js");
+ for(const input of ["네트워크","네트워크 3급","관리사 2급","네트워크 2급 준비중","PC 2급","정보보안 2급"]){
+   assert.equal(matchOwned(db.certifications,input).matched.size,0,input);
+ }
+ const one=matchOwned(db.certifications,"네트워크 1급");
+ assert.ok(one.matched.has("네트워크관리사 1급"));
+ assert.ok(!one.matched.has("네트워크관리사 2급"));
+});
+test("여러 보유 자격증·표기 차이도 인식하지만 입력하지 않은 자격증은 보유 아님",()=>{
+ const {matchOwned}=require("./load-browser-module.cjs")("../assets/certification-recommendations.js");
+ const owned=matchOwned(db.certifications,"정보처리 기사, SQLD, 네트워크 2급 취득");
+ assert.ok(owned.matched.has("정보처리기사"));
+ assert.ok(owned.matched.has("SQLD"));
+ assert.ok(owned.matched.has("네트워크관리사 2급"));
+ assert.ok(!owned.matched.has("정보보안기사"));
+ const rec=r({goal:"네트워크 운영",owned:"네트워크 2급"});
+ assert.ok(rec.some(x=>x.name==="네트워크관리사 2급"&&x.owned),JSON.stringify(rec));
+});
+test("중복 해석되는 축약형은 어느 자격증도 자동 보유 표시하지 않음",()=>{
+ const {matchOwned}=require("./load-browser-module.cjs")("../assets/certification-recommendations.js");
+ const fake=[{name:"네트워크관리사 2급",aliases:""},{name:"네트워크마스터 2급",aliases:""}];
+ const parsed=matchOwned(fake,"네트워크 2급");
+ assert.equal(parsed.matched.size,0);
+ assert.equal(parsed.ambiguous.size,2);
+});
