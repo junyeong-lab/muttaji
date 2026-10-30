@@ -29,7 +29,9 @@ test('preview serves disabled model API and integrated UI without paid calls',as
  try{
  const port=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('preview timeout')),5000);child.once('error',reject);child.stdout.on('data',chunk=>{const m=chunk.toString().match(/127\.0\.0\.1:(\d+)/);if(m){clearTimeout(timer);resolve(m[1]);}});});
  const base='http://127.0.0.1:'+port;const health=await (await fetch(base+'/api/model-analysis')).json();assert.equal(health.enabled,false);
- assert.match(await (await fetch(base)).text(),/model-analysis-title/);
+ const html=await (await fetch(base)).text();
+ assert.match(html,/id="job-text"/);assert.match(html,/id="cert-search"/);
+ assert.doesNotMatch(html,/model-analysis-title|assets\/model-analysis-ui\.js/);
  const response=await fetch(base+'/api/model-analysis',{method:'POST',body:'{}'});assert.equal(response.status,503);
  }finally{child.kill();}
 });
