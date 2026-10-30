@@ -18,7 +18,7 @@ test("유형 구분과 국제 인정 확인 상태 분리",()=>{
  assert.equal(byName("Cisco CCNP").classification_ansi_iso17024,"확인 못함");
 });
 test("실제 미확인 상태만 별도로 안내",()=>{
- for(const name of ["ISO/IEC 27001 심사원","ISO/IEC 42001 심사원","OCA (Oracle Certified Associate) · 자격군"]){
+ for(const name of ["ISO/IEC 27001 심사원","ISO/IEC 42001 심사원","OCA"]){
   assert.equal(byName(name).classification_status,"세부 자격 확인 필요");
  }
  const c=byName("PCCP");

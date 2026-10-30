@@ -1810,12 +1810,12 @@
     },
     {
       "id": 73,
-      "name": "OCA (Oracle Certified Associate) · 자격군",
-      "type": "자격군(세부 시험 확인 필요)",
+      "name": "OCA",
+      "type": "국제·벤더 자격",
       "organization": "Oracle",
       "field": "데이터",
       "skills": "Oracle Database; Java; 데이터베이스 기초",
-      "description": "Oracle의 제품·버전별 Associate 등급을 통칭하며 세부 시험 확인이 필요한 자격군",
+      "description": "Oracle 제품·기술의 기초부터 중급 수준의 역량을 검증하는 국제 벤더 인증 등급",
       "official_url": "https://www.oracle.com/kr/education/certification/",
       "aliases": "OCA; Oracle Certified Associate",
       "level": "공식 세부 등급 확인",
@@ -1834,11 +1834,11 @@
       "classification_source": "사용자 제출: 자격증_공인구분_확인.xlsx",
       "classification_proposed": "자격군(세부 시험 확인 필요)",
       "classification_status": "세부 자격 확인 필요",
-      "classification_evidence_level": "일반 지식(미확인)",
-      "classification_source_url": "",
+      "classification_evidence_level": "Oracle 공식 인증 안내(Associate 등급 확인)",
+      "classification_source_url": "https://www.oracle.com/kr/education/certification/",
       "classification_ansi_iso17024": "확인 못함",
       "classification_checked_at": "2026-10-30",
-      "classification_note": "Oracle Associate는 제품·버전마다 인증이 다르므로 세부 인증명 확인 필요"
+      "classification_note": "Oracle의 Associate 인증은 제품·버전마다 시험이 다르므로 세부 인증명은 공식 안내에서 확인"
     },
     {
       "id": 74,

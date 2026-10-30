@@ -13,7 +13,7 @@ test("자격증 설명 74개가 간결한 명사형 문구로 표시",()=>{
 test("CIPP/E 표기와 역사적 인증의 제한 사항 유지",()=>{
  assert.equal(db.certifications.find(x=>x.name==="CIPP/E").description,"유럽 개인정보보호법과 GDPR, 개인정보 처리 및 국경 간 이전 규정에 대한 이해를 평가하는 IAPP의 국제 자격");
  for(const keyword of ["OCA"]){
-  const cert=db.certifications.find(x=>x.name.startsWith(keyword+" "));
+  const cert=db.certifications.find(x=>x.name===keyword);
   assert.equal(cert.recommendable,false);
  }
 });

@@ -20,7 +20,7 @@ test("현행 LPIC·SAS와 자격군 OCA만 검색 가능",()=>{
 test("과거 시험·미특정 자격군은 공고에 직접 나오더라도 추천하지 않음",()=>{
  for(const legacy of ["OCA"]){
   const results=recommend(db.certifications,{posting:"자격증 우대 "+legacy,preferred:[legacy]});
-  assert.ok(results.every(x=>!["OCA (Oracle Certified Associate) · 자격군"].includes(x.name)),legacy);
+  assert.ok(results.every(x=>!["OCA"].includes(x.name)),legacy);
  }
 });
 test("현행 SAS·LPIC·Java SE 25 시험은 직접 명시되면 추천 가능",()=>{
@@ -36,6 +36,6 @@ test("OCPJP·OCWCD는 독립 등록 항목도 검색 결과도 없음",()=>{
   const rec=recommend(db.certifications,{posting:"우대 자격증 "+txt,preferred:[txt]});
   assert.ok(rec.every(x=>!x.name.includes("OCPJP")&&!x.name.includes("OCWCD")),txt);
  }
- assert.ok(db.certifications.some(x=>x.name==="OCA (Oracle Certified Associate) · 자격군"));
+ assert.ok(db.certifications.some(x=>x.name==="OCA"));
  assert.ok(db.certifications.some(x=>x.name==="Oracle Certified Professional: Java SE 25 Developer"));
 });
